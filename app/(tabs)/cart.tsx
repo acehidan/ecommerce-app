@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#1A1A1A',
     borderRadius: 20,
     marginHorizontal: 16,
+    marginVertical: 4,
   },
   itemImage: {
     width: 100,

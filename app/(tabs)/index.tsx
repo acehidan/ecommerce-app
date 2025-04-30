@@ -34,8 +34,8 @@ const CATEGORIES = [
   },
   {
     id: 3,
-    name: 'Home & Living',
-    slug: 'home-living',
+    name: 'Beauty',
+    slug: 'beauty',
     image:
       'https://images.unsplash.com/photo-1469504512102-900f29606341?w=800&q=80',
   },

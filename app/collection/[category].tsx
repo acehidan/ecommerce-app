@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '../../store/cartStore';
 import { router } from 'expo-router';
+import { useWishlistStore } from '../../store/wishlistStore';
 
 const PRODUCTS_BY_CATEGORY = {
   electronics: [
@@ -51,24 +52,7 @@ const PRODUCTS_BY_CATEGORY = {
         'https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&q=80',
     },
   ],
-  'home-living': [
-    {
-      id: 8,
-      name: 'Modern Table Lamp',
-      brand: 'HomeLux',
-      price: 129.99,
-      image:
-        'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80',
-    },
-    {
-      id: 9,
-      name: 'Decorative Vase',
-      brand: 'ArtHome',
-      price: 69.99,
-      image:
-        'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&q=80',
-    },
-  ],
+
   beauty: [
     {
       id: 3,
@@ -92,13 +76,13 @@ const PRODUCTS_BY_CATEGORY = {
 const CATEGORY_TITLES = {
   electronics: 'Electronics',
   fashion: 'Fashion',
-  'home-living': 'Home & Living',
   beauty: 'Beauty',
 };
 
 export default function Collection() {
+  const { addItem: toggleWishlist, isInWishlist } = useWishlistStore();
   const handleProductPress = (productId: number) => {
-    router.push(`/product/${productId}`);
+    router.push(`/cart`);
   };
 
   const { category } = useLocalSearchParams<{
@@ -120,7 +104,68 @@ export default function Collection() {
         <View style={styles.placeholder} />
       </View>
 
-      <FlatList
+      <View style={styles.productsGrid as ViewStyle}>
+        {products.map((product) => (
+          <View key={product.id} style={styles.productCard as ViewStyle}>
+            <Pressable
+              style={styles.productCardContent as ViewStyle}
+              onPress={() => handleProductPress(product.id)}
+            >
+              <View style={styles.productImageContainer as ViewStyle}>
+                <Image
+                  source={{ uri: product.image }}
+                  style={styles.productImage as ImageStyle}
+                />
+                <Pressable
+                  style={[
+                    styles.wishlistButton as ViewStyle,
+                    isInWishlist(product.id) &&
+                      (styles.wishlistButtonActive as ViewStyle),
+                  ]}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(product);
+                  }}
+                >
+                  <Ionicons
+                    name={isInWishlist(product.id) ? 'heart' : 'heart-outline'}
+                    size={20}
+                    color={isInWishlist(product.id) ? '#FF3B30' : '#000000'}
+                  />
+                </Pressable>
+              </View>
+              <View style={styles.productInfo as ViewStyle}>
+                <Text style={styles.brandName as TextStyle}>
+                  {product.brand}
+                </Text>
+                <Text style={styles.productName as TextStyle} numberOfLines={2}>
+                  {product.name}
+                </Text>
+                <Text style={styles.productPrice as TextStyle}>
+                  {product.price.toLocaleString()} MMK
+                </Text>
+              </View>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.addButton as ViewStyle,
+                { opacity: pressed ? 0.7 : 1 }, // Change opacity when pressed for feedback
+              ]}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleProductPress(product.id);
+                addItem(product);
+              }}
+              android_ripple={{ color: '#ddd' }} // Set ripple color for Android
+            >
+              <Image source={ShoppingCart} style={{ width: 20, height: 20 }} />
+              <Text style={styles.addButtonText as TextStyle}>Add</Text>
+            </Pressable>
+          </View>
+        ))}
+      </View>
+
+      {/* <FlatList
         data={products}
         numColumns={2}
         contentContainerStyle={styles.productGrid}
@@ -161,7 +206,7 @@ export default function Collection() {
             </View>
           </Pressable>
         )}
-      />
+      /> */}
     </SafeAreaView>
   );
 }
@@ -169,18 +214,19 @@ export default function Collection() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 16,
     backgroundColor: '#000000',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#1A1A1A',
   },
   backButton: {
-    padding: 8,
+    padding: 0,
   },
   headerTitle: {
     fontSize: 20,
@@ -190,60 +236,74 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 40,
   },
-  productGrid: {
-    padding: 16,
-  },
+  productsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  } as ViewStyle,
   productCard: {
-    flex: 1,
-    margin: 8,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
+    width: '48%',
+    height: 380,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     overflow: 'hidden',
-  },
+  } as ViewStyle,
+  productCardContent: {
+    flex: 1,
+  } as ViewStyle,
   productImageContainer: {
     position: 'relative',
     aspectRatio: 1,
-    backgroundColor: '#FFFFFF',
-  },
+  } as ViewStyle,
   productImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 0,
-  },
+  } as ImageStyle,
   wishlistButton: {
     position: 'absolute',
     top: 8,
     right: 8,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  } as ViewStyle,
+  wishlistButtonActive: {
+    backgroundColor: '#FFF0F0',
+  } as ViewStyle,
   productInfo: {
     padding: 12,
-  },
+  } as ViewStyle,
   brandName: {
     fontSize: 14,
     color: 'red',
-    marginBottom: 4,
-  },
+    marginBottom: 10,
+  } as TextStyle,
   productName: {
     fontSize: 16,
     fontWeight: '500',
     color: '#000000',
     marginBottom: 8,
     height: 44,
-  },
+  } as TextStyle,
   productPrice: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
     marginBottom: 12,
     textAlign: 'center',
-  },
+  } as TextStyle,
   addButton: {
+    marginLeft: 12,
+    marginRight: 12,
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -253,11 +313,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     padding: 12,
     borderRadius: 30,
-  },
+  } as ViewStyle,
   addButtonText: {
-    fontSize: 16,
+    fontSize: 14,
+    marginLeft: 4,
     fontWeight: '600',
     color: '#000000',
-    marginLeft: 4,
   },
 });
