@@ -1,4 +1,4 @@
-import { View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Platform, TouchableOpacity, StyleSheet } from 'react-native';
 import { useLinkBuilder, useTheme } from '@react-navigation/native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -69,28 +69,8 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
             ]}
           >
             {route.name === 'cart' && totalItems > 0 && (
-              <View
-                style={{
-                  position: 'absolute',
-                  right: -0,
-                  top: -5,
-                  backgroundColor: '#FF3B30',
-                  borderRadius: 10,
-                  width: 20,
-                  height: 20,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  style={{
-                    color: '#FFFFFF',
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {totalItems}
-                </Text>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{totalItems}</Text>
               </View>
             )}
             {getIconByRouteName(route.name, isFocused ? 'white' : 'black')}
@@ -126,7 +106,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     width: '90%',
     alignSelf: 'center',
-    borderRadius: 50,
+    borderRadius: 25,
     bottom: 10,
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -135,13 +115,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 50,
+    height: 48,
     paddingHorizontal: 20,
     borderRadius: 25,
   },
+  badge: {
+    position: 'absolute',
+    right: 0,
+    top: -6,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   text: {
     color: 'white',
-    marginLeft: 5,
+    marginLeft: 4,
   },
 });
 
