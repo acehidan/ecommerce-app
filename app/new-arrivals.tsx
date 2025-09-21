@@ -1,142 +1,116 @@
 import React, { useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
 import {
   View,
   Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  Pressable,
   TextInput,
+  StyleSheet,
   ViewStyle,
   TextStyle,
-  ImageStyle,
+  FlatList,
+  Pressable,
 } from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import ProductCard from '../components/ProductCard';
+import { router } from 'expo-router';
+import ProductCard from './components/ProductCard';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const PRODUCTS_BY_CATEGORY = {
-  capacitor: [
-    {
-      id: 1,
-      name: 'Capacitor (1 uf)',
-      price: 1000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-    {
-      id: 2,
-      name: 'Capacitor (2 uf)',
-      price: 20000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-    {
-      id: 3,
-      name: 'Capacitor (2.5 uf)',
-      price: 20000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-    {
-      id: 4,
-      name: 'Capacitor (4 uf)',
-      price: 20000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-    {
-      id: 5,
-      name: 'Capacitor (10 uf)',
-      price: 25000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-    {
-      id: 6,
-      name: 'Capacitor (22 uf)',
-      price: 30000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-    {
-      id: 7,
-      name: 'Capacitor (47 uf)',
-      price: 35000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-    {
-      id: 8,
-      name: 'Capacitor (100 uf)',
-      price: 40000,
-      image:
-        'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-    },
-  ],
-  'diy-decoration-kits': [
-    {
-      id: 9,
-      name: 'LED Strip Kit',
-      price: 15000,
-      image:
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-    },
-    {
-      id: 10,
-      name: 'Arduino Starter Kit',
-      price: 45000,
-      image:
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-    },
-  ],
-  electronics: [
-    {
-      id: 11,
-      name: 'Smart Sensors',
-      price: 35000,
-      image:
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-    },
-    {
-      id: 12,
-      name: 'Motor Controller',
-      price: 55000,
-      image:
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-    },
-  ],
-};
+const ALL_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Capacitor (1 uf)',
+    price: 20000,
+    image:
+      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
+  },
+  {
+    id: 2,
+    name: 'Mini Grinder',
+    price: 30000,
+    image:
+      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
+  },
+  {
+    id: 3,
+    name: 'Capacitor (2 uf)',
+    price: 20000,
+    image:
+      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
+  },
+  {
+    id: 4,
+    name: 'အလှဆင် ရေနွေးငွေ့ ဖန်းစက်',
+    price: 17000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 5,
+    name: 'LED Strip Lights',
+    price: 25000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 6,
+    name: 'Arduino Starter Kit',
+    price: 45000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 7,
+    name: 'Smart Sensors',
+    price: 35000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 8,
+    name: 'Resistor Pack',
+    price: 15000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 9,
+    name: 'Motor Controller',
+    price: 55000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 10,
+    name: 'Breadboard Kit',
+    price: 12000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 11,
+    name: 'Jumper Wires',
+    price: 8000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+  {
+    id: 12,
+    name: 'Power Supply',
+    price: 40000,
+    image:
+      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  },
+];
 
-const CATEGORY_TITLES = {
-  capacitor: 'Capacitor များ',
-  'diy-decoration-kits': 'D.I.Y အလှဆင် Kits များ',
-  electronics: 'Electronics',
-};
-
-export default function Collection() {
+export default function NewArrivalsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-
-  const { category } = useLocalSearchParams<{
-    category: keyof typeof PRODUCTS_BY_CATEGORY;
-  }>();
-
-  const products = PRODUCTS_BY_CATEGORY[category] || [];
-  const title = CATEGORY_TITLES[category] || 'Collection';
-
-  React.useEffect(() => {
-    setFilteredProducts(products);
-  }, [products]);
+  const [filteredProducts, setFilteredProducts] = useState(ALL_PRODUCTS);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setFilteredProducts(products);
+      setFilteredProducts(ALL_PRODUCTS);
     } else {
-      const filtered = products.filter((product) =>
+      const filtered = ALL_PRODUCTS.filter((product) =>
         product.name.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredProducts(filtered);
@@ -147,7 +121,7 @@ export default function Collection() {
     router.push(`/product/${productId}`);
   };
 
-  const renderProduct = ({ item }: { item: (typeof products)[0] }) => (
+  const renderProduct = ({ item }: { item: (typeof ALL_PRODUCTS)[0] }) => (
     <View style={styles.productItem as ViewStyle}>
       <ProductCard
         id={item.id}
@@ -169,7 +143,9 @@ export default function Collection() {
         >
           <Ionicons name="arrow-back" size={24} color="#000000" />
         </Pressable>
-        <Text style={styles.headerTitle as TextStyle}>{title}</Text>
+        <Text style={styles.headerTitle as TextStyle}>
+          အသစ်ရောက် ပစ္စည်းများ
+        </Text>
         <Text style={styles.productCount as TextStyle}>
           ပစ္စည်း {filteredProducts.length} ခု
         </Text>
@@ -181,7 +157,7 @@ export default function Collection() {
           <Ionicons name="search" size={20} color="#666666" />
           <TextInput
             style={styles.searchInput as TextStyle}
-            placeholder={`${title} တွေ ရှာမယ်`}
+            placeholder="အသစ်ရောက် ပစ္စည်းတွေရှာမယ်"
             placeholderTextColor="#666666"
             value={searchQuery}
             onChangeText={handleSearch}
@@ -257,7 +233,8 @@ const styles = StyleSheet.create({
   } as TextStyle,
   searchHint: {
     color: '#999999',
-    fontSize: 12,
+    fontSize: 10,
+    textAlign: 'center',
     lineHeight: 16,
   } as TextStyle,
   productsGrid: {

@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useCartStore } from '../../store/cartStore';
-import CustomTabBar from './../components/CustomTabBar';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const totalItems = useCartStore((state) => state.getTotalItems());
@@ -9,42 +9,67 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E5E5',
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarActiveTintColor: '#000000',
+        tabBarInactiveTintColor: '#999999',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
       }}
-      tabBar={(props) => <CustomTabBar {...props} totalItems={totalItems} />}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="search" options={{ title: 'Search' }} />
-      <Tabs.Screen name="cart" options={{ title: 'Cart' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'ပင်မ',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="categories"
+        options={{
+          title: 'အမျိုးအစားများ',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="grid-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'ရှာမည်',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="cart"
+        options={{
+          title: 'စျေးခြင်း',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="basket-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'မိမိအကောင့်',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
-
-const styles = {
-  activeTabIndicator: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000000',
-    width: 120,
-    height: 50,
-    color: 'white',
-    // padding: 20,
-    borderRadius: 50,
-    zIndex: -1,
-  },
-  TabIndicator: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    // backgroundColor: '#000000',
-    width: 70,
-    height: 50,
-    color: 'white',
-    borderWidth: 1, // Width of the border
-    borderColor: '#gray', // Color of the border
-    borderStyle: 'solid',
-    borderRadius: 50,
-    zIndex: -1,
-  },
-};

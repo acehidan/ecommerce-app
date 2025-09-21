@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import {
   View,
@@ -6,6 +7,9 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  ViewStyle,
+  TextStyle,
+  ImageStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,24 +18,30 @@ import { useCartStore } from '../../store/cartStore';
 const PRODUCTS = {
   1: {
     id: 1,
-    name: 'Premium Wireless Headphones',
-    price: 299.99,
+    name: 'Capacitor (1 uf)',
+    price: 1000,
     description:
-      'Experience crystal-clear sound with our premium wireless headphones. Featuring active noise cancellation, 30-hour battery life, and premium materials for ultimate comfort.',
-    specs: [
-      'Active Noise Cancellation',
-      '30-hour battery life',
-      'Bluetooth 5.0',
-      'Touch controls',
-      'Voice assistant support',
+      '1uF ကပက်ဆစ်တာသည် DIY အီလက်ထရောနစ် ပစ္စည်းများအတွက် သင့်လျော်ပြီး၊ လျှပ်စစ်အား သိမ်းဆည်းရန်နှင့် လှိုင်းများကို ထိန်းချုပ်ရန် ကူညီပါတယ်။',
+    specs: {
+      type: 'Capacitor ups',
+      quantity: 477,
+      storage: 'ပစ္စည်းရှိ',
+      weight: 'KG 0.1',
+      price: 'MMK 1,000',
+    },
+    wholesalePrices: [
+      { quantity: 10, price: 950 },
+      { quantity: 50, price: 900 },
+      { quantity: 100, price: 800 },
     ],
+    seller: {
+      name: 'ကိုမင်း',
+      phone: '09765077123/09964xxxxxx',
+      address: '(ရန်ကုန်-ဆူးလေ.ဘားလမ်း)',
+    },
     images: [
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
-      'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&q=80',
-      'https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=800&q=80',
+      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&q=80',
     ],
-    rating: 4.8,
-    reviews: 128,
   },
   2: {
     id: 2,
@@ -136,86 +146,164 @@ const PRODUCTS = {
 
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const product = PRODUCTS[Number(id)];
+  const product = PRODUCTS[Number(id) as keyof typeof PRODUCTS];
   const addItem = useCartStore((state) => state.addItem);
+  const [quantity, setQuantity] = useState(0);
 
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[0],
-    });
-    router.push('/cart');
+  const handleQuantityChange = (change: number) => {
+    const newQuantity = quantity + change;
+    if (newQuantity >= 0) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  const handleBuyProduct = () => {
+    if (quantity > 0) {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+      });
+      router.push('/cart');
+    }
   };
 
   if (!product) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>Product not found</Text>
+      <SafeAreaView style={styles.container as ViewStyle}>
+        <Text style={styles.errorText as TextStyle}>Product not found</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        {/* Image Gallery */}
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.imageGallery}
-        >
-          {product.images.map((image, index) => (
-            <Image
-              key={index}
-              source={{ uri: image }}
-              style={styles.productImage}
-              resizeMode="cover"
-            />
-          ))}
-        </ScrollView>
+    <SafeAreaView style={styles.container as ViewStyle}>
+      <ScrollView style={styles.scrollView as ViewStyle}>
+        {/* Header */}
+        <View style={styles.header as ViewStyle}>
+          <Pressable
+            style={styles.backButton as ViewStyle}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#000000" />
+          </Pressable>
+          <Text style={styles.headerTitle as TextStyle}>ပစ္စည်း အသေးစိတ်</Text>
+          <View style={styles.placeholder as ViewStyle} />
+        </View>
 
-        {/* Product Info */}
-        <View style={styles.productInfo}>
-          <Text style={styles.productName}>{product.name}</Text>
-          <View style={styles.ratingContainer}>
-            <View style={styles.stars}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons
-                  key={star}
-                  name={
-                    star <= Math.floor(product.rating) ? 'star' : 'star-outline'
-                  }
-                  size={20}
-                  color="#FFD700"
-                />
-              ))}
-            </View>
-            <Text style={styles.reviews}>({product.reviews} reviews)</Text>
-          </View>
-          <Text style={styles.price}>${product.price}</Text>
-          <Text style={styles.description}>{product.description}</Text>
-
-          {/* Specifications */}
-          <View style={styles.specSection}>
-            <Text style={styles.sectionTitle}>Specifications</Text>
-            {product.specs.map((spec, index) => (
-              <View key={index} style={styles.specItem}>
-                <Ionicons name="checkmark-circle" size={20} color="#00C853" />
-                <Text style={styles.specText}>{spec}</Text>
-              </View>
-            ))}
+        {/* Product Image and Price */}
+        <View style={styles.imageContainer as ViewStyle}>
+          <Image
+            source={{ uri: product.images[0] }}
+            style={styles.mainImage as ImageStyle}
+            resizeMode="cover"
+          />
+          <View style={styles.priceBadge as ViewStyle}>
+            <Text style={styles.priceBadgeText as TextStyle}>1000ks</Text>
           </View>
         </View>
+
+        {/* Seller Information */}
+        {(product as any).seller && (
+          <View style={styles.sellerInfo as ViewStyle}>
+            <Text style={styles.sellerName as TextStyle}>
+              {(product as any).seller.name}
+            </Text>
+            <Text style={styles.sellerPhone as TextStyle}>
+              {(product as any).seller.phone}
+            </Text>
+            <Text style={styles.sellerAddress as TextStyle}>
+              {(product as any).seller.address}
+            </Text>
+          </View>
+        )}
+
+        {/* Product Description */}
+        <View style={styles.descriptionContainer as ViewStyle}>
+          <Text style={styles.productName as TextStyle}>{product.name}</Text>
+          <Text style={styles.productDescription as TextStyle}>
+            {product.description}
+          </Text>
+        </View>
+
+        {/* Product Specifications */}
+        {product.specs &&
+          typeof product.specs === 'object' &&
+          'type' in product.specs && (
+            <View style={styles.specsContainer as ViewStyle}>
+              <Text style={styles.specsTitle as TextStyle}>အမျိုးအစား</Text>
+              <Text style={styles.specValue as TextStyle}>
+                {product.specs.type}
+              </Text>
+
+              <Text style={styles.specsTitle as TextStyle}>
+                လက်ကျန် အရေအတွက်
+              </Text>
+              <Text style={styles.specValue as TextStyle}>
+                {product.specs.quantity} ခု
+              </Text>
+
+              <Text style={styles.specsTitle as TextStyle}>သိုလှောင်မှု</Text>
+              <Text style={styles.specValue as TextStyle}>
+                {product.specs.storage}
+              </Text>
+
+              <Text style={styles.specsTitle as TextStyle}>အလေးချိန်</Text>
+              <Text style={styles.specValue as TextStyle}>
+                {product.specs.weight}
+              </Text>
+
+              <Text style={styles.specsTitle as TextStyle}>ဈေးနှုန်း</Text>
+              <Text style={styles.specValue as TextStyle}>
+                {product.specs.price}
+              </Text>
+            </View>
+          )}
+
+        {/* Wholesale Prices */}
+        {(product as any).wholesalePrices && (
+          <View style={styles.wholesaleContainer as ViewStyle}>
+            <Text style={styles.wholesaleTitle as TextStyle}>
+              လက်ကားဈေးနှုန်းများ
+            </Text>
+            {(product as any).wholesalePrices.map(
+              (wholesale: any, index: number) => (
+                <Text key={index} style={styles.wholesaleItem as TextStyle}>
+                  {wholesale.quantity} ခု အထက်ဈေး: MMK {wholesale.price}
+                </Text>
+              )
+            )}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Add to Cart Button */}
-      <View style={styles.footer}>
-        <Pressable style={styles.addToCartButton} onPress={handleAddToCart}>
-          <Ionicons name="cart" size={24} color="#000000" />
-          <Text style={styles.addToCartText}>Add to Cart</Text>
+      {/* Bottom Action Bar */}
+      <View style={styles.bottomBar as ViewStyle}>
+        <View style={styles.quantitySelector as ViewStyle}>
+          <Pressable
+            style={styles.quantityButton as ViewStyle}
+            onPress={() => handleQuantityChange(-1)}
+          >
+            <Ionicons name="remove" size={20} color="#000000" />
+          </Pressable>
+          <Text style={styles.quantityText as TextStyle}>{quantity} ခု</Text>
+          <Pressable
+            style={styles.quantityButton as ViewStyle}
+            onPress={() => handleQuantityChange(1)}
+          >
+            <Ionicons name="add" size={20} color="#000000" />
+          </Pressable>
+        </View>
+        <Pressable
+          style={[
+            styles.buyButton as ViewStyle,
+            quantity === 0 && (styles.buyButtonDisabled as ViewStyle),
+          ]}
+          onPress={handleBuyProduct}
+          disabled={quantity === 0}
+        >
+          <Text style={styles.buyButtonText as TextStyle}>ပစ္စည်း ဝယ်မယ်</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -225,92 +313,189 @@ export default function ProductDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
-  },
+    backgroundColor: '#FFFFFF',
+  } as ViewStyle,
+  scrollView: {
+    flex: 1,
+  } as ViewStyle,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  } as ViewStyle,
+  backButton: {
+    padding: 4,
+  } as ViewStyle,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    flex: 1,
+    textAlign: 'center',
+  } as TextStyle,
+  placeholder: {
+    width: 32,
+  } as ViewStyle,
+  imageContainer: {
+    position: 'relative',
+    height: 300,
+    margin: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+  } as ViewStyle,
+  mainImage: {
+    width: '100%',
+    height: '100%',
+  } as ImageStyle,
+  priceBadge: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#FF0000',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  } as ViewStyle,
+  priceBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  } as TextStyle,
+  sellerInfo: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#F8F8F8',
+    marginHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+  } as ViewStyle,
+  sellerName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 4,
+  } as TextStyle,
+  sellerPhone: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 4,
+  } as TextStyle,
+  sellerAddress: {
+    fontSize: 14,
+    color: '#666666',
+  } as TextStyle,
+  descriptionContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  } as ViewStyle,
+  productName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 12,
+  } as TextStyle,
+  productDescription: {
+    fontSize: 14,
+    color: '#333333',
+    lineHeight: 20,
+  } as TextStyle,
+  specsContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  } as ViewStyle,
+  specsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+    marginTop: 12,
+  } as TextStyle,
+  specValue: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 8,
+  } as TextStyle,
+  wholesaleContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 100,
+  } as ViewStyle,
+  wholesaleTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 12,
+  } as TextStyle,
+  wholesaleItem: {
+    fontSize: 14,
+    color: '#333333',
+    marginBottom: 8,
+  } as TextStyle,
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+  } as ViewStyle,
+  quantitySelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 16,
+  } as ViewStyle,
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  } as ViewStyle,
+  quantityText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginHorizontal: 16,
+    minWidth: 40,
+    textAlign: 'center',
+  } as TextStyle,
+  buyButton: {
+    flex: 1,
+    backgroundColor: '#333333',
+    paddingVertical: 12,
+    borderRadius: 50,
+    alignItems: 'center',
+  } as ViewStyle,
+  buyButtonDisabled: {
+    backgroundColor: '#CCCCCC',
+  } as ViewStyle,
+  buyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  } as TextStyle,
   errorText: {
     fontSize: 18,
     color: '#FF0000',
     textAlign: 'center',
     marginTop: 20,
-  },
-  imageGallery: {
-    height: 400,
-  },
-  productImage: {
-    width: 400,
-    height: 400,
-  },
-  productInfo: {
-    padding: 20,
-  },
-  productName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  stars: {
-    flexDirection: 'row',
-    marginRight: 8,
-  },
-  reviews: {
-    color: '#999999',
-    fontSize: 14,
-  },
-  price: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  specSection: {
-    marginTop: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  specItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  specText: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginLeft: 12,
-  },
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#1A1A1A',
-    backgroundColor: '#000000',
-  },
-  addToCartButton: {
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-  },
-  addToCartText: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
+  } as TextStyle,
 });
