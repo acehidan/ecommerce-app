@@ -7,9 +7,6 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  ViewStyle,
-  TextStyle,
-  ImageStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -145,12 +142,12 @@ const PRODUCTS = {
 };
 
 export default function ProductDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const product = PRODUCTS[Number(id) as keyof typeof PRODUCTS];
+  const { id } = useLocalSearchParams();
+  const product = PRODUCTS[Number(id)];
   const addItem = useCartStore((state) => state.addItem);
   const [quantity, setQuantity] = useState(0);
 
-  const handleQuantityChange = (change: number) => {
+  const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
     if (newQuantity >= 0) {
       setQuantity(newQuantity);
@@ -171,139 +168,102 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <SafeAreaView style={styles.container as ViewStyle}>
-        <Text style={styles.errorText as TextStyle}>Product not found</Text>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.errorText}>Product not found</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container as ViewStyle}>
-      <ScrollView style={styles.scrollView as ViewStyle}>
-        {/* Header */}
-        <View style={styles.header as ViewStyle}>
-          <Pressable
-            style={styles.backButton as ViewStyle}
-            onPress={() => router.back()}
-          >
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#000000" />
           </Pressable>
-          <Text style={styles.headerTitle as TextStyle}>ပစ္စည်း အသေးစိတ်</Text>
-          <View style={styles.placeholder as ViewStyle} />
+          <Text style={styles.headerTitle}>ပစ္စည်း အသေးစိတ်</Text>
+          <View style={styles.placeholder} />
         </View>
 
-        {/* Product Image and Price */}
-        <View style={styles.imageContainer as ViewStyle}>
+        <View style={styles.imageContainer}>
           <Image
             source={{ uri: product.images[0] }}
-            style={styles.mainImage as ImageStyle}
+            style={styles.mainImage}
             resizeMode="cover"
           />
-          <View style={styles.priceBadge as ViewStyle}>
-            <Text style={styles.priceBadgeText as TextStyle}>1000ks</Text>
+          <View style={styles.priceBadge}>
+            <Text style={styles.priceBadgeText}>1000ks</Text>
           </View>
         </View>
 
-        {/* Seller Information */}
-        {(product as any).seller && (
-          <View style={styles.sellerInfo as ViewStyle}>
-            <Text style={styles.sellerName as TextStyle}>
-              {(product as any).seller.name}
-            </Text>
-            <Text style={styles.sellerPhone as TextStyle}>
-              {(product as any).seller.phone}
-            </Text>
-            <Text style={styles.sellerAddress as TextStyle}>
-              {(product as any).seller.address}
-            </Text>
+        {product.seller && (
+          <View style={styles.sellerInfo}>
+            <Text style={styles.sellerName}>{product.seller.name}</Text>
+            <Text style={styles.sellerPhone}>{product.seller.phone}</Text>
+            <Text style={styles.sellerAddress}>{product.seller.address}</Text>
           </View>
         )}
 
-        {/* Product Description */}
-        <View style={styles.descriptionContainer as ViewStyle}>
-          <Text style={styles.productName as TextStyle}>{product.name}</Text>
-          <Text style={styles.productDescription as TextStyle}>
-            {product.description}
-          </Text>
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.productName}>{product.name}</Text>
+          <Text style={styles.productDescription}>{product.description}</Text>
         </View>
 
-        {/* Product Specifications */}
         {product.specs &&
           typeof product.specs === 'object' &&
           'type' in product.specs && (
-            <View style={styles.specsContainer as ViewStyle}>
-              <Text style={styles.specsTitle as TextStyle}>အမျိုးအစား</Text>
-              <Text style={styles.specValue as TextStyle}>
-                {product.specs.type}
-              </Text>
+            <View style={styles.specsContainer}>
+              <Text style={styles.specsTitle}>အမျိုးအစား</Text>
+              <Text style={styles.specValue}>{product.specs.type}</Text>
 
-              <Text style={styles.specsTitle as TextStyle}>
-                လက်ကျန် အရေအတွက်
-              </Text>
-              <Text style={styles.specValue as TextStyle}>
-                {product.specs.quantity} ခု
-              </Text>
+              <Text style={styles.specsTitle}>လက်ကျန် အရေအတွက်</Text>
+              <Text style={styles.specValue}>{product.specs.quantity} ခု</Text>
 
-              <Text style={styles.specsTitle as TextStyle}>သိုလှောင်မှု</Text>
-              <Text style={styles.specValue as TextStyle}>
-                {product.specs.storage}
-              </Text>
+              <Text style={styles.specsTitle}>သိုလှောင်မှု</Text>
+              <Text style={styles.specValue}>{product.specs.storage}</Text>
 
-              <Text style={styles.specsTitle as TextStyle}>အလေးချိန်</Text>
-              <Text style={styles.specValue as TextStyle}>
-                {product.specs.weight}
-              </Text>
+              <Text style={styles.specsTitle}>အလေးချိန်</Text>
+              <Text style={styles.specValue}>{product.specs.weight}</Text>
 
-              <Text style={styles.specsTitle as TextStyle}>ဈေးနှုန်း</Text>
-              <Text style={styles.specValue as TextStyle}>
-                {product.specs.price}
-              </Text>
+              <Text style={styles.specsTitle}>ဈေးနှုန်း</Text>
+              <Text style={styles.specValue}>{product.specs.price}</Text>
             </View>
           )}
 
-        {/* Wholesale Prices */}
-        {(product as any).wholesalePrices && (
-          <View style={styles.wholesaleContainer as ViewStyle}>
-            <Text style={styles.wholesaleTitle as TextStyle}>
-              လက်ကားဈေးနှုန်းများ
-            </Text>
-            {(product as any).wholesalePrices.map(
-              (wholesale: any, index: number) => (
-                <Text key={index} style={styles.wholesaleItem as TextStyle}>
-                  {wholesale.quantity} ခု အထက်ဈေး: MMK {wholesale.price}
-                </Text>
-              )
-            )}
+        {product.wholesalePrices && (
+          <View style={styles.wholesaleContainer}>
+            <Text style={styles.wholesaleTitle}>လက်ကားဈေးနှုန်းများ</Text>
+            {product.wholesalePrices.map((wholesale, index) => (
+              <Text key={index} style={styles.wholesaleItem}>
+                {wholesale.quantity} ခု အထက်ဈေး: MMK {wholesale.price}
+              </Text>
+            ))}
           </View>
         )}
       </ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View style={styles.bottomBar as ViewStyle}>
-        <View style={styles.quantitySelector as ViewStyle}>
+      <View style={styles.bottomBar}>
+        <View style={styles.quantitySelector}>
           <Pressable
-            style={styles.quantityButton as ViewStyle}
+            style={styles.quantityButton}
             onPress={() => handleQuantityChange(-1)}
           >
             <Ionicons name="remove" size={20} color="#000000" />
           </Pressable>
-          <Text style={styles.quantityText as TextStyle}>{quantity} ခု</Text>
+          <Text style={styles.quantityText}>{quantity} ခု</Text>
           <Pressable
-            style={styles.quantityButton as ViewStyle}
+            style={styles.quantityButton}
             onPress={() => handleQuantityChange(1)}
           >
             <Ionicons name="add" size={20} color="#000000" />
           </Pressable>
         </View>
         <Pressable
-          style={[
-            styles.buyButton as ViewStyle,
-            quantity === 0 && (styles.buyButtonDisabled as ViewStyle),
-          ]}
+          style={[styles.buyButton, quantity === 0 && styles.buyButtonDisabled]}
           onPress={handleBuyProduct}
           disabled={quantity === 0}
         >
-          <Text style={styles.buyButtonText as TextStyle}>ပစ္စည်း ဝယ်မယ်</Text>
+          <Text style={styles.buyButtonText}>ပစ္စည်း ဝယ်မယ်</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -314,10 +274,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  } as ViewStyle,
+  },
   scrollView: {
     flex: 1,
-  } as ViewStyle,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -326,31 +286,31 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
-  } as ViewStyle,
+  },
   backButton: {
     padding: 4,
-  } as ViewStyle,
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000000',
     flex: 1,
     textAlign: 'center',
-  } as TextStyle,
+  },
   placeholder: {
     width: 32,
-  } as ViewStyle,
+  },
   imageContainer: {
     position: 'relative',
     height: 300,
     margin: 20,
     borderRadius: 12,
     overflow: 'hidden',
-  } as ViewStyle,
+  },
   mainImage: {
     width: '100%',
     height: '100%',
-  } as ImageStyle,
+  },
   priceBadge: {
     position: 'absolute',
     bottom: 16,
@@ -359,12 +319,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-  } as ViewStyle,
+  },
   priceBadgeText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: 'bold',
-  } as TextStyle,
+  },
   sellerInfo: {
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -372,68 +332,68 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 12,
     marginBottom: 20,
-  } as ViewStyle,
+  },
   sellerName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
     marginBottom: 4,
-  } as TextStyle,
+  },
   sellerPhone: {
     fontSize: 14,
     color: '#666666',
     marginBottom: 4,
-  } as TextStyle,
+  },
   sellerAddress: {
     fontSize: 14,
     color: '#666666',
-  } as TextStyle,
+  },
   descriptionContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
-  } as ViewStyle,
+  },
   productName: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#000000',
     marginBottom: 12,
-  } as TextStyle,
+  },
   productDescription: {
     fontSize: 14,
     color: '#333333',
     lineHeight: 20,
-  } as TextStyle,
+  },
   specsContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
-  } as ViewStyle,
+  },
   specsTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#000000',
     marginBottom: 4,
     marginTop: 12,
-  } as TextStyle,
+  },
   specValue: {
     fontSize: 14,
     color: '#666666',
     marginBottom: 8,
-  } as TextStyle,
+  },
   wholesaleContainer: {
     paddingHorizontal: 20,
     marginBottom: 100,
-  } as ViewStyle,
+  },
   wholesaleTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
     marginBottom: 12,
-  } as TextStyle,
+  },
   wholesaleItem: {
     fontSize: 14,
     color: '#333333',
     marginBottom: 8,
-  } as TextStyle,
+  },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -446,7 +406,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5',
-  } as ViewStyle,
+  },
   quantitySelector: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -455,7 +415,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 16,
-  } as ViewStyle,
+  },
   quantityButton: {
     width: 32,
     height: 32,
@@ -468,7 +428,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-  } as ViewStyle,
+  },
   quantityText: {
     fontSize: 16,
     fontWeight: '600',
@@ -476,26 +436,26 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     minWidth: 40,
     textAlign: 'center',
-  } as TextStyle,
+  },
   buyButton: {
     flex: 1,
     backgroundColor: '#333333',
     paddingVertical: 12,
     borderRadius: 50,
     alignItems: 'center',
-  } as ViewStyle,
+  },
   buyButtonDisabled: {
     backgroundColor: '#CCCCCC',
-  } as ViewStyle,
+  },
   buyButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-  } as TextStyle,
+  },
   errorText: {
     fontSize: 18,
     color: '#FF0000',
     textAlign: 'center',
     marginTop: 20,
-  } as TextStyle,
+  },
 });

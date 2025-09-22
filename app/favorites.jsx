@@ -165,7 +165,6 @@ const styles = StyleSheet.create({
     borderColor: '#000000',
     borderWidth: 1,
     borderStyle: 'solid',
-    // borderRadius: 50,
     padding: 8,
     borderRadius: 50,
     marginRight: 8,

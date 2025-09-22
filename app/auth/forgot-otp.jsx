@@ -23,7 +23,7 @@ export default function ForgotOTPScreen() {
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const inputRefs = useRef<TextInput[]>([]);
+  const inputRefs = useRef([]);
 
   useEffect(() => {
     // Start resend timer
@@ -41,7 +41,7 @@ export default function ForgotOTPScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleOtpChange = (value: string, index: number) => {
+  const handleOtpChange = (value, index) => {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -52,7 +52,7 @@ export default function ForgotOTPScreen() {
     }
   };
 
-  const handleKeyPress = (key: string, index: number) => {
+  const handleKeyPress = (key, index) => {
     if (key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -95,7 +95,7 @@ export default function ForgotOTPScreen() {
 
     try {
       const response = await handleResetPassword({
-        phoneNumber: phoneNumber as string,
+        phoneNumber: phoneNumber,
         otpCode: otp.join(''),
         newPassword,
         confirmPassword,

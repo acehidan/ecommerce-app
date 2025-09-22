@@ -72,9 +72,6 @@ export default function Cart() {
           <Text style={styles.totalLabel}>Total:</Text>
           <Text style={styles.totalAmount}>${getTotalPrice().toFixed(2)}</Text>
         </View>
-        {/* <Pressable style={styles.checkoutButton}>
-          <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-        </Pressable> */}
       </View>
     </SafeAreaView>
   );

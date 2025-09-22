@@ -4,8 +4,6 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  ViewStyle,
-  TextStyle,
   FlatList,
   Pressable,
 } from 'react-native';
@@ -105,7 +103,7 @@ export default function NewArrivalsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState(ALL_PRODUCTS);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
       setFilteredProducts(ALL_PRODUCTS);
@@ -117,12 +115,12 @@ export default function NewArrivalsPage() {
     }
   };
 
-  const handleProductPress = (productId: number) => {
+  const handleProductPress = (productId) => {
     router.push(`/product/${productId}`);
   };
 
-  const renderProduct = ({ item }: { item: (typeof ALL_PRODUCTS)[0] }) => (
-    <View style={styles.productItem as ViewStyle}>
+  const renderProduct = ({ item }) => (
+    <View style={styles.productItem}>
       <ProductCard
         id={item.id}
         name={item.name}
@@ -134,48 +132,40 @@ export default function NewArrivalsPage() {
   );
 
   return (
-    <SafeAreaView style={styles.container as ViewStyle}>
-      {/* Header */}
-      <View style={styles.header as ViewStyle}>
-        <Pressable
-          style={styles.backButton as ViewStyle}
-          onPress={() => router.back()}
-        >
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#000000" />
         </Pressable>
-        <Text style={styles.headerTitle as TextStyle}>
-          အသစ်ရောက် ပစ္စည်းများ
-        </Text>
-        <Text style={styles.productCount as TextStyle}>
+        <Text style={styles.headerTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
+        <Text style={styles.productCount}>
           ပစ္စည်း {filteredProducts.length} ခု
         </Text>
       </View>
 
-      {/* Search Section */}
-      <View style={styles.searchSection as ViewStyle}>
-        <View style={styles.searchBar as ViewStyle}>
+      <View style={styles.searchSection}>
+        <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#666666" />
           <TextInput
-            style={styles.searchInput as TextStyle}
+            style={styles.searchInput}
             placeholder="အသစ်ရောက် ပစ္စည်းတွေရှာမယ်"
             placeholderTextColor="#666666"
             value={searchQuery}
             onChangeText={handleSearch}
           />
         </View>
-        <Text style={styles.searchHint as TextStyle}>
+        <Text style={styles.searchHint}>
           * မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို
           ရိုက်ပြီးရှာနိုင်ပါတယ်
         </Text>
       </View>
 
-      {/* Products Grid */}
       <FlatList
         data={filteredProducts}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
-        contentContainerStyle={styles.productsGrid as ViewStyle}
+        contentContainerStyle={styles.productsGrid}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -186,7 +176,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  } as ViewStyle,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -195,27 +185,27 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
-  } as ViewStyle,
+  },
   backButton: {
     padding: 4,
-  } as ViewStyle,
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000000',
     flex: 1,
     textAlign: 'center',
-  } as TextStyle,
+  },
   productCount: {
     fontSize: 14,
     color: '#666666',
     minWidth: 80,
     textAlign: 'right',
-  } as TextStyle,
+  },
   searchSection: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-  } as ViewStyle,
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -224,26 +214,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 8,
-  } as ViewStyle,
+  },
   searchInput: {
     flex: 1,
     marginLeft: 12,
     fontSize: 16,
     color: '#000000',
-  } as TextStyle,
+  },
   searchHint: {
     color: '#999999',
     fontSize: 10,
     textAlign: 'center',
     lineHeight: 16,
-  } as TextStyle,
+  },
   productsGrid: {
     paddingHorizontal: 20,
     paddingBottom: 20,
-  } as ViewStyle,
+  },
   productItem: {
     flex: 1,
     marginHorizontal: 8,
     marginBottom: 16,
-  } as ViewStyle,
+  },
 });

@@ -9,62 +9,51 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import handleLogin from '../../services/auth/login';
-import { saveUserProfile } from '../../services/user/userProfile';
+import handleSignUp from '../../services/auth/signUp';
 
-export default function LoginScreen() {
+export default function SignupScreen() {
+  const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(true);
   const [language, setLanguage] = useState('ENG');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuthStore();
 
-  const handleLoginPress = async () => {
-    if (!phoneNumber || !password) {
+  const handleSignup = async () => {
+    if (!name || !phoneNumber || !password) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    if (!agreeToTerms) {
+      Alert.alert('Error', 'Please agree to terms and conditions');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await handleLogin({
+      const response = await handleSignUp({
+        userName: name,
         phoneNumber,
         password,
+        confirmPassword: password,
       });
 
       if (response.success) {
-        console.log('Login response data:', response.data);
-
-        // Validate response data before saving
-        if (
-          !response.data ||
-          !response.data.data.token ||
-          !response.data.data.user
-        ) {
-          Alert.alert('Error', 'Invalid response data received from server');
-          return;
-        }
-
-        // Save user profile to AsyncStorage
-        await saveUserProfile(response.data.data);
-
-        // Update auth store
-        login({
-          name: response.data.data.user.userName,
-          phoneNumber: response.data.data.user.phoneNumber,
-        });
-
         Alert.alert(
           'Success',
-          response.data.message || 'Logged in successfully!',
+          response.data.message || 'OTP sent successfully',
           [
             {
               text: 'OK',
-              onPress: () => router.replace('/(tabs)'),
+              onPress: () => {
+                router.push({
+                  pathname: '/auth/otp',
+                  params: { phoneNumber, name },
+                });
+              },
             },
           ]
         );
@@ -78,9 +67,15 @@ export default function LoginScreen() {
     }
   };
 
-  const handleForgotPasswordPress = () => {
-    // Navigate to forgot password page
-    router.push('/auth/forgot-password');
+  const handleTermsPress = () => {
+    Alert.alert(
+      'Terms & Conditions',
+      'Terms and conditions will be displayed here'
+    );
+  };
+
+  const handlePoliciesPress = () => {
+    Alert.alert('Policies', 'Privacy policies will be displayed here');
   };
 
   return (
@@ -105,18 +100,40 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.signupButton}
-            onPress={() => router.push('/auth/signup')}
+            style={styles.loginButton}
+            onPress={() => router.push('/auth/login')}
           >
-            <Text style={styles.signupButtonText}>အကောင့်သစ်ဖွင့်မယ်</Text>
+            <Text style={styles.loginButtonText}>အကောင့်ဝင်မယ်</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.title}>အကောင့်ပြန်ဝင်မယ်</Text>
+        <Text style={styles.title}>အကောင့်အသစ်ဖွင့်မယ်</Text>
         <Text style={styles.description}>
-          အကောင့်ထဲသို့ ပြန်လည်ဝင်ရောက်ရန် ဖုန်းနံပါတ် နဲ့ လျှိုဝှက် နံပါတ်
-          ကိုထည့်ပါ။
+          အကောင့်အသစ်ဖွင့်ဖို့ အတွက် အသုံးပြုလို့တဲ့ နာမည်နဲ့ ဖုန်းနံပါတ်ကို
+          ရိုက်ထည့်ပြီး မိနစ်ပိုင်းအတွင်း ဖွင့်လိုက်ပါ။
         </Text>
+
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapperContainer}>
+            <View style={styles.inputLabelContainer}>
+              <Ionicons
+                name="person-outline"
+                size={18}
+                color="#666"
+                style={styles.inputIcon}
+              />
+              <Text style={styles.inputLabel}>နာမည်</Text>
+            </View>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="အကောင့်နာမည် ရိုက်ထည့်ပါ"
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+          </View>
+        </View>
 
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapperContainer}>
@@ -160,7 +177,6 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
-
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -172,22 +188,39 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          onPress={handleForgotPasswordPress}
-        >
-          <Text style={styles.forgotPasswordText}>
-            လျှို့ဝှက်နံပါတ်မေ့သွားပြီ
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.termsContainer}>
+          <TouchableOpacity
+            style={styles.checkbox}
+            onPress={() => setAgreeToTerms(!agreeToTerms)}
+          >
+            <Ionicons
+              name={agreeToTerms ? 'checkbox' : 'square-outline'}
+              size={20}
+              color={agreeToTerms ? '#007AFF' : '#666'}
+            />
+          </TouchableOpacity>
+          <View style={styles.termsTextContainer}>
+            <Text style={styles.termsText}>
+              အကောင့်ဖွင့်ရန်အတွက် ကျွန်တော်တို့ရဲ့{' '}
+              <Text style={styles.linkText} onPress={handleTermsPress}>
+                စည်းမျဉ်း စည်းကမ်း
+              </Text>{' '}
+              နဲ့{' '}
+              <Text style={styles.linkText} onPress={handlePoliciesPress}>
+                မူဝါဒများကို
+              </Text>{' '}
+              သဘောတူဖို့ လိုအပါပါတယ်
+            </Text>
+          </View>
+        </View>
 
         <TouchableOpacity
-          style={[styles.loginButton, isLoading && styles.disabledButton]}
-          onPress={handleLoginPress}
+          style={[styles.signupButton, isLoading && styles.disabledButton]}
+          onPress={handleSignup}
           disabled={isLoading}
         >
-          <Text style={styles.loginButtonText}>
-            {isLoading ? 'Loading...' : 'အကောင့်ပြန်ဝင်မယ်'}
+          <Text style={styles.signupButtonText}>
+            {isLoading ? 'Loading...' : 'အကောင့်အသစ်ဖွင့်မယ်'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -228,11 +261,11 @@ const styles = StyleSheet.create({
   activeLangText: {
     color: 'white',
   },
-  signupButton: {
+  loginButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  signupButtonText: {
+  loginButtonText: {
     fontSize: 14,
     color: '#333',
   },
@@ -280,22 +313,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 30,
   },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#007AFF',
+  checkbox: {
+    marginRight: 12,
+    marginTop: 2,
   },
-  loginButton: {
+  termsTextContainer: {
+    flex: 1,
+  },
+  termsText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  linkText: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+  },
+  signupButton: {
     backgroundColor: '#333',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
   },
-  loginButtonText: {
+  signupButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

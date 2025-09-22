@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Navbar from '../components/Navbar';
 import SearchBar from '../components/SearchBar';
@@ -8,8 +8,8 @@ import NewArrivals from '../components/NewArrivals';
 
 export default function Home() {
   return (
-    <SafeAreaView style={styles.container as ViewStyle}>
-      <ScrollView style={styles.scrollView as ViewStyle}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
         <Navbar />
         <SearchBar />
         <PromotionalBanner />
@@ -24,8 +24,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  } as ViewStyle,
+  },
   scrollView: {
     flex: 1,
-  } as ViewStyle,
+  },
 });

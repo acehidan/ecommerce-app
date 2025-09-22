@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-  ScrollView,
-} from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 
 const CATEGORIES = [
@@ -54,35 +46,31 @@ const CATEGORIES = [
 ];
 
 export default function CategoriesSection() {
-  const handleShopNow = (slug: string) => {
+  const handleShopNow = (slug) => {
     router.push(`/collection/${slug}`);
   };
 
   return (
-    <View style={styles.section as ViewStyle}>
-      <View style={styles.categoriesHeader as ViewStyle}>
-        <Text style={styles.sectionTitle as TextStyle}>
-          ပစ္စည်းအမျိူးအစားများ
-        </Text>
-        <Pressable style={styles.viewAllButton as ViewStyle}>
-          <Text style={styles.viewAllText as TextStyle}>အမျိုးအစားများ</Text>
+    <View style={styles.section}>
+      <View style={styles.categoriesHeader}>
+        <Text style={styles.sectionTitle}>ပစ္စည်းအမျိူးအစားများ</Text>
+        <Pressable style={styles.viewAllButton}>
+          <Text style={styles.viewAllText}>အမျိုးအစားများ</Text>
         </Pressable>
       </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesScrollContainer as ViewStyle}
-        style={styles.categoriesScrollView as ViewStyle}
+        contentContainerStyle={styles.categoriesScrollContainer}
+        style={styles.categoriesScrollView}
       >
         {CATEGORIES.map((category) => (
           <Pressable
             key={category.id}
-            style={styles.categoryButton as ViewStyle}
+            style={styles.categoryButton}
             onPress={() => handleShopNow(category.slug)}
           >
-            <Text style={styles.categoryButtonText as TextStyle}>
-              {category.name}
-            </Text>
+            <Text style={styles.categoryButtonText}>{category.name}</Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -94,40 +82,40 @@ const styles = StyleSheet.create({
   section: {
     paddingVertical: 20,
     backgroundColor: '#0B231C',
-  } as ViewStyle,
+  },
   categoriesHeader: {
     paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-  } as ViewStyle,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
     flex: 1,
-  } as TextStyle,
+  },
   viewAllButton: {
     borderWidth: 1,
     borderColor: '#FFFFFF',
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 16,
-  } as ViewStyle,
+  },
   viewAllText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '500',
-  } as TextStyle,
+  },
   categoriesScrollView: {
     paddingLeft: 20,
     marginTop: 8,
-  } as ViewStyle,
+  },
   categoriesScrollContainer: {
     paddingHorizontal: 2,
     gap: 12,
-  } as ViewStyle,
+  },
   categoryButton: {
     backgroundColor: '#F5F5F5',
     paddingHorizontal: 16,
@@ -135,11 +123,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minWidth: 100,
     marginRight: 12,
-  } as ViewStyle,
+  },
   categoryButtonText: {
     color: '#000000',
     fontSize: 14,
     fontWeight: '500',
     textAlign: 'center',
-  } as TextStyle,
+  },
 });

@@ -9,51 +9,59 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import handleSignUp from '../../services/auth/signUp';
+import handleLogin from '../../services/auth/login';
+import { saveUserProfile } from '../../services/user/userProfile';
 
-export default function SignupScreen() {
-  const [name, setName] = useState('');
+export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeToTerms, setAgreeToTerms] = useState(true);
   const [language, setLanguage] = useState('ENG');
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuthStore();
 
-  const handleSignup = async () => {
-    if (!name || !phoneNumber || !password) {
+  const handleLoginPress = async () => {
+    if (!phoneNumber || !password) {
       Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-    if (!agreeToTerms) {
-      Alert.alert('Error', 'Please agree to terms and conditions');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await handleSignUp({
-        userName: name,
+      const response = await handleLogin({
         phoneNumber,
         password,
-        confirmPassword: password,
       });
 
       if (response.success) {
+        console.log('Login response data:', response.data);
+
+        if (
+          !response.data ||
+          !response.data.data.token ||
+          !response.data.data.user
+        ) {
+          Alert.alert('Error', 'Invalid response data received from server');
+          return;
+        }
+
+        await saveUserProfile(response.data.data);
+
+        login({
+          name: response.data.data.user.userName,
+          phoneNumber: response.data.data.user.phoneNumber,
+        });
+
         Alert.alert(
           'Success',
-          response.data.message || 'OTP sent successfully',
+          response.data.message || 'Logged in successfully!',
           [
             {
               text: 'OK',
-              onPress: () => {
-                router.push({
-                  pathname: '/auth/otp',
-                  params: { phoneNumber, name },
-                });
-              },
+              onPress: () => router.replace('/(tabs)'),
             },
           ]
         );
@@ -67,17 +75,8 @@ export default function SignupScreen() {
     }
   };
 
-  const handleTermsPress = () => {
-    // Handle terms and conditions
-    Alert.alert(
-      'Terms & Conditions',
-      'Terms and conditions will be displayed here'
-    );
-  };
-
-  const handlePoliciesPress = () => {
-    // Handle policies
-    Alert.alert('Policies', 'Privacy policies will be displayed here');
+  const handleForgotPasswordPress = () => {
+    router.push('/auth/forgot-password');
   };
 
   return (
@@ -102,40 +101,18 @@ export default function SignupScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => router.push('/auth/login')}
+            style={styles.signupButton}
+            onPress={() => router.push('/auth/signup')}
           >
-            <Text style={styles.loginButtonText}>အကောင့်ဝင်မယ်</Text>
+            <Text style={styles.signupButtonText}>အကောင့်သစ်ဖွင့်မယ်</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.title}>အကောင့်အသစ်ဖွင့်မယ်</Text>
+        <Text style={styles.title}>အကောင့်ပြန်ဝင်မယ်</Text>
         <Text style={styles.description}>
-          အကောင့်အသစ်ဖွင့်ဖို့ အတွက် အသုံးပြုလို့တဲ့ နာမည်နဲ့ ဖုန်းနံပါတ်ကို
-          ရိုက်ထည့်ပြီး မိနစ်ပိုင်းအတွင်း ဖွင့်လိုက်ပါ။
+          အကောင့်ထဲသို့ ပြန်လည်ဝင်ရောက်ရန် ဖုန်းနံပါတ် နဲ့ လျှိုဝှက် နံပါတ်
+          ကိုထည့်ပါ။
         </Text>
-
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapperContainer}>
-            <View style={styles.inputLabelContainer}>
-              <Ionicons
-                name="person-outline"
-                size={18}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <Text style={styles.inputLabel}>နာမည်</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="အကောင့်နာမည် ရိုက်ထည့်ပါ"
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
-          </View>
-        </View>
 
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapperContainer}>
@@ -179,6 +156,7 @@ export default function SignupScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
+
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -190,39 +168,22 @@ export default function SignupScreen() {
           </View>
         </View>
 
-        <View style={styles.termsContainer}>
-          <TouchableOpacity
-            style={styles.checkbox}
-            onPress={() => setAgreeToTerms(!agreeToTerms)}
-          >
-            <Ionicons
-              name={agreeToTerms ? 'checkbox' : 'square-outline'}
-              size={20}
-              color={agreeToTerms ? '#007AFF' : '#666'}
-            />
-          </TouchableOpacity>
-          <View style={styles.termsTextContainer}>
-            <Text style={styles.termsText}>
-              အကောင့်ဖွင့်ရန်အတွက် ကျွန်တော်တို့ရဲ့{' '}
-              <Text style={styles.linkText} onPress={handleTermsPress}>
-                စည်းမျဉ်း စည်းကမ်း
-              </Text>{' '}
-              နဲ့{' '}
-              <Text style={styles.linkText} onPress={handlePoliciesPress}>
-                မူဝါဒများကို
-              </Text>{' '}
-              သဘောတူဖို့ လိုအပါပါတယ်
-            </Text>
-          </View>
-        </View>
+        <TouchableOpacity
+          style={styles.forgotPassword}
+          onPress={handleForgotPasswordPress}
+        >
+          <Text style={styles.forgotPasswordText}>
+            လျှို့ဝှက်နံပါတ်မေ့သွားပြီ
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.signupButton, isLoading && styles.disabledButton]}
-          onPress={handleSignup}
+          style={[styles.loginButton, isLoading && styles.disabledButton]}
+          onPress={handleLoginPress}
           disabled={isLoading}
         >
-          <Text style={styles.signupButtonText}>
-            {isLoading ? 'Loading...' : 'အကောင့်အသစ်ဖွင့်မယ်'}
+          <Text style={styles.loginButtonText}>
+            {isLoading ? 'Loading...' : 'အကောင့်ပြန်ဝင်မယ်'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -263,11 +224,11 @@ const styles = StyleSheet.create({
   activeLangText: {
     color: 'white',
   },
-  loginButton: {
+  signupButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  loginButtonText: {
+  signupButtonText: {
     fontSize: 14,
     color: '#333',
   },
@@ -315,35 +276,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  termsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  forgotPassword: {
+    alignSelf: 'flex-end',
     marginBottom: 30,
   },
-  checkbox: {
-    marginRight: 12,
-    marginTop: 2,
-  },
-  termsTextContainer: {
-    flex: 1,
-  },
-  termsText: {
+  forgotPasswordText: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  linkText: {
     color: '#007AFF',
-    textDecorationLine: 'underline',
   },
-  signupButton: {
+  loginButton: {
     backgroundColor: '#333',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
   },
-  signupButtonText: {
+  loginButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

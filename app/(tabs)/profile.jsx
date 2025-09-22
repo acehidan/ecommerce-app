@@ -1,4 +1,11 @@
-import { View, Text, Image, StyleSheet, Pressable, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -37,11 +44,12 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* Profile Header */}
         <View style={styles.header}>
           <View style={styles.profileImageContainer}>
             <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&q=80' }}
+              source={{
+                uri: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&q=80',
+              }}
               style={styles.profileImage}
             />
           </View>
@@ -49,7 +57,6 @@ export default function Profile() {
           <Text style={styles.email}>sarah.johnson@example.com</Text>
         </View>
 
-        {/* Account Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Settings</Text>
           <Pressable style={styles.menuItem}>
@@ -57,9 +64,10 @@ export default function Profile() {
             <Text style={styles.menuItemText}>Edit Profile</Text>
             <Ionicons name="chevron-forward" size={24} color="#666666" />
           </Pressable>
-          <Pressable 
+          <Pressable
             style={styles.menuItem}
-            onPress={() => router.push('/favorites')}>
+            onPress={() => router.push('/favorites')}
+          >
             <Ionicons name="heart-outline" size={24} color="#FFFFFF" />
             <Text style={styles.menuItemText}>Favorites</Text>
             {wishlistItems.length > 0 && (
@@ -81,17 +89,23 @@ export default function Profile() {
           </Pressable>
         </View>
 
-        {/* Order History */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Orders</Text>
           {ORDERS.map((order) => (
             <Pressable key={order.id} style={styles.orderItem}>
               <View style={styles.orderHeader}>
                 <Text style={styles.orderDate}>Order • {order.date}</Text>
-                <Text style={[
-                  styles.orderStatus,
-                  { color: order.status === 'Delivered' ? '#00C853' : '#FF9800' }
-                ]}>{order.status}</Text>
+                <Text
+                  style={[
+                    styles.orderStatus,
+                    {
+                      color:
+                        order.status === 'Delivered' ? '#00C853' : '#FF9800',
+                    },
+                  ]}
+                >
+                  {order.status}
+                </Text>
               </View>
               {order.items.map((item, index) => (
                 <Text key={index} style={styles.orderItemText}>
@@ -103,7 +117,6 @@ export default function Profile() {
           ))}
         </View>
 
-        {/* Logout Button */}
         <Pressable style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
           <Text style={styles.logoutText}>Log Out</Text>

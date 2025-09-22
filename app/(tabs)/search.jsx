@@ -55,14 +55,13 @@ const PRODUCTS = [
     image:
       'https://images.unsplash.com/photo-1606763106198-4ffc663c2419?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   },
-  // {},
 ];
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState(PRODUCTS);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = (query) => {
     setSearchQuery(query);
     const filtered = PRODUCTS.filter((product) =>
       product.name.toLowerCase().includes(query.toLowerCase())
@@ -128,10 +127,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 20,
     color: '#FFFFFF',
-    // paddingVertical: 8,
-    outlineStyle: 'none',
   },
-
   productList: {
     padding: 16,
   },

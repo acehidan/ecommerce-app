@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  ViewStyle,
-  TextStyle,
-  ScrollView,
-} from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import ProductCard from './ProductCard';
 
@@ -50,35 +42,30 @@ const NEW_ARRIVALS = [
 ];
 
 export default function NewArrivals() {
-  const handleProductPress = (productId: number) => {
+  const handleProductPress = (productId) => {
     router.push(`/product/${productId}`);
   };
 
   return (
-    <View style={styles.section as ViewStyle}>
-      <View style={styles.header as ViewStyle}>
-        <Text style={styles.sectionTitle as TextStyle}>
-          အသစ်ရောက် ပစ္စည်းများ
-        </Text>
+    <View style={styles.section}>
+      <View style={styles.header}>
+        <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
         <Pressable
-          style={styles.viewMoreButton as ViewStyle}
+          style={styles.viewMoreButton}
           onPress={() => router.push('/new-arrivals')}
         >
-          <Text style={styles.viewMoreText as TextStyle}>ထပ်ကြည့်မယ်</Text>
+          <Text style={styles.viewMoreText}>ထပ်ကြည့်မယ်</Text>
         </Pressable>
       </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.productsScrollContainer as ViewStyle}
-        style={styles.productsScrollView as ViewStyle}
+        contentContainerStyle={styles.productsScrollContainer}
+        style={styles.productsScrollView}
       >
         {NEW_ARRIVALS.map((product) => (
-          <View
-            key={product.id}
-            style={styles.horizontalProductItem as ViewStyle}
-          >
+          <View key={product.id} style={styles.horizontalProductItem}>
             <ProductCard
               id={product.id}
               name={product.name}
@@ -97,20 +84,20 @@ const styles = StyleSheet.create({
   section: {
     paddingVertical: 20,
     backgroundColor: '#FFFFFF',
-  } as ViewStyle,
+  },
   header: {
     paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-  } as ViewStyle,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000000',
     flex: 1,
-  } as TextStyle,
+  },
   viewMoreButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -118,20 +105,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-  } as ViewStyle,
+  },
   viewMoreText: {
     color: '#000000',
     fontSize: 12,
     fontWeight: '500',
-  } as TextStyle,
+  },
   productsScrollView: {
     paddingLeft: 20,
-  } as ViewStyle,
+  },
   productsScrollContainer: {
     paddingRight: 20,
     gap: 16,
-  } as ViewStyle,
+  },
   horizontalProductItem: {
     width: 160,
-  } as ViewStyle,
+  },
 });

@@ -20,7 +20,7 @@ export default function OTPScreen() {
   const [resendTimer, setResendTimer] = useState(300);
   const [canResend, setCanResend] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const inputRefs = useRef<TextInput[]>([]);
+  const inputRefs = useRef([]);
   const { login } = useAuthStore();
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function OTPScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleOtpChange = (value: string, index: number) => {
+  const handleOtpChange = (value, index) => {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -55,20 +55,20 @@ export default function OTPScreen() {
     }
   };
 
-  const handleKeyPress = (key: string, index: number) => {
+  const handleKeyPress = (key, index) => {
     if (key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleVerifyOtp = async (otpCode: string) => {
+  const handleVerifyOtp = async (otpCode) => {
     if (isVerifying) return;
 
     setIsVerifying(true);
 
     try {
       const response = await handleVerifyOTP({
-        phoneNumber: phoneNumber as string,
+        phoneNumber: phoneNumber,
         otpCode: otpCode,
       });
 

@@ -3,19 +3,15 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 
-declare global {
-  interface Window {
-    frameworkReady?: () => void;
-  }
-}
-
 export default function RootLayout() {
   const [loaded] = useFonts({
     // Add custom fonts here if needed
   });
 
   useEffect(() => {
-    window.frameworkReady?.();
+    if (typeof window !== 'undefined') {
+      window.frameworkReady?.();
+    }
   }, []);
 
   if (!loaded) return null;
