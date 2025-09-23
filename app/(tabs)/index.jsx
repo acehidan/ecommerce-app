@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        <Navbar />
+        <Navbar title="ကိုမင်း D.I.Y ပစ္စည်းများ" />
         <SearchBar />
         <PromotionalBanner />
         <CategoriesSection />

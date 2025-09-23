@@ -2,12 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function Navbar() {
+export default function Navbar({ title }) {
   return (
     <View style={styles.navbar}>
-      <Text style={styles.homePageText}>Home Page</Text>
       <View style={styles.navbarContent}>
-        <Text style={styles.appTitle}>ကိုမင်း D.I.Y ပစ္စည်းများ</Text>
+        <Text style={styles.appTitle}>{title}</Text>
         <View style={styles.profileSection}>
           <View style={styles.profileIcon}>
             <Ionicons name="person" size={24} color="#FFFFFF" />
@@ -23,22 +22,20 @@ export default function Navbar() {
 
 const styles = StyleSheet.create({
   navbar: {
+    backgroundColor: '#F5F5F5',
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  homePageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginBottom: 8,
-  },
+
   navbarContent: {
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   appTitle: {
     color: '#000000',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     flex: 1,
   },

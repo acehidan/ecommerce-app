@@ -1,50 +1,75 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { router } from 'expo-router';
 import ProductCard from './ProductCard';
-
-const NEW_ARRIVALS = [
-  {
-    id: 1,
-    name: 'Mini Grinder',
-    price: 30000,
-    image:
-      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-  },
-  {
-    id: 2,
-    name: 'အလှဆင် ရေနွေးငွေ့ ဖန်းစက်',
-    price: 17000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 3,
-    name: 'LED Strip Lights',
-    price: 25000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 4,
-    name: 'Arduino Starter Kit',
-    price: 45000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 5,
-    name: 'Smart Sensors',
-    price: 35000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-];
+import handleGetNewArrivalsProducts from '../../services/products/getNewArrivalsProducts';
 
 export default function NewArrivals() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      try {
+        setLoading(true);
+        const result = await handleGetNewArrivalsProducts();
+        if (result.success) {
+          // Limit to first 10 products
+          const limitedProducts = result.data.data.slice(0, 10);
+          setProducts(limitedProducts);
+        } else {
+          setError(result.error);
+        }
+      } catch (err) {
+        setError('Failed to fetch new arrivals');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNewArrivals();
+  }, []);
+
   const handleProductPress = (productId) => {
     router.push(`/product/${productId}`);
   };
+
+  if (loading) {
+    return (
+      <View style={styles.section}>
+        <View style={styles.header}>
+          <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="#333333" />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.section}>
+        <View style={styles.header}>
+          <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load products</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.section}>
@@ -64,14 +89,16 @@ export default function NewArrivals() {
         contentContainerStyle={styles.productsScrollContainer}
         style={styles.productsScrollView}
       >
-        {NEW_ARRIVALS.map((product) => (
-          <View key={product.id} style={styles.horizontalProductItem}>
+        {products.map((product) => (
+          <View key={product._id} style={styles.horizontalProductItem}>
             <ProductCard
-              id={product.id}
+              id={product._id}
               name={product.name}
-              price={product.price}
-              image={product.image}
-              onPress={handleProductPress}
+              price={product.retailUnitPrice}
+              image={
+                product.images?.[0]?.url || 'https://via.placeholder.com/300'
+              }
+              onPress={() => handleProductPress(product.productCode)}
             />
           </View>
         ))}
@@ -120,5 +147,30 @@ const styles = StyleSheet.create({
   },
   horizontalProductItem: {
     width: 160,
+  },
+  placeholder: {
+    width: 80,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#666666',
+    marginLeft: 8,
+  },
+  errorContainer: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#FF0000',
+    textAlign: 'center',
   },
 });

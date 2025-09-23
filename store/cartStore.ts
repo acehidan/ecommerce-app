@@ -10,7 +10,7 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
   removeItem: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
   getTotalItems: () => number;
@@ -19,17 +19,17 @@ interface CartStore {
 
 export const useCartStore = create<CartStore>((set, get) => ({
   items: [],
-  addItem: (item) => {
+  addItem: (item, quantity = 1) => {
     set((state) => {
       const existingItem = state.items.find((i) => i.id === item.id);
       if (existingItem) {
         return {
           items: state.items.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+            i.id === item.id ? { ...i, quantity: i.quantity + quantity } : i
           ),
         };
       }
-      return { items: [...state.items, { ...item, quantity: 1 }] };
+      return { items: [...state.items, { ...item, quantity }] };
     });
   },
   removeItem: (id) => {
@@ -38,11 +38,20 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }));
   },
   updateQuantity: (id, quantity) => {
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id ? { ...item, quantity } : item
-      ),
-    }));
+    set((state) => {
+      if (quantity <= 0) {
+        // Remove item if quantity is 0 or less
+        return {
+          items: state.items.filter((item) => item.id !== id),
+        };
+      }
+      // Update quantity if greater than 0
+      return {
+        items: state.items.map((item) =>
+          item.id === id ? { ...item, quantity } : item
+        ),
+      };
+    });
   },
   getTotalItems: () => {
     const store = get();
@@ -50,6 +59,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
   getTotalPrice: () => {
     const store = get();
-    return store.items.reduce((total, item) => total + item.price * item.quantity, 0);
+    return store.items.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
   },
 }));

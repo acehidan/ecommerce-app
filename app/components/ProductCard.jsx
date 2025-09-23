@@ -37,7 +37,6 @@ export default function ProductCard({ id, name, price, image, onPress }) {
 
 const styles = StyleSheet.create({
   productCard: {
-    flex: 1,
     backgroundColor: '#F5F5F5',
     borderRadius: 12,
     borderWidth: 1,
@@ -47,7 +46,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productImageContainer: {
-    height: 120,
+    height: 150,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     overflow: 'hidden',

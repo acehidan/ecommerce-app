@@ -98,15 +98,18 @@ export default function Collection() {
   };
 
   const renderProduct = ({ item }) => (
-    <View style={styles.productItem}>
-      <ProductCard
-        id={item.id}
-        name={item.name}
-        price={item.price}
-        image={item.image}
-        onPress={handleProductPress}
-      />
-    </View>
+    console.log(item),
+    (
+      <View style={styles.productItem}>
+        <ProductCard
+          id={item.id}
+          name={item.name}
+          price={item.price}
+          image={item.image}
+          onPress={() => handleProductPress(item.productCode)}
+        />
+      </View>
+    )
   );
 
   if (isLoading) {

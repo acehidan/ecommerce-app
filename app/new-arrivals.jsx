@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,109 +6,48 @@ import {
   StyleSheet,
   FlatList,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import ProductCard from './components/ProductCard';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const ALL_PRODUCTS = [
-  {
-    id: 1,
-    name: 'Capacitor (1 uf)',
-    price: 20000,
-    image:
-      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-  },
-  {
-    id: 2,
-    name: 'Mini Grinder',
-    price: 30000,
-    image:
-      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-  },
-  {
-    id: 3,
-    name: 'Capacitor (2 uf)',
-    price: 20000,
-    image:
-      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80',
-  },
-  {
-    id: 4,
-    name: 'အလှဆင် ရေနွေးငွေ့ ဖန်းစက်',
-    price: 17000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 5,
-    name: 'LED Strip Lights',
-    price: 25000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 6,
-    name: 'Arduino Starter Kit',
-    price: 45000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 7,
-    name: 'Smart Sensors',
-    price: 35000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 8,
-    name: 'Resistor Pack',
-    price: 15000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 9,
-    name: 'Motor Controller',
-    price: 55000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 10,
-    name: 'Breadboard Kit',
-    price: 12000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 11,
-    name: 'Jumper Wires',
-    price: 8000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-  {
-    id: 12,
-    name: 'Power Supply',
-    price: 40000,
-    image:
-      'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-  },
-];
+import handleGetNewArrivalsProducts from '../services/products/getNewArrivalsProducts';
 
 export default function NewArrivalsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(ALL_PRODUCTS);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchNewArrivals = async () => {
+      try {
+        setLoading(true);
+        const result = await handleGetNewArrivalsProducts();
+        if (result.success) {
+          setProducts(result.data.data);
+          setFilteredProducts(result.data.data);
+        } else {
+          setError(result.error);
+        }
+      } catch (err) {
+        setError('Failed to fetch new arrivals');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNewArrivals();
+  }, []);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setFilteredProducts(ALL_PRODUCTS);
+      setFilteredProducts(products);
     } else {
-      const filtered = ALL_PRODUCTS.filter((product) =>
+      const filtered = products.filter((product) =>
         product.name.toLowerCase().includes(query.toLowerCase())
       );
       setFilteredProducts(filtered);
@@ -122,14 +61,49 @@ export default function NewArrivalsPage() {
   const renderProduct = ({ item }) => (
     <View style={styles.productItem}>
       <ProductCard
-        id={item.id}
+        id={item._id}
         name={item.name}
-        price={item.price}
-        image={item.image}
-        onPress={handleProductPress}
+        price={item.retailUnitPrice}
+        image={item.images?.[0]?.url || 'https://via.placeholder.com/300'}
+        onPress={() => handleProductPress(item.productCode)}
       />
     </View>
   );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="#000000" />
+          </Pressable>
+          <Text style={styles.headerTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#333333" />
+          <Text style={styles.loadingText}>Loading new arrivals...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="#000000" />
+          </Pressable>
+          <Text style={styles.headerTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -163,8 +137,9 @@ export default function NewArrivalsPage() {
       <FlatList
         data={filteredProducts}
         renderItem={renderProduct}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item._id.toString()}
         numColumns={2}
+        columnWrapperStyle={styles.row}
         contentContainerStyle={styles.productsGrid}
         showsVerticalScrollIndicator={false}
       />
@@ -231,9 +206,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+  row: {
+    justifyContent: 'space-between',
+  },
   productItem: {
-    flex: 1,
-    marginHorizontal: 8,
+    width: '48%',
     marginBottom: 16,
+  },
+  placeholder: {
+    width: 80,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666666',
+    marginTop: 12,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF0000',
+    textAlign: 'center',
   },
 });
