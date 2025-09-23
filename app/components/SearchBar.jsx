@@ -25,6 +25,7 @@ const styles = StyleSheet.create({
   searchSection: {
     paddingHorizontal: 20,
     marginBottom: 20,
+    marginTop: 20,
   },
   searchBar: {
     flexDirection: 'row',

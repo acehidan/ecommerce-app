@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import handleLogin from '../../services/auth/login';
-import { saveUserProfile } from '../../services/user/userProfile';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -48,12 +47,13 @@ export default function LoginScreen() {
           return;
         }
 
-        await saveUserProfile(response.data.data);
-
-        login({
-          name: response.data.data.user.userName,
-          phoneNumber: response.data.data.user.phoneNumber,
-        });
+        login(
+          {
+            name: response.data.data.user.userName,
+            phoneNumber: response.data.data.user.phoneNumber,
+          },
+          response.data.data.token
+        );
 
         Alert.alert(
           'Success',

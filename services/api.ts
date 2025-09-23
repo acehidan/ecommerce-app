@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearUserProfile } from './user/userProfile';
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || 'https://your-api-url.com/api';
@@ -31,7 +32,11 @@ api.interceptors.response.use(
   },
   async (error) => {
     if (error.response?.status === 401) {
-      await AsyncStorage.removeItem('authToken');
+      try {
+        await clearUserProfile();
+      } catch (clearError) {
+        console.error('Error clearing user profile on 401:', clearError);
+      }
     }
     return Promise.reject(error);
   }

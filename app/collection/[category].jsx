@@ -98,18 +98,15 @@ export default function Collection() {
   };
 
   const renderProduct = ({ item }) => (
-    console.log(item),
-    (
-      <View style={styles.productItem}>
-        <ProductCard
-          id={item.id}
-          name={item.name}
-          price={item.price}
-          image={item.image}
-          onPress={() => handleProductPress(item.productCode)}
-        />
-      </View>
-    )
+    <View style={styles.productItem}>
+      <ProductCard
+        id={item.id}
+        name={item.name}
+        price={item.price}
+        image={item.image}
+        onPress={() => handleProductPress(item.productCode)}
+      />
+    </View>
   );
 
   if (isLoading) {
@@ -188,6 +185,7 @@ export default function Collection() {
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
+        columnWrapperStyle={styles.row}
         contentContainerStyle={styles.productsGrid}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
@@ -239,7 +237,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 8,
@@ -252,16 +252,18 @@ const styles = StyleSheet.create({
   },
   searchHint: {
     color: '#999999',
-    fontSize: 12,
+    fontSize: 10,
     lineHeight: 16,
   },
   productsGrid: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+  row: {
+    justifyContent: 'space-between',
+  },
   productItem: {
-    flex: 1,
-    marginHorizontal: 8,
+    width: '48%',
     marginBottom: 16,
   },
   loadingContainer: {

@@ -2,17 +2,20 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
+import { useAuthStore } from '../store/authStore';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
     // Add custom fonts here if needed
   });
+  const { initializeAuth } = useAuthStore();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.frameworkReady?.();
     }
-  }, []);
+    initializeAuth();
+  }, [initializeAuth]);
 
   if (!loaded) return null;
 

@@ -37,9 +37,8 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Navbar title="မိမိအကောင့်" />
-
       <ScrollView style={styles.content}>
+        <Navbar title="မိမိအကောင့်" />
         <View style={styles.menuContainer}>
           <Pressable
             style={styles.menuItem}
@@ -120,10 +119,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
   },
   menuContainer: {
-    paddingVertical: 28,
+    padding: 20,
   },
   menuItem: {
     flexDirection: 'row',
@@ -191,7 +190,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   logoutTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#FF3B30',
   },

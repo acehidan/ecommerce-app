@@ -30,14 +30,17 @@ export default function Categories() {
       setIsLoading(true);
       setError(null);
       const response = await handleGetAllCategory();
+      console.log('response', response);
 
       if (response.success) {
         // Transform API response to match our component structure
-        const transformedCategories = response.data.data.map((item, index) => ({
-          id: index + 1,
-          name: item.category,
-          itemCount: item.totalStockItems,
-        }));
+        const transformedCategories = response.data.data.items.map(
+          (item, index) => ({
+            id: index + 1,
+            name: item.category,
+            itemCount: item.totalStockItems,
+          })
+        );
 
         setCategories(transformedCategories);
         setFilteredCategories(transformedCategories);
