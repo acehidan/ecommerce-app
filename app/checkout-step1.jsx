@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
+import { useCheckoutStore } from '../store/checkoutStore';
 import {
   getUserAddresses,
   UserAddress,
@@ -19,6 +20,7 @@ import {
 export default function CheckoutStep1() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const { setContactInfo, setAddressInfo } = useCheckoutStore();
   const [selectedAddressType, setSelectedAddressType] = useState(null);
   const [userAddresses, setUserAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,26 @@ export default function CheckoutStep1() {
       setSelectedAddressType(userAddresses[0]._id);
     }
   }, [userAddresses, selectedAddressType]);
+
+  const saveStep1Data = () => {
+    if (user && currentAddress) {
+      // Save contact info
+      setContactInfo({
+        name: user.userName,
+        phoneNumber: user.phoneNumber,
+      });
+
+      // Save address info
+      setAddressInfo({
+        addressId: currentAddress._id,
+        addressType: selectedAddressType || 'home',
+        city: currentAddress.city,
+        township: currentAddress.township,
+        fullAddress: currentAddress.address,
+        deliveryType: 'ဂိတ်ချနဲ့ ပို့မယ်',
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -235,6 +257,7 @@ export default function CheckoutStep1() {
         <Pressable
           style={styles.confirmActionButton}
           onPress={() => {
+            saveStep1Data();
             console.log('Navigating to checkout-step2');
             router.push('/checkout-step2');
           }}

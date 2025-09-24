@@ -4,10 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../store/cartStore';
+import { useCheckoutStore } from '../store/checkoutStore';
 
 export default function CheckoutStep2() {
   const router = useRouter();
   const { items, getTotalPrice } = useCartStore();
+  const { setOrderItems, setOrderSummary } = useCheckoutStore();
 
   // Calculate total weight
   const totalWeight = items.reduce(
@@ -23,6 +25,28 @@ export default function CheckoutStep2() {
 
   // Calculate grand total
   const grandTotal = getTotalPrice() + shippingFee + overweightCharge;
+
+  const saveStep2Data = () => {
+    // Save order items
+    const orderItems = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      weight: item.weight || 1.0,
+      price: item.price,
+    }));
+
+    setOrderItems(orderItems);
+
+    // Save order summary
+    setOrderSummary({
+      subtotal: getTotalPrice(),
+      shippingFee,
+      overweightCharge,
+      grandTotal,
+      totalWeight,
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -126,7 +150,11 @@ export default function CheckoutStep2() {
         </Pressable>
         <Pressable
           style={styles.confirmActionButton}
-          onPress={() => router.push('/checkout-step3')}
+          onPress={() => {
+            saveStep2Data();
+            console.log('Navigating to checkout-step3');
+            router.push('/checkout-step3');
+          }}
         >
           <Text style={styles.confirmActionText}>မှန်ကန်ပါတယ်</Text>
         </Pressable>
