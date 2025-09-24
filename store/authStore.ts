@@ -10,11 +10,23 @@ import {
 interface AuthState {
   isAuthenticated: boolean;
   user: {
-    name: string;
+    _id: string;
+    userName: string;
     phoneNumber: string;
+    isVerified: boolean;
+    role: string;
   } | null;
   token: string | null;
-  login: (user: { name: string; phoneNumber: string }, token: string) => void;
+  login: (
+    user: {
+      _id: string;
+      userName: string;
+      phoneNumber: string;
+      isVerified: boolean;
+      role: string;
+    },
+    token: string
+  ) => void;
   logout: () => void;
   continueAsGuest: () => void;
   initializeAuth: () => Promise<void>;

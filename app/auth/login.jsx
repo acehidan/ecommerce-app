@@ -49,8 +49,11 @@ export default function LoginScreen() {
 
         login(
           {
-            name: response.data.data.user.userName,
+            _id: response.data.data.user._id,
+            userName: response.data.data.user.userName,
             phoneNumber: response.data.data.user.phoneNumber,
+            isVerified: response.data.data.user.isVerified,
+            role: response.data.data.user.role,
           },
           response.data.data.token
         );

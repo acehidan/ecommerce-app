@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface User {
+  _id: string;
   userName: string;
   phoneNumber: string;
   isVerified: boolean;

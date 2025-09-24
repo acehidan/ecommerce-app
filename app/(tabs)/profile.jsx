@@ -69,7 +69,10 @@ export default function Profile() {
             <Ionicons name="chevron-forward" size={20} color="#666666" />
           </Pressable>
 
-          <Pressable style={styles.menuItem}>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => router.push('/address')}
+          >
             <View style={styles.menuIcon}>
               <Ionicons name="location-outline" size={24} color="#000000" />
             </View>

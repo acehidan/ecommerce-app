@@ -8,7 +8,13 @@ const handleLogin = async (data: { phoneNumber: string; password: string }) => {
     if (response.data.token && response.data.user) {
       await saveUserProfile({
         token: response.data.token,
-        user: response.data.user,
+        user: {
+          _id: response.data.user._id,
+          userName: response.data.user.userName,
+          phoneNumber: response.data.user.phoneNumber,
+          isVerified: response.data.user.isVerified,
+          role: response.data.user.role,
+        },
       });
     }
 
