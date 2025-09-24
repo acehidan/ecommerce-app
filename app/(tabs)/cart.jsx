@@ -8,10 +8,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useCartStore } from '../../store/cartStore';
 import Navbar from '../components/Navbar';
 
 export default function Cart() {
+  const router = useRouter();
   const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
 
   if (items.length === 0) {
@@ -89,7 +91,10 @@ export default function Cart() {
         </View>
       </View>
       <View style={styles.checkoutButtonContainer}>
-        <Pressable style={styles.checkoutButton}>
+        <Pressable
+          style={styles.checkoutButton}
+          onPress={() => router.push('/checkout-step1')}
+        >
           <Text style={styles.checkoutButtonText}>ပိုက်ဆံရှင်းမယ်</Text>
         </Pressable>
       </View>
