@@ -48,6 +48,31 @@ export interface PaymentInfo {
   };
 }
 
+export interface OrderResponse {
+  orderId: string;
+  status: string;
+  totalAmount: number;
+  delivery: {
+    city: string;
+    township: string;
+    totalWeight: number;
+    deliveryFee: number;
+    baseDeliveryFee: number;
+    additionalWeightCharge: number;
+  };
+  products: Array<{
+    stockId: string;
+    quantity: number;
+    name: string;
+    productCode: string;
+    unitPrice: number;
+    unitWeight: number;
+    weightUnit: string;
+    sale: string;
+  }>;
+  address: string;
+}
+
 export interface CheckoutData {
   // Step 1 Data
   contactInfo: ContactInfo | null;
@@ -61,6 +86,7 @@ export interface CheckoutData {
   paymentInfo: PaymentInfo | null;
 
   // Step 4 Data
+  orderResponse: OrderResponse | null;
   isCompleted: boolean;
 }
 
@@ -81,10 +107,12 @@ interface CheckoutState {
   setPaymentDetails: (details: PaymentInfo['paymentDetails']) => void;
 
   // Step 4 Actions
+  createOrder: (orderData: any) => Promise<void>;
+  setOrderResponse: (orderResponse: OrderResponse) => void;
   completeCheckout: () => void;
+  clearCheckoutData: () => void;
 
   // Utility Actions
-  clearCheckoutData: () => void;
   getStepData: (step: number) => any;
 }
 
@@ -94,6 +122,7 @@ const initialCheckoutData: CheckoutData = {
   orderItems: [],
   orderSummary: null,
   paymentInfo: null,
+  orderResponse: null,
   isCompleted: false,
 };
 
@@ -183,6 +212,31 @@ export const useCheckoutStore = create<CheckoutState>()(
         })),
 
       // Step 4 Actions
+      createOrder: async (orderData: any) => {
+        const { createOrder } = await import('../services/order/createOrder');
+        try {
+          const response = await createOrder(orderData);
+          set((state) => ({
+            checkoutData: {
+              ...state.checkoutData,
+              orderResponse: response.data,
+            },
+          }));
+          return response;
+        } catch (error) {
+          console.error('Error creating order:', error);
+          throw error;
+        }
+      },
+
+      setOrderResponse: (orderResponse: OrderResponse) =>
+        set((state) => ({
+          checkoutData: {
+            ...state.checkoutData,
+            orderResponse,
+          },
+        })),
+
       completeCheckout: () =>
         set((state) => ({
           checkoutData: {
@@ -191,11 +245,12 @@ export const useCheckoutStore = create<CheckoutState>()(
           },
         })),
 
-      // Utility Actions
       clearCheckoutData: () =>
         set({
           checkoutData: initialCheckoutData,
         }),
+
+      // Utility Actions
 
       getStepData: (step: number) => {
         const { checkoutData } = get();

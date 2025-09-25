@@ -1,7 +1,16 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { router } from 'expo-router';
+import handleGetAllCategory from '../../services/products/getAllCategory';
 
+// Fallback categories for when API fails
 const CATEGORIES = [
   {
     id: 1,
@@ -10,42 +19,58 @@ const CATEGORIES = [
   },
   {
     id: 2,
-    name: 'D.I.Y အလှဆင် Kits များ',
-    slug: 'diy-decoration-kits',
-  },
-  {
-    id: 3,
     name: 'Electronics',
     slug: 'electronics',
   },
   {
-    id: 4,
+    id: 3,
     name: 'Resistors',
     slug: 'resistors',
-  },
-  {
-    id: 5,
-    name: 'LEDs',
-    slug: 'leds',
-  },
-  {
-    id: 6,
-    name: 'Arduino',
-    slug: 'arduino',
-  },
-  {
-    id: 7,
-    name: 'Sensors',
-    slug: 'sensors',
-  },
-  {
-    id: 8,
-    name: 'Motors',
-    slug: 'motors',
   },
 ];
 
 export default function CategoriesSection() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await handleGetAllCategory();
+      console.log('response', response);
+
+      if (response.success) {
+        // Transform API response to match our component structure
+        const transformedCategories = response.data.data.items
+          .slice(0, 10) // Limit to first 3 categories
+          .map((item, index) => ({
+            id: index + 1,
+            name: item.category,
+            slug: item.category,
+          }));
+
+        setCategories(transformedCategories);
+      } else {
+        setError(response.error || 'Failed to load categories');
+        // Fallback to static categories if API fails
+        setCategories(CATEGORIES);
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      setError('Failed to load categories');
+      // Fallback to static categories
+      setCategories(CATEGORIES);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleShopNow = (slug) => {
     router.push(`/collection/${slug}`);
   };
@@ -54,7 +79,10 @@ export default function CategoriesSection() {
     <View style={styles.section}>
       <View style={styles.categoriesHeader}>
         <Text style={styles.sectionTitle}>ပစ္စည်းအမျိူးအစားများ</Text>
-        <Pressable style={styles.viewAllButton}>
+        <Pressable
+          style={styles.viewAllButton}
+          onPress={() => router.push('/categories')}
+        >
           <Text style={styles.viewAllText}>အမျိုးအစားများ</Text>
         </Pressable>
       </View>
@@ -64,15 +92,26 @@ export default function CategoriesSection() {
         contentContainerStyle={styles.categoriesScrollContainer}
         style={styles.categoriesScrollView}
       >
-        {CATEGORIES.map((category) => (
-          <Pressable
-            key={category.id}
-            style={styles.categoryButton}
-            onPress={() => handleShopNow(category.slug)}
-          >
-            <Text style={styles.categoryButtonText}>{category.name}</Text>
-          </Pressable>
-        ))}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#FFFFFF" />
+            <Text style={styles.loadingText}>Loading categories...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Failed to load categories</Text>
+          </View>
+        ) : (
+          categories.map((category) => (
+            <Pressable
+              key={category.id}
+              style={styles.categoryButton}
+              onPress={() => handleShopNow(category.slug)}
+            >
+              <Text style={styles.categoryButtonText}>{category.name}</Text>
+            </Pressable>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -118,16 +157,36 @@ const styles = StyleSheet.create({
   },
   categoryButton: {
     backgroundColor: '#F5F5F5',
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 12,
-    minWidth: 100,
+    minWidth: 80,
     marginRight: 12,
   },
   categoryButtonText: {
     color: '#000000',
     fontSize: 14,
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  errorContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 14,
     textAlign: 'center',
   },
 });

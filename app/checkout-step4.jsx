@@ -6,21 +6,31 @@ import {
   Pressable,
   ScrollView,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../store/cartStore';
 import { useCheckoutStore } from '../store/checkoutStore';
+import { useAuthStore } from '../store/authStore';
 
 export default function CheckoutStep4() {
   const router = useRouter();
-  const { items, getTotalPrice } = useCartStore();
-  const { checkoutData, completeCheckout } = useCheckoutStore();
+  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { checkoutData, completeCheckout, createOrder, clearCheckoutData } =
+    useCheckoutStore();
+  const { user } = useAuthStore();
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
   // Get data from checkout store
   const { contactInfo, addressInfo, orderItems, orderSummary, paymentInfo } =
     checkoutData;
+
+  // Get selected payment method from checkout store or default to prepayment
+  const selectedPaymentMethod = paymentInfo?.selectedMethod || 'prepayment';
+  // console.log('Payment method from store:', selectedPaymentMethod);
+  // console.log('Full payment info:', paymentInfo);
 
   // Use store data or fallback to defaults
   const displayItems =
@@ -42,6 +52,142 @@ export default function CheckoutStep4() {
     totalWeight: 3.0,
   };
 
+  const handleCreateOrder = async () => {
+    if (!user) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
+    if (!contactInfo || !addressInfo || !orderItems.length) {
+      Alert.alert('Error', 'Missing required order information');
+      return;
+    }
+
+    setIsCreatingOrder(true);
+
+    // Navigate to loading page
+    router.push('/order-processing');
+
+    try {
+      // Validate required data
+      if (!user._id) {
+        throw new Error('User ID is required');
+      }
+      if (!orderItems || orderItems.length === 0) {
+        throw new Error('No items in cart');
+      }
+      if (!addressInfo?.fullAddress) {
+        throw new Error('Address is required');
+      }
+
+      // Map order items to the required format
+      const products = orderItems.map((item) => ({
+        stockId: item.id.toString(), // Convert number to string
+        quantity: item.quantity,
+      }));
+
+      console.log('Products:', products);
+
+      // Map payment method
+      const paymentMethodMap = {
+        prepayment: 'cash-down',
+        cod: 'cash-on-delivery',
+      };
+
+      const orderData = {
+        userId: user._id,
+        products,
+        address: addressInfo.fullAddress,
+        deliveryZone: '68bad3e54077df8ffba8e978',
+        platform: 'ecommerce',
+        paymentMethod: 'cash-down',
+      };
+
+      // const orderData = {
+      //   userId: user._id,
+      //   products,
+      //   address: addressInfo.fullAddress,
+      //   deliveryZone: '68bad3e54077df8ffba8e978', // This should come from addressInfo or be configurable
+      //   platform: 'ecommerce',
+      //   paymentMethod: 'cash-down',
+      // };
+
+      // Additional validation for API requirements
+      if (!orderData.userId || orderData.userId.trim() === '') {
+        throw new Error('User ID cannot be empty');
+      }
+      if (!orderData.products || orderData.products.length === 0) {
+        throw new Error('Products cannot be empty');
+      }
+      if (!orderData.address || orderData.address.trim() === '') {
+        throw new Error('Address cannot be empty');
+      }
+      if (!orderData.deliveryZone || orderData.deliveryZone.trim() === '') {
+        throw new Error('Delivery zone is required');
+      }
+
+      console.log('Creating order with data:', orderData);
+      console.log('User ID:', user._id);
+      console.log('Order items:', orderItems);
+      console.log('Address info:', addressInfo);
+      console.log('Selected payment method:', selectedPaymentMethod);
+
+      const response = await createOrder(orderData);
+
+      console.log('Order created successfully:', response);
+
+      // Clear cart items and checkout data first
+      clearCart();
+      clearCheckoutData();
+      completeCheckout();
+
+      // Navigate to success page (replace the loading page)
+      router.replace('/order-success');
+    } catch (error) {
+      console.error('Error creating order:', error);
+
+      let errorMessage = 'Failed to create order. Please try again.';
+
+      // Handle validation errors
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      // Handle specific API error responses
+      else if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+
+        if (error.response.status === 400) {
+          errorMessage = 'Invalid order data. Please check your information.';
+          if (error.response.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.response.data?.error) {
+            errorMessage = error.response.data.error;
+          }
+        } else if (error.response.status === 401) {
+          errorMessage = 'Authentication required. Please login again.';
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+        errorMessage = 'Network error. Please check your connection.';
+      }
+
+      Alert.alert('Error', errorMessage, [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Navigate back to step 4 on error
+            router.replace('/checkout-step4');
+          },
+        },
+      ]);
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
+
   const receiptData = paymentInfo?.paymentDetails || {
     bankName: 'A BANK',
     transactionAmount: '-50,000.00',
@@ -59,12 +205,11 @@ export default function CheckoutStep4() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={24} />
           </Pressable>
           <Text style={styles.headerTitle}>စစ်ဆေးပါ</Text>
           <View style={styles.progressInfo}>
             <Text style={styles.totalSteps}>စုစုပေါင်း အဆင့် ၄ ဆင့်</Text>
-            <Text style={styles.currentStep}>အဆင့် နံပါတ် ၃</Text>
           </View>
         </View>
       </View>
@@ -73,33 +218,97 @@ export default function CheckoutStep4() {
         {/* Contact & Address Summary */}
         {(contactInfo || addressInfo) && (
           <View style={styles.contactAddressSection}>
-            <Text style={styles.sectionTitle}>အချက်အလက်များ အကျဉ်းချုပ်</Text>
-
+            <View style={styles.contactAddressSectionTitle}>
+              <View>
+                <Text style={styles.sectionTitle}>အော်ဒါ အကျဉ်းချုပ်</Text>
+              </View>
+              <Text style={styles.currentStep}>အဆင့် နံပါတ် ၄</Text>
+            </View>
             {contactInfo && (
-              <View style={styles.infoCard}>
-                <Text style={styles.infoCardTitle}>ဆက်သွယ်ရန်</Text>
-                <Text style={styles.infoText}>နာမည်: {contactInfo.name}</Text>
-                <Text style={styles.infoText}>
-                  ဖုန်းနံပါတ်: {contactInfo.phoneNumber}
+              <View style={styles.contactSection}>
+                <Text style={styles.subsectionTitle}>
+                  ဝယ်ယူသူ အချက်အလက်များ
                 </Text>
+                <View style={styles.contactCards}>
+                  <View style={styles.contactCard}>
+                    <View style={styles.contactCardHeader}>
+                      <Ionicons
+                        name="person-outline"
+                        size={24}
+                        color="#666666"
+                      />
+                      <Text style={styles.contactLabel}>နာမည်</Text>
+                    </View>
+                    <Text style={styles.contactValue}>
+                      {contactInfo.name || 'Guest User'}
+                    </Text>
+                  </View>
+                  <View style={styles.contactCard}>
+                    <View style={styles.contactCardHeader}>
+                      <Ionicons name="call-outline" size={24} color="#666666" />
+                      <Text style={styles.contactLabel}>ဖုန်းနံပါတ်</Text>
+                    </View>
+                    <Text style={styles.contactValue}>
+                      {contactInfo.phoneNumber || 'Not provided'}
+                    </Text>
+                  </View>
+                </View>
               </View>
             )}
 
             {addressInfo && (
-              <View style={styles.infoCard}>
-                <Text style={styles.infoCardTitle}>
-                  ပို့ဆောင်ရမဲ့ နေရပ်လိပ်စာ
-                </Text>
-                <Text style={styles.infoText}>မြို့: {addressInfo.city}</Text>
-                <Text style={styles.infoText}>
-                  မြို့နယ်: {addressInfo.township}
-                </Text>
-                <Text style={styles.infoText}>
-                  လိပ်စာ: {addressInfo.fullAddress}
-                </Text>
-                <Text style={styles.infoText}>
-                  ပို့ဆောင်မှု: {addressInfo.deliveryType}
-                </Text>
+              <View style={styles.deliverySection}>
+                <View style={styles.deliveryHeader}>
+                  <Text style={styles.subsectionTitle}>
+                    ပို့ဆောင်ရမဲ့ နေရပ်လိပ်စာ
+                  </Text>
+                  <View style={styles.deliveryTypeBadge}>
+                    <Text style={styles.deliveryTypeText}>
+                      {addressInfo.deliveryType}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.locationCards}>
+                  <View style={styles.locationCard}>
+                    <View style={styles.contactCardHeader}>
+                      <Ionicons
+                        name="business-outline"
+                        size={24}
+                        color="#666666"
+                      />
+                      <Text style={styles.locationLabel}>မြို့</Text>
+                    </View>
+                    <Text style={styles.locationValue}>
+                      {addressInfo.city || 'Not provided'}
+                    </Text>
+                  </View>
+                  <View style={styles.locationCard}>
+                    <View style={styles.contactCardHeader}>
+                      <Ionicons name="home-outline" size={24} color="#666666" />
+                      <Text style={styles.locationLabel}>မြို့နယ်</Text>
+                    </View>
+                    <Text style={styles.locationValue}>
+                      {addressInfo.township || 'Not provided'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.exactAddressCard}>
+                  <View style={styles.contactCardHeader}>
+                    <Ionicons
+                      name="location-outline"
+                      size={24}
+                      color="#666666"
+                    />
+                    <Text style={styles.exactAddressLabel}>
+                      ပို့ဆောင်ရန် လိပ်စာ အတိအကျ
+                    </Text>
+                  </View>
+                  <Text style={styles.exactAddressValue}>
+                    {addressInfo.fullAddress || 'No address provided'}
+                  </Text>
+                </View>
               </View>
             )}
           </View>
@@ -124,6 +333,33 @@ export default function CheckoutStep4() {
                 </Text>
               </View>
             ))}
+          </View>
+        </View>
+
+        {/* Payment Method Section */}
+        <View style={styles.paymentSection}>
+          <Text style={styles.sectionTitle}>ငွေပေးချေမှု</Text>
+
+          <View style={styles.paymentMethodDisplay}>
+            <View style={styles.paymentMethodCard}>
+              {selectedPaymentMethod === 'prepayment' ? (
+                <>
+                  <View style={styles.paymentOptionIcon}>
+                    <Ionicons name="card-outline" size={24} color="#666666" />
+                  </View>
+                  <Text style={styles.paymentMethodLabel}>ငွေကြိုရှင်း</Text>
+                </>
+              ) : (
+                <>
+                  <View style={styles.paymentOptionIcon}>
+                    <Ionicons name="home-outline" size={24} color="#666666" />
+                  </View>
+                  <Text style={styles.paymentMethodLabel}>
+                    အိမ်အရောက်ငွေချေ
+                  </Text>
+                </>
+              )}
+            </View>
           </View>
         </View>
 
@@ -248,18 +484,21 @@ export default function CheckoutStep4() {
           style={styles.backActionButton}
           onPress={() => router.back()}
         >
-          <Text style={styles.backActionText}>နောက်သို့</Text>
+          <Text style={styles.backActionText}>ပြန်စစ်မယ်</Text>
         </Pressable>
         <Pressable
-          style={styles.continueActionButton}
-          onPress={() => {
-            completeCheckout();
-            console.log('Order completed!');
-            // Navigate to success page or home
-            router.push('/(tabs)');
-          }}
+          style={[
+            styles.continueActionButton,
+            isCreatingOrder && styles.continueActionButtonDisabled,
+          ]}
+          onPress={handleCreateOrder}
+          disabled={isCreatingOrder}
         >
-          <Text style={styles.continueActionText}>ဆက်လုပ်မည်</Text>
+          {isCreatingOrder ? (
+            <Text style={styles.continueActionText}>အော်ဒါ တင်နေသည်...</Text>
+          ) : (
+            <Text style={styles.continueActionText}>အော်ဒါ တင်မယ်</Text>
+          )}
         </Pressable>
       </View>
     </SafeAreaView>
@@ -272,7 +511,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    backgroundColor: '#333333',
+    backgroundColor: '#F5F5F5',
     paddingHorizontal: 20,
     paddingBottom: 16,
   },
@@ -283,27 +522,38 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   backButton: {
-    padding: 8,
+    padding: 4,
+    color: '#000000',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#000000',
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 8,
   },
   progressInfo: {
     alignItems: 'flex-end',
   },
   totalSteps: {
     fontSize: 12,
-    color: '#CCCCCC',
+    color: '#000000',
     marginBottom: 2,
   },
   currentStep: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: '#000000',
     fontWeight: '500',
+    backgroundColor: '#E6E6E6',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 24,
+  },
+  contactAddressSectionTitle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   content: {
     flex: 1,
@@ -313,22 +563,157 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 24,
   },
-  infoCard: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+  contactSection: {
+    marginBottom: 24,
   },
-  infoCardTitle: {
+  subsectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#000000',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  infoText: {
+  contactCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  contactCards: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  contactCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  contactLabel: {
     fontSize: 14,
     color: '#666666',
+    marginTop: 8,
     marginBottom: 4,
+  },
+  contactValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000000',
+  },
+  deliverySection: {
+    marginBottom: 24,
+  },
+  deliveryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  deliveryTypeBadge: {
+    backgroundColor: '#E5E5E5',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  deliveryTypeText: {
+    fontSize: 12,
+    color: '#000000',
+    fontWeight: '500',
+  },
+  addressTabs: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  addressTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#E5E5E5',
+  },
+  addressTabActive: {
+    backgroundColor: '#333333',
+  },
+  addressTabText: {
+    fontSize: 14,
+    color: '#000000',
+    fontWeight: '500',
+  },
+  addressTabTextActive: {
+    color: '#FFFFFF',
+  },
+  locationCards: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  locationCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  locationLabel: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  locationValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000000',
+    textAlign: 'center',
+  },
+  exactAddressCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  exactAddressLabel: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 8,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  exactAddressValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000000',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  paymentSection: {
+    marginBottom: 24,
+  },
+  paymentMethodDisplay: {
+    marginTop: 12,
+  },
+  paymentMethodCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  paymentMethodLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000000',
   },
   purchasedItemsSection: {
     marginTop: 24,
@@ -338,10 +723,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#000000',
-    marginBottom: 16,
   },
   itemsList: {
-    backgroundColor: '#F8F8F8',
     borderRadius: 12,
     padding: 16,
   },
@@ -378,19 +761,19 @@ const styles = StyleSheet.create({
   },
   orderSummarySection: {
     marginBottom: 24,
-  },
-  summaryDetails: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 16,
+  },
+  summaryDetails: {
+    borderRadius: 12,
+    paddingVertical: 16,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
   },
   summaryLabel: {
     fontSize: 14,
@@ -549,6 +932,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  continueActionButtonDisabled: {
+    backgroundColor: '#666666',
+    opacity: 0.7,
   },
   continueActionText: {
     fontSize: 16,
