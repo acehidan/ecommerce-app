@@ -9,6 +9,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
@@ -22,6 +23,21 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
+        },
+        tabBarShowLabel: true,
+        tabBarVisibilityAnimationConfig: {
+          show: {
+            animation: 'timing',
+            config: {
+              duration: 250,
+            },
+          },
+          hide: {
+            animation: 'timing',
+            config: {
+              duration: 10,
+            },
+          },
         },
       }}
     >

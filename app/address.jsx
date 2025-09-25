@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useState, useEffect, useCallback } from 'react';
 import { getUserAddresses } from '../services/user/getUserAddresses';
 import { getUserProfile } from '../services/user/userProfile';
 
@@ -22,6 +22,13 @@ export default function Address() {
   useEffect(() => {
     fetchAddresses();
   }, []);
+
+  // Refetch addresses when screen comes into focus (e.g., returning from add-address)
+  useFocusEffect(
+    useCallback(() => {
+      fetchAddresses();
+    }, [])
+  );
 
   const fetchAddresses = async () => {
     try {
@@ -91,7 +98,10 @@ export default function Address() {
 
           <Text style={styles.navTitle}>နေရပ် လိပ်စာ</Text>
 
-          <Pressable style={styles.addButton}>
+          <Pressable
+            style={styles.addButton}
+            onPress={() => router.push('/add-address')}
+          >
             <Text style={styles.addButtonText}>လိပ်စာ အသစ်ထည့်မယ်</Text>
           </Pressable>
         </View>

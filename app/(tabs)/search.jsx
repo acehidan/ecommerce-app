@@ -9,9 +9,13 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import handleGetAllCategory from '../../services/products/getAllCategory';
 import handleGetStocks from '../../services/products/getStocks';
 import Navbar from '../components/Navbar';
@@ -51,32 +55,16 @@ export default function Search() {
       return;
     }
 
-    setIsSearching(true);
-    setHasSearched(true);
+    // Navigate to search results page with search parameters
+    const searchParams = {
+      query: itemName.trim() || selectedCategory,
+      category: selectedCategory,
+    };
 
-    try {
-      const searchParams = {};
-      if (itemName.trim()) {
-        searchParams.name = itemName.trim();
-      }
-      if (selectedCategory) {
-        searchParams.category = selectedCategory;
-      }
-
-      const response = await handleGetStocks(searchParams);
-
-      if (response.success) {
-        setSearchResults(response.data);
-      } else {
-        console.error('Search failed:', response.message);
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
+    router.push({
+      pathname: '/search-results',
+      params: searchParams,
+    });
   };
 
   const clearSearch = () => {
@@ -252,7 +240,7 @@ export default function Search() {
 
       {/* Search Button */}
       <View style={styles.buttonContainer}>
-        <Pressable
+        <TouchableOpacity
           style={[
             styles.searchButton,
             isSearching && styles.searchButtonDisabled,
@@ -265,7 +253,7 @@ export default function Search() {
           ) : (
             <Text style={styles.searchButtonText}>ပစ္စည်းရှာမယ်</Text>
           )}
-        </Pressable>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -275,6 +263,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -337,7 +328,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     borderRadius: 12,
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -387,7 +378,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20,
-    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
   },
   searchButton: {
     backgroundColor: '#333333',

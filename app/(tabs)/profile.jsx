@@ -1,8 +1,17 @@
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useWishlistStore } from '../../store/wishlistStore';
+import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
 import Navbar from '../components/Navbar';
 
 const ORDERS = [
@@ -34,6 +43,31 @@ const ORDERS = [
 
 export default function Profile() {
   const wishlistItems = useWishlistStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    Alert.alert('အကောင့်မှထွက်မယ်', 'သင်အကောင့်မှထွက်ရန်သေချာပါသလား?', [
+      {
+        text: 'မထွက်ပါ',
+        style: 'cancel',
+      },
+      {
+        text: 'ထွက်မယ်',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logout();
+            clearCart();
+            router.replace('/auth/login');
+          } catch (error) {
+            console.error('Logout error:', error);
+            Alert.alert('အမှား', 'အကောင့်မှထွက်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်');
+          }
+        },
+      },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,7 +90,10 @@ export default function Profile() {
             <Ionicons name="chevron-forward" size={20} color="#666666" />
           </Pressable>
 
-          <Pressable style={styles.menuItem}>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => router.push('/order-history')}
+          >
             <View style={styles.menuIcon}>
               <Ionicons name="time-outline" size={24} color="#000000" />
             </View>
@@ -98,7 +135,7 @@ export default function Profile() {
             <Ionicons name="chevron-forward" size={20} color="#666666" />
           </Pressable>
 
-          <Pressable style={styles.logoutButton}>
+          <Pressable style={styles.logoutButton} onPress={handleLogout}>
             <View style={styles.logoutContainer}>
               <View style={styles.logoutIcon}>
                 <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
@@ -107,7 +144,6 @@ export default function Profile() {
                 <Text style={styles.logoutTitle}>အကောင့်မှထွက်မယ်</Text>
               </View>
             </View>
-            {/* <Ionicons name="chevron-forward" size={20} color="#666666" /> */}
           </Pressable>
         </View>
       </ScrollView>
