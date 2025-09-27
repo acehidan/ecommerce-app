@@ -5,41 +5,20 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-
-const ORDER_DATA = [
-  {
-    id: 1,
-    date: '12/10/2025',
-    amount: 36200,
-    status: 'Delivered',
-  },
-  {
-    id: 2,
-    date: '6/10/2025',
-    amount: 36200,
-    status: 'Delivered',
-  },
-  {
-    id: 3,
-    date: '1/10/2025',
-    amount: 36200,
-    status: 'Delivered',
-  },
-  {
-    id: 4,
-    date: '11/6/2025',
-    amount: 36200,
-    status: 'Delivered',
-  },
-];
+import { useEffect, useState } from 'react';
+import { getOrderHistory, Order } from '../services/order/getOrderHistory';
 
 export default function OrderHistory() {
-  const totalOrders = 30;
-  const totalAmount = 756000;
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
 
   const handleBack = () => {
     router.back();
@@ -63,6 +42,54 @@ export default function OrderHistory() {
       `အော်ဒါ #${orderId} ရဲ့ အသေးစိတ် အချက်အလက်များ`
     );
   };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const formatStatus = (status) => {
+    const statusMap = {
+      pending: 'ဆိုင်းငံ့ထား',
+      processing: 'လုပ်ဆောင်နေဆဲ',
+      shipped: 'ပို့ဆောင်ပြီး',
+      delivered: 'ပို့ဆောင်ပြီး',
+      cancelled: 'ပယ်ဖျက်ပြီး',
+    };
+    return statusMap[status] || status;
+  };
+
+  const fetchOrderHistory = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getOrderHistory();
+
+      if (response.success) {
+        setOrders(response.data.orders);
+        setTotalOrders(response.data.count);
+
+        const total = response.data.orders.reduce(
+          (sum, order) => sum + order.totalAmount,
+          0
+        );
+        setTotalAmount(total);
+      }
+    } catch (err) {
+      setError('အော်ဒါ မှတ်တမ်း ရယူရာတွင် အမှား ဖြစ်ပွားပါသည်');
+      console.error('Error fetching order history:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrderHistory();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -118,41 +145,75 @@ export default function OrderHistory() {
 
         {/* Order List */}
         <View style={styles.orderList}>
-          {ORDER_DATA.map((order) => (
-            <View key={order.id} style={styles.orderCard}>
-              <View style={styles.orderInfo}>
-                <View style={styles.orderHeader}>
-                  <View style={styles.orderHeaderInfo}>
-                    <View style={styles.orderIcon}>
-                      <Ionicons name="bag-outline" size={20} color="#000000" />
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#000000" />
+              <Text style={styles.loadingText}>အော်ဒါ မှတ်တမ်း ရယူနေဆဲ...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
+              <Text style={styles.errorText}>{error}</Text>
+              <Pressable style={styles.retryButton} onPress={fetchOrderHistory}>
+                <Text style={styles.retryButtonText}>ပြန်လည် ကြိုးစားမယ်</Text>
+              </Pressable>
+            </View>
+          ) : orders.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="bag-outline" size={48} color="#CCCCCC" />
+              <Text style={styles.emptyText}>အော်ဒါ မရှိပါ</Text>
+              <Text style={styles.emptySubText}>
+                သင်မှာယူထားသော အော်ဒါများ ဤနေရာတွင် ပေါ်လာမည်
+              </Text>
+            </View>
+          ) : (
+            orders.map((order) => (
+              <View key={order._id} style={styles.orderCard}>
+                <View style={styles.orderInfo}>
+                  <View style={styles.orderHeader}>
+                    <View style={styles.orderHeaderInfo}>
+                      <View style={styles.orderIcon}>
+                        <Ionicons
+                          name="bag-outline"
+                          size={20}
+                          color="#000000"
+                        />
+                      </View>
+                      <View>
+                        <Text style={styles.orderDate}>
+                          {formatDate(order.createdAt)} မှ အော်ဒါ
+                        </Text>
+                        <Text style={styles.orderStatus}>
+                          {formatStatus(order.status)}
+                        </Text>
+                      </View>
                     </View>
-                    <Text style={styles.orderDate}>{order.date} မှ အော်ဒါ</Text>
+                    <Text style={styles.orderAmount}>
+                      MMK {order.totalAmount.toLocaleString()}
+                    </Text>
                   </View>
-                  <Text style={styles.orderAmount}>
-                    MMK{order.amount.toLocaleString()}
-                  </Text>
-                </View>
-                <View style={styles.orderActions}>
-                  <Pressable
-                    style={styles.reorderButton}
-                    onPress={() => handleReorder(order.id)}
-                  >
-                    <Text style={styles.reorderButtonText}>
-                      အော်ဒါ ပြန်မှာမယ်
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={styles.detailsButton}
-                    onPress={() => handleOrderDetails(order.id)}
-                  >
-                    <Text style={styles.detailsButtonText}>
-                      အော်ဒါ အသေးစိတ်
-                    </Text>
-                  </Pressable>
+                  <View style={styles.orderActions}>
+                    <Pressable
+                      style={styles.reorderButton}
+                      onPress={() => handleReorder(order._id)}
+                    >
+                      <Text style={styles.reorderButtonText}>
+                        အော်ဒါ ပြန်မှာမယ်
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.detailsButton}
+                      onPress={() => handleOrderDetails(order._id)}
+                    >
+                      <Text style={styles.detailsButtonText}>
+                        အော်ဒါ အသေးစိတ်
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -323,6 +384,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#000000',
   },
+  orderStatus: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 2,
+  },
   orderAmount: {
     fontSize: 16,
     fontWeight: '600',
@@ -359,5 +425,55 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666666',
+    marginTop: 12,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#000000',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666666',
+    marginTop: 16,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: '#999999',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
   },
 });

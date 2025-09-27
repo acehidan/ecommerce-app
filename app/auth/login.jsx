@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import handleLogin from '../../services/auth/login';
+import LoadingScreen from '../loading';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -19,14 +20,22 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState('ENG');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
   const { login } = useAuthStore();
 
   const handleLoginPress = async () => {
     if (!phoneNumber || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setErrorMessage(
+        'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.'
+      );
+      setShowError(true);
       return;
     }
 
+    // Clear error when attempting login
+    setShowError(false);
+    setErrorMessage('');
     setIsLoading(true);
 
     try {
@@ -58,21 +67,19 @@ export default function LoginScreen() {
           response.data.data.token
         );
 
-        Alert.alert(
-          'Success',
-          response.data.message || 'Logged in successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/(tabs)'),
-            },
-          ]
-        );
+        // Navigate directly to home page without showing success alert
+        router.replace('/(tabs)');
       } else {
-        Alert.alert('Error', response.error);
+        setErrorMessage(
+          'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.'
+        );
+        setShowError(true);
       }
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      setErrorMessage(
+        'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.'
+      );
+      setShowError(true);
     } finally {
       setIsLoading(false);
     }
@@ -84,112 +91,156 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={[
-              styles.langButton,
-              language === 'ENG' && styles.activeLangButton,
-            ]}
-            onPress={() => setLanguage('ENG')}
-          >
-            <Text
+      {isLoading ? (
+        <LoadingScreen
+          userName="ကိုမင်း"
+          statusText1="အကောင့် ဝင်နေပါပြီ"
+          statusText2="ခနစောင့်ပေးပါ"
+        />
+      ) : (
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <TouchableOpacity
               style={[
-                styles.langText,
-                language === 'ENG' && styles.activeLangText,
+                styles.langButton,
+                language === 'ENG' && styles.activeLangButton,
+              ]}
+              onPress={() => setLanguage('ENG')}
+            >
+              <Text
+                style={[
+                  styles.langText,
+                  language === 'ENG' && styles.activeLangText,
+                ]}
+              >
+                ENG
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.signupButton}
+              onPress={() => router.push('/auth/signup')}
+            >
+              <Text style={styles.signupButtonText}>အကောင့်သစ်ဖွင့်မယ်</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.title}>အကောင့်ပြန်ဝင်မယ်</Text>
+          <Text style={styles.description}>
+            အကောင့်ထဲသို့ ပြန်လည်ဝင်ရောက်ရန် ဖုန်းနံပါတ် နဲ့ လျှိုဝှက် နံပါတ်
+            ကိုထည့်ပါ။
+          </Text>
+
+          {showError && (
+            <View style={styles.errorBanner}>
+              <Ionicons
+                name="warning-outline"
+                size={20}
+                color="#fff"
+                style={styles.errorIcon}
+              />
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
+
+          <View style={styles.inputContainer}>
+            <View
+              style={[
+                styles.inputWrapperContainer,
+                showError && styles.inputWrapperContainerError,
               ]}
             >
-              ENG
+              <View style={styles.inputLabelContainer}>
+                <Ionicons
+                  name="call-outline"
+                  size={20}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <Text style={styles.inputLabel}>ဖုန်းနံပါတ်</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="09 783742004"
+                  value={phoneNumber}
+                  onChangeText={(text) => {
+                    setPhoneNumber(text);
+                    if (showError) {
+                      setShowError(false);
+                      setErrorMessage('');
+                    }
+                  }}
+                  keyboardType="phone-pad"
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View
+              style={[
+                styles.inputWrapperContainer,
+                showError && styles.inputWrapperContainerError,
+              ]}
+            >
+              <View style={styles.inputLabelContainer}>
+                <Ionicons
+                  name="key-outline"
+                  size={20}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <Text style={styles.inputLabel}>လျှို့ဝှက်နံပါတ်</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="873614@"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (showError) {
+                      setShowError(false);
+                      setErrorMessage('');
+                    }
+                  }}
+                  secureTextEntry={!showPassword}
+                />
+
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="#666"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={handleForgotPasswordPress}
+          >
+            <Text style={styles.forgotPasswordText}>
+              လျှို့ဝှက်နံပါတ်မေ့သွားပြီ
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.signupButton}
-            onPress={() => router.push('/auth/signup')}
+            style={[styles.loginButton, isLoading && styles.disabledButton]}
+            onPress={handleLoginPress}
+            disabled={isLoading}
           >
-            <Text style={styles.signupButtonText}>အကောင့်သစ်ဖွင့်မယ်</Text>
+            <Text style={styles.loginButtonText}>
+              {isLoading ? 'Loading...' : 'အကောင့်ပြန်ဝင်မယ်'}
+            </Text>
           </TouchableOpacity>
         </View>
-
-        <Text style={styles.title}>အကောင့်ပြန်ဝင်မယ်</Text>
-        <Text style={styles.description}>
-          အကောင့်ထဲသို့ ပြန်လည်ဝင်ရောက်ရန် ဖုန်းနံပါတ် နဲ့ လျှိုဝှက် နံပါတ်
-          ကိုထည့်ပါ။
-        </Text>
-
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapperContainer}>
-            <View style={styles.inputLabelContainer}>
-              <Ionicons
-                name="call-outline"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <Text style={styles.inputLabel}>ဖုန်းနံပါတ်</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="09 783742004"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapperContainer}>
-            <View style={styles.inputLabelContainer}>
-              <Ionicons
-                name="key-outline"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <Text style={styles.inputLabel}>လျှို့ဝှက်နံပါတ်</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="873614@"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color="#666"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.forgotPassword}
-          onPress={handleForgotPasswordPress}
-        >
-          <Text style={styles.forgotPasswordText}>
-            လျှို့ဝှက်နံပါတ်မေ့သွားပြီ
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.loginButton, isLoading && styles.disabledButton]}
-          onPress={handleLoginPress}
-          disabled={isLoading}
-        >
-          <Text style={styles.loginButtonText}>
-            {isLoading ? 'Loading...' : 'အကောင့်ပြန်ဝင်မယ်'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -197,7 +248,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    // backgroundColor: '#1a1a1a',
   },
   content: {
     flex: 1,
@@ -302,5 +353,33 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#666',
     opacity: 0.7,
+  },
+  errorBanner: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 0,
+    zIndex: 1000,
+    backgroundColor: '#FF3B30',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+    width: '110%',
+  },
+  errorIcon: {
+    marginRight: 8,
+  },
+  errorText: {
+    color: '#fff',
+    fontSize: 14,
+    flex: 1,
+    lineHeight: 18,
+  },
+  inputWrapperContainerError: {
+    borderColor: '#FF3B30',
+    borderWidth: 1,
   },
 });

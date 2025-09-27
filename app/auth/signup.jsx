@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -80,150 +83,165 @@ export default function SignupScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={[
-              styles.langButton,
-              language === 'ENG' && styles.activeLangButton,
-            ]}
-            onPress={() => setLanguage('ENG')}
-          >
-            <Text
+      {/* <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      > */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <TouchableOpacity
               style={[
-                styles.langText,
-                language === 'ENG' && styles.activeLangText,
+                styles.langButton,
+                language === 'ENG' && styles.activeLangButton,
               ]}
+              onPress={() => setLanguage('ENG')}
             >
-              ENG
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.langText,
+                  language === 'ENG' && styles.activeLangText,
+                ]}
+              >
+                ENG
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => router.push('/auth/login')}
-          >
-            <Text style={styles.loginButtonText}>အကောင့်ဝင်မယ်</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.title}>အကောင့်အသစ်ဖွင့်မယ်</Text>
-        <Text style={styles.description}>
-          အကောင့်အသစ်ဖွင့်ဖို့ အတွက် အသုံးပြုလို့တဲ့ နာမည်နဲ့ ဖုန်းနံပါတ်ကို
-          ရိုက်ထည့်ပြီး မိနစ်ပိုင်းအတွင်း ဖွင့်လိုက်ပါ။
-        </Text>
-
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapperContainer}>
-            <View style={styles.inputLabelContainer}>
-              <Ionicons
-                name="person-outline"
-                size={18}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <Text style={styles.inputLabel}>နာမည်</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="အကောင့်နာမည် ရိုက်ထည့်ပါ"
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => router.push('/auth/login')}
+            >
+              <Text style={styles.loginButtonText}>အကောင့်ဝင်မယ်</Text>
+            </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapperContainer}>
-            <View style={styles.inputLabelContainer}>
-              <Ionicons
-                name="call-outline"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <Text style={styles.inputLabel}>ဖုန်းနံပါတ်</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="09 783742004"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
-        </View>
+          <Text style={styles.title}>အကောင့်အသစ်ဖွင့်မယ်</Text>
+          <Text style={styles.description}>
+            အကောင့်အသစ်ဖွင့်ဖို့ အတွက် အသုံးပြုလို့တဲ့ နာမည်နဲ့ ဖုန်းနံပါတ်ကို
+            ရိုက်ထည့်ပြီး မိနစ်ပိုင်းအတွင်း ဖွင့်လိုက်ပါ။
+          </Text>
 
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapperContainer}>
-            <View style={styles.inputLabelContainer}>
-              <Ionicons
-                name="key-outline"
-                size={20}
-                color="#666"
-                style={styles.inputIcon}
-              />
-              <Text style={styles.inputLabel}>လျှို့ဝှက်နံပါတ်</Text>
-            </View>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="873614@"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapperContainer}>
+              <View style={styles.inputLabelContainer}>
                 <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  name="person-outline"
+                  size={18}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <Text style={styles.inputLabel}>နာမည်</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="အကောင့်နာမည် ရိုက်ထည့်ပါ"
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapperContainer}>
+              <View style={styles.inputLabelContainer}>
+                <Ionicons
+                  name="call-outline"
                   size={20}
                   color="#666"
+                  style={styles.inputIcon}
                 />
-              </TouchableOpacity>
+                <Text style={styles.inputLabel}>ဖုန်းနံပါတ်</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="09 783742004"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  keyboardType="phone-pad"
+                />
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.termsContainer}>
-          <TouchableOpacity
-            style={styles.checkbox}
-            onPress={() => setAgreeToTerms(!agreeToTerms)}
-          >
-            <Ionicons
-              name={agreeToTerms ? 'checkbox' : 'square-outline'}
-              size={20}
-              color={agreeToTerms ? '#007AFF' : '#666'}
-            />
-          </TouchableOpacity>
-          <View style={styles.termsTextContainer}>
-            <Text style={styles.termsText}>
-              အကောင့်ဖွင့်ရန်အတွက် ကျွန်တော်တို့ရဲ့{' '}
-              <Text style={styles.linkText} onPress={handleTermsPress}>
-                စည်းမျဉ်း စည်းကမ်း
-              </Text>{' '}
-              နဲ့{' '}
-              <Text style={styles.linkText} onPress={handlePoliciesPress}>
-                မူဝါဒများကို
-              </Text>{' '}
-              သဘောတူဖို့ လိုအပါပါတယ်
-            </Text>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapperContainer}>
+              <View style={styles.inputLabelContainer}>
+                <Ionicons
+                  name="key-outline"
+                  size={20}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <Text style={styles.inputLabel}>လျှို့ဝှက်နံပါတ်</Text>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="873614@"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="#666"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
 
-        <TouchableOpacity
-          style={[styles.signupButton, isLoading && styles.disabledButton]}
-          onPress={handleSignup}
-          disabled={isLoading}
-        >
-          <Text style={styles.signupButtonText}>
-            {isLoading ? 'Loading...' : 'အကောင့်အသစ်ဖွင့်မယ်'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.termsContainer}>
+            <TouchableOpacity
+              style={styles.checkbox}
+              onPress={() => setAgreeToTerms(!agreeToTerms)}
+            >
+              <Ionicons
+                name={agreeToTerms ? 'checkbox' : 'square-outline'}
+                size={20}
+                color={agreeToTerms ? '#007AFF' : '#666'}
+              />
+            </TouchableOpacity>
+            <View style={styles.termsTextContainer}>
+              <Text style={styles.termsText}>
+                အကောင့်ဖွင့်ရန်အတွက် ကျွန်တော်တို့ရဲ့{' '}
+                <Text style={styles.linkText} onPress={handleTermsPress}>
+                  စည်းမျဉ်း စည်းကမ်း
+                </Text>{' '}
+                နဲ့{' '}
+                <Text style={styles.linkText} onPress={handlePoliciesPress}>
+                  မူဝါဒများကို
+                </Text>{' '}
+                သဘောတူဖို့ လိုအပါပါတယ်
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.signupButton, isLoading && styles.disabledButton]}
+            onPress={handleSignup}
+            disabled={isLoading}
+          >
+            <Text style={styles.signupButtonText}>
+              {isLoading ? 'Loading...' : 'အကောင့်အသစ်ဖွင့်မယ်'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+      {/* </KeyboardAvoidingView> */}
     </SafeAreaView>
   );
 }
@@ -231,12 +249,22 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    // backgroundColor: 'red',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
     backgroundColor: 'white',
     padding: 24,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',

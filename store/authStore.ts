@@ -17,6 +17,7 @@ interface AuthState {
     role: string;
   } | null;
   token: string | null;
+  passwordChangeToken: string | null;
   login: (
     user: {
       _id: string;
@@ -30,6 +31,8 @@ interface AuthState {
   logout: () => void;
   continueAsGuest: () => void;
   initializeAuth: () => Promise<void>;
+  updateUsername: (userName: string) => void;
+  setPasswordChangeToken: (token: string | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -38,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       user: null,
       token: null,
+      passwordChangeToken: null,
       login: async (user, token) => {
         try {
           await saveUserProfile({ user, token });
@@ -50,7 +54,12 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           await clearUserProfile();
-          set({ isAuthenticated: false, user: null, token: null });
+          set({
+            isAuthenticated: false,
+            user: null,
+            token: null,
+            passwordChangeToken: null,
+          });
         } catch (error) {
           console.error('Error clearing user profile:', error);
         }
@@ -70,6 +79,20 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Error initializing auth:', error);
         }
+      },
+      updateUsername: (userName: string) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({
+            user: {
+              ...currentUser,
+              userName,
+            },
+          });
+        }
+      },
+      setPasswordChangeToken: (token: string | null) => {
+        set({ passwordChangeToken: token });
       },
     }),
     {

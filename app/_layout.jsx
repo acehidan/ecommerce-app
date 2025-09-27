@@ -3,6 +3,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { useAuthStore } from '../store/authStore';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '../services/utils/toastConfig';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -28,6 +30,7 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" options={{ presentation: 'modal' }} />
       </Stack>
       <StatusBar style="dark" />
+      <Toast config={toastConfig} />
     </>
   );
 }
