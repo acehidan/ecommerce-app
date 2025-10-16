@@ -11,7 +11,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import handleGetAllCategory from '../../services/products/getAllCategory';
 
 export default function Categories() {
@@ -20,6 +23,8 @@ export default function Categories() {
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 60 + insets.bottom + 16;
 
   useEffect(() => {
     fetchCategories();
@@ -98,7 +103,7 @@ export default function Categories() {
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#333333" />
-          <Text style={styles.loadingText}>အမျိုးအစားများ ရယူနေပါသည်...</Text>
+          <Text style={styles.loadingText}>အမျိုးအစားများ ရယူနေပါသည်</Text>
         </View>
       </SafeAreaView>
     );
@@ -148,7 +153,10 @@ export default function Categories() {
         data={filteredCategories}
         renderItem={renderCategory}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.categoriesList}
+        contentContainerStyle={[
+          styles.categoriesList,
+          { paddingBottom: tabBarHeight },
+        ]}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={() => (
@@ -242,6 +250,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
     textAlign: 'center',
+    width: '100%',
   },
   errorContainer: {
     flex: 1,
@@ -279,5 +288,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#CCCCCC',
     textAlign: 'center',
+    width: '100%',
   },
 });

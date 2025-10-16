@@ -2,8 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { clearUserProfile } from './user/userProfile';
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || 'https://your-api-url.com/api';
+const API_BASE_URL = 'https://ko-min-ecommerce.dynv6.net/';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -13,7 +13,10 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import handleGetAllCategory from '../../services/products/getAllCategory';
@@ -29,6 +32,8 @@ export default function Search() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 60 + insets.bottom + 16;
 
   useEffect(() => {
     loadCategories();
@@ -79,7 +84,11 @@ export default function Search() {
       {/* Header */}
       <Navbar title="ပစ္စည်း တွေရှာမယ်" />
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: tabBarHeight }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Item Name Field */}
         <View style={styles.fieldContainer}>
           <View style={styles.fieldHeader}>
@@ -380,6 +389,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5',
+    marginBottom: 60,
   },
   searchButton: {
     backgroundColor: '#333333',

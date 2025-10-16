@@ -162,7 +162,7 @@ export default function LoginScreen() {
               <View style={styles.inputWrapper}>
                 <TextInput
                   style={styles.input}
-                  placeholder="09 783742004"
+                  placeholder="09xxxxxxxx"
                   value={phoneNumber}
                   onChangeText={(text) => {
                     setPhoneNumber(text);
@@ -329,14 +329,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     color: '#666',
+    width: '100%',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: 30,
+    width: '100%',
   },
   forgotPasswordText: {
     fontSize: 14,
     color: '#007AFF',
+    width: '100%',
+    textAlign: 'right',
   },
   loginButton: {
     backgroundColor: '#333',

@@ -6,7 +6,10 @@ import {
   Pressable,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../../store/cartStore';
@@ -15,6 +18,8 @@ import Navbar from '../components/Navbar';
 export default function Cart() {
   const router = useRouter();
   const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 60 + insets.bottom + 16;
 
   if (items.length === 0) {
     return (
@@ -37,7 +42,11 @@ export default function Cart() {
           <Text style={styles.quantityLabel}>အရေအတွက် {items.length} ခု</Text>
         </View>
 
-        <ScrollView style={styles.cartList}>
+        <ScrollView
+          style={styles.cartList}
+          contentContainerStyle={{ paddingBottom: tabBarHeight }}
+          showsVerticalScrollIndicator={false}
+        >
           {items.map((item) => (
             <View key={item.id} style={styles.cartItem}>
               <View style={styles.itemInfo}>
@@ -223,6 +232,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5',
+    marginBottom: 60,
   },
   checkoutButton: {
     backgroundColor: '#333333',
@@ -244,5 +254,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#666666',
     marginTop: 16,
+    width: '100%',
+    textAlign: 'center',
   },
 });

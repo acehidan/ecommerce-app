@@ -6,7 +6,10 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useWishlistStore } from '../../store/wishlistStore';
@@ -45,6 +48,8 @@ export default function Profile() {
   const wishlistItems = useWishlistStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
   const logout = useAuthStore((state) => state.logout);
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 60 + insets.bottom + 16;
 
   const handleLogout = () => {
     Alert.alert('အကောင့်မှထွက်မယ်', 'သင်အကောင့်မှထွက်ရန်သေချာပါသလား?', [
@@ -71,7 +76,11 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: tabBarHeight }}
+        showsVerticalScrollIndicator={false}
+      >
         <Navbar title="မိမိအကောင့်" />
         <View style={styles.menuContainer}>
           <Pressable
@@ -124,12 +133,36 @@ export default function Profile() {
 
           <Pressable style={styles.menuItem}>
             <View style={styles.menuIcon}>
-              <Ionicons name="settings-outline" size={24} color="#000000" />
+              <Ionicons
+                name="chatbox-ellipses-outline"
+                size={24}
+                color="#000000"
+              />
             </View>
             <View style={styles.menuTextContainer}>
               <Text style={styles.menuTitle}>ဆက်တင်</Text>
               <Text style={styles.menuSubtitle}>
                 ဆက်တင်နဲ့ အသေးစိတ် အချက်အလက်များ
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#666666" />
+          </Pressable>
+
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => router.push('/chat')}
+          >
+            <View style={styles.menuIcon}>
+              <Ionicons
+                name="chatbox-ellipses-outline"
+                size={24}
+                color="#000000"
+              />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={styles.menuTitle}>Chat</Text>
+              <Text style={styles.menuSubtitle}>
+                Chat with the customer service
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666666" />
