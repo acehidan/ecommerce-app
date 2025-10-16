@@ -7,14 +7,14 @@ export default function Navbar({ title }) {
     <View style={styles.navbar}>
       <View style={styles.navbarContent}>
         <Text style={styles.appTitle}>{title}</Text>
-        <View style={styles.profileSection}>
+        {/* <View style={styles.profileSection}>
           <View style={styles.profileIcon}>
             <Ionicons name="person" size={24} color="#FFFFFF" />
             <View style={styles.notificationBadge}>
               <Text style={styles.badgeText}>2</Text>
             </View>
           </View>
-        </View>
+        </View> */}
       </View>
     </View>
   );

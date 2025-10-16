@@ -340,6 +340,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     color: '#666',
+    width: '100%',
   },
   termsContainer: {
     flexDirection: 'row',

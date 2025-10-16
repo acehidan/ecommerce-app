@@ -23,7 +23,7 @@ export default function Home() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Navbar title="ကိုမင်း D.I.Y ပစ္စည်းများ" />
+        <Navbar title="OTAS Demo" />
         <SearchBar />
         <PromotionalBanner />
         <CategoriesSection />
