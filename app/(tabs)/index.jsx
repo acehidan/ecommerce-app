@@ -23,7 +23,7 @@ export default function Home() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Navbar title="OTAS Demo" />
+        <Navbar title="Ko Min D.I.Y" />
         <SearchBar />
         <PromotionalBanner />
         <CategoriesSection />

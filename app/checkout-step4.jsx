@@ -126,11 +126,11 @@ export default function CheckoutStep4() {
         throw new Error('Delivery zone is required');
       }
 
-      console.log('Creating order with data:', orderData);
-      console.log('User ID:', user._id);
-      console.log('Order items:', orderItems);
-      console.log('Address info:', addressInfo);
-      console.log('Selected payment method:', selectedPaymentMethod);
+      // console.log('Creating order with data:', orderData);
+      // console.log('User ID:', user._id);
+      // console.log('Order items:', orderItems);
+      // console.log('Address info:', addressInfo);
+      // console.log('Selected payment method:', selectedPaymentMethod);
 
       const response = await createOrder(orderData);
 
