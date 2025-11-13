@@ -10,8 +10,10 @@ import {
 import { router } from 'expo-router';
 import ProductCard from './ProductCard';
 import handleGetNewArrivalsProducts from '../../services/products/getNewArrivalsProducts';
+import Button from './Button';
+import colors from '../../constants/colors';
 
-export default function NewArrivals() {
+export default function NewArrivals({ refreshTrigger, onLoadingChange }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +22,7 @@ export default function NewArrivals() {
     const fetchNewArrivals = async () => {
       try {
         setLoading(true);
+        if (onLoadingChange) onLoadingChange(true);
         const result = await handleGetNewArrivalsProducts();
         if (result.success) {
           // Limit to first 10 products
@@ -32,30 +35,35 @@ export default function NewArrivals() {
         setError('Failed to fetch new arrivals');
       } finally {
         setLoading(false);
+        if (onLoadingChange) onLoadingChange(false);
       }
     };
 
     fetchNewArrivals();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleProductPress = (productId) => {
     router.push(`/product/${productId}`);
   };
 
-  if (loading) {
-    return (
-      <View style={styles.section}>
-        <View style={styles.header}>
-          <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#333333" />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </View>
-    );
+  if (loading && products.length === 0) {
+    return null;
   }
+
+  // if (loading) {
+  //   return (
+  //     <View style={styles.section}>
+  //       <View style={styles.header}>
+  //         <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
+  //         <View style={styles.placeholder} />
+  //       </View>
+  //       <View style={styles.loadingContainer}>
+  //         <ActivityIndicator size="small" color="#333333" />
+  //         <Text style={styles.loadingText}>Loading...</Text>
+  //       </View>
+  //     </View>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -75,12 +83,14 @@ export default function NewArrivals() {
     <View style={styles.section}>
       <View style={styles.header}>
         <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
-        <Pressable
-          style={styles.viewMoreButton}
+        <Button
+          title="ထပ်ကြည့်မယ်"
+          variant="outline"
+          size="medium"
+          borderColor={colors.text.primary}
+          textColor={colors.text.primary}
           onPress={() => router.push('/new-arrivals')}
-        >
-          <Text style={styles.viewMoreText}>ထပ်ကြည့်မယ်</Text>
-        </Pressable>
+        />
       </View>
 
       <ScrollView
@@ -96,7 +106,8 @@ export default function NewArrivals() {
               name={product.name}
               price={product.retailUnitPrice}
               image={
-                product.images?.[0]?.url || 'https://via.placeholder.com/300'
+                product.images?.[0]?.url ||
+                'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg'
               }
               onPress={() => handleProductPress(product.productCode)}
             />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack, Slot } from 'expo-router';
+import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { useAuthStore } from '../store/authStore';
@@ -9,7 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    // Add custom fonts here if needed
+    'NotoSansMyanmar-Regular': require('../assets/fonts/NotoSansMyanmar-Regular.ttf'),
   });
   const [isReady, setIsReady] = useState(false);
   const { initializeAuth } = useAuthStore();

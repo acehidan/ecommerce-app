@@ -2,19 +2,24 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   FlatList,
-  Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import ProductCard from './components/ProductCard';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import PageHeader from './components/PageHeader';
+import SearchBar from './components/SearchBar';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import handleGetNewArrivalsProducts from '../services/products/getNewArrivalsProducts';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function NewArrivalsPage() {
+  const insets = useSafeAreaInsets();
+  const headerHeight = 56 + insets.top; // Approximate header height (padding + content + safe area)
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -64,7 +69,10 @@ export default function NewArrivalsPage() {
         id={item._id}
         name={item.name}
         price={item.retailUnitPrice}
-        image={item.images?.[0]?.url || 'https://via.placeholder.com/300'}
+        image={
+          item.images?.[0]?.url ||
+          'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg'
+        }
         onPress={() => handleProductPress(item.productCode)}
       />
     </View>
@@ -73,14 +81,8 @@ export default function NewArrivalsPage() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.loadingContainer}>
+        <PageHeader title="အသစ်ရောက် ပစ္စည်းများ" />
+        <View style={[styles.loadingContainer, { paddingTop: headerHeight }]}>
           <ActivityIndicator size="large" color="#333333" />
           <Text style={styles.loadingText}>Loading new arrivals...</Text>
         </View>
@@ -91,14 +93,9 @@ export default function NewArrivalsPage() {
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.errorContainer}>
+        <PageHeader title="အသစ်ရောက် ပစ္စည်းများ" />
+        <View style={[styles.errorContainer, { paddingTop: headerHeight }]}>
+          <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       </SafeAreaView>
@@ -107,42 +104,29 @@ export default function NewArrivalsPage() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#000000" />
-        </Pressable>
-        <Text style={styles.headerTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
-        <Text style={styles.productCount}>
-          ပစ္စည်း {filteredProducts.length} ခု
-        </Text>
-      </View>
-
-      <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#666666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="အသစ်ရောက် ပစ္စည်းတွေရှာမယ်"
-            placeholderTextColor="#666666"
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-        </View>
-        <Text style={styles.searchHint}>
-          * မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို
-          ရိုက်ပြီးရှာနိုင်ပါတယ်
-        </Text>
-      </View>
-
-      <FlatList
-        data={filteredProducts}
-        renderItem={renderProduct}
-        keyExtractor={(item) => item._id.toString()}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.productsGrid}
-        showsVerticalScrollIndicator={false}
+      <PageHeader
+        title="အသစ်ရောက် ပစ္စည်းများ"
+        rightContent={`ပစ္စည်း ${filteredProducts.length} ခု`}
       />
+
+      <View style={{ paddingTop: headerHeight }}>
+        <SearchBar
+          placeholder="အသစ်ရောက် ပစ္စည်းတွေရှာမယ်"
+          value={searchQuery}
+          onChangeText={handleSearch}
+          hintText="* မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+        />
+
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderProduct}
+          keyExtractor={(item) => item._id.toString()}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.productsGrid}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -151,56 +135,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    flex: 1,
-    textAlign: 'center',
-  },
-  productCount: {
-    fontSize: 14,
-    color: '#666666',
-    minWidth: 80,
-    textAlign: 'right',
-  },
-  searchSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#000000',
-  },
-  searchHint: {
-    color: '#999999',
-    fontSize: 10,
-    textAlign: 'center',
-    lineHeight: 16,
   },
   productsGrid: {
     paddingHorizontal: 20,

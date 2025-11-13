@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   FlatList,
   Pressable,
@@ -15,16 +14,19 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import PageHeader from '../components/PageHeader';
+import SearchBar from '../components/SearchBar';
 import handleGetAllCategory from '../../services/products/getAllCategory';
 
 export default function Categories() {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 60 + insets.bottom + 16;
+  const headerHeight = 56 + insets.top;
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const insets = useSafeAreaInsets();
-  const tabBarHeight = 60 + insets.bottom + 16;
 
   useEffect(() => {
     fetchCategories();
@@ -98,9 +100,7 @@ export default function Categories() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>ပစ္စည်း အမျိုးအစားများ</Text>
-        </View>
+        <PageHeader title="ပစ္စည်း အမျိုးအစားများ" sticky={false} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#333333" />
           <Text style={styles.loadingText}>အမျိုးအစားများ ရယူနေပါသည်</Text>
@@ -112,9 +112,7 @@ export default function Categories() {
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>ပစ္စည်း အမျိုးအစားများ</Text>
-        </View>
+        <PageHeader title="ပစ္စည်း အမျိုးအစားများ" sticky={false} />
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
           <Text style={styles.errorText}>{error}</Text>
@@ -128,44 +126,34 @@ export default function Categories() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>ပစ္စည်း အမျိုးအစားများ</Text>
-      </View>
+      <PageHeader title="ပစ္စည်း အမျိုးအစားများ" sticky={true} />
 
-      <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#666666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="အမျိုးအစားတွေ ရှာမယ်"
-            placeholderTextColor="#666666"
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-        </View>
-        <Text style={styles.searchHint}>
-          * မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို
-          ရိုက်ပြီးရှာနိုင်ပါတယ်
-        </Text>
-      </View>
+      <View style={{ paddingTop: headerHeight }}>
+        <SearchBar
+          placeholder="အမျိုးအစားတွေ ရှာမယ်"
+          value={searchQuery}
+          onChangeText={handleSearch}
+          hintText="* မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+        />
 
-      <FlatList
-        data={filteredCategories}
-        renderItem={renderCategory}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={[
-          styles.categoriesList,
-          { paddingBottom: tabBarHeight },
-        ]}
-        showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={48} color="#CCCCCC" />
-            <Text style={styles.emptyText}>ရှာတွေ့သော အမျိုးအစား မရှိပါ</Text>
-          </View>
-        )}
-      />
+        <FlatList
+          data={filteredCategories}
+          renderItem={renderCategory}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={[
+            styles.categoriesList,
+            { paddingBottom: tabBarHeight },
+          ]}
+          showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="search-outline" size={48} color="#CCCCCC" />
+              <Text style={styles.emptyText}>ရှာတွေ့သော အမျိုးအစား မရှိပါ</Text>
+            </View>
+          )}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -174,40 +162,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  searchSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#000000',
-  },
-  searchHint: {
-    color: '#999999',
-    fontSize: 10,
-    textAlign: 'center',
-    lineHeight: 16,
   },
   categoriesList: {
     paddingHorizontal: 20,

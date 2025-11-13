@@ -13,9 +13,12 @@ import {
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuthStore } from '../../store/authStore';
 import handleSignUp from '../../services/auth/signUp';
+import colors from '../../constants/colors';
 
 export default function SignupScreen() {
+  const { login } = useAuthStore();
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -45,25 +48,38 @@ export default function SignupScreen() {
       });
 
       if (response.success) {
-        Alert.alert(
-          'Success',
-          response.data.message || 'OTP sent successfully',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                router.push({
-                  pathname: '/auth/otp',
-                  params: { phoneNumber, name },
-                });
-              },
-            },
-          ]
-        );
+        // Handle new response structure: { success, message, data: { token, user } }
+        const token = response.data?.data?.token || response.data?.token;
+        const user = response.data?.data?.user || response.data?.user;
+
+        if (token && user) {
+          // Store token and user in auth store
+          const userData = {
+            _id: user._id || '',
+            userName: user.userName,
+            phoneNumber: user.phoneNumber,
+            isVerified: user.isVerified || false,
+            role: user.role || 'user',
+          };
+
+          await login(userData, token);
+
+          // Redirect to home page
+          router.replace('/(tabs)');
+        } else {
+          Alert.alert(
+            'Error',
+            'Signup successful but missing user data. Please try again.'
+          );
+        }
       } else {
-        Alert.alert('Error', response.error);
+        Alert.alert(
+          'Error',
+          response.error || 'Signup failed. Please try again.'
+        );
       }
     } catch (error) {
+      console.error('Signup error:', error);
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -96,7 +112,7 @@ export default function SignupScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 styles.langButton,
                 language === 'ENG' && styles.activeLangButton,
@@ -111,7 +127,7 @@ export default function SignupScreen() {
               >
                 ENG
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               style={styles.loginButton}
@@ -268,7 +284,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginBottom: 30,
   },
@@ -292,10 +308,18 @@ const styles = StyleSheet.create({
   loginButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.border.primary,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: colors.background.primary,
   },
   loginButtonText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text.secondary,
+    fontWeight: '700',
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
   title: {
     fontSize: 24,

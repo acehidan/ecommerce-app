@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import handleGetAllCategory from '../../services/products/getAllCategory';
+import colors from '../../constants/colors';
+import Button from './Button';
 
 // Fallback categories for when API fails
 const CATEGORIES = [
@@ -29,18 +31,19 @@ const CATEGORIES = [
   },
 ];
 
-export default function CategoriesSection() {
+export default function CategoriesSection({ refreshTrigger, onLoadingChange }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
+      if (onLoadingChange) onLoadingChange(true);
       setError(null);
       const response = await handleGetAllCategory();
       console.log('response', response);
@@ -68,6 +71,7 @@ export default function CategoriesSection() {
       setCategories(CATEGORIES);
     } finally {
       setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
     }
   };
 
@@ -77,42 +81,50 @@ export default function CategoriesSection() {
 
   return (
     <View style={styles.section}>
-      <View style={styles.categoriesHeader}>
-        <Text style={styles.sectionTitle}>ပစ္စည်းအမျိူးအစားများ</Text>
-        <Pressable
-          style={styles.viewAllButton}
-          onPress={() => router.push('/categories')}
-        >
-          <Text style={styles.viewAllText}>အမျိုးအစားများ</Text>
-        </Pressable>
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesScrollContainer}
-        style={styles.categoriesScrollView}
-      >
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#FFFFFF" />
-            <Text style={styles.loadingText}>Loading categories...</Text>
+      {!loading && categories.length > 0 && (
+        <View>
+          <View style={styles.categoriesHeader}>
+            <Text style={styles.sectionTitle}>ပစ္စည်းအမျိူးအစားများ</Text>
+            <Button
+              title="အမျိုးအစားများ"
+              onPress={() => router.push('/categories')}
+              variant="outline"
+              size="medium"
+              borderColor={colors.text.light}
+              textColor={colors.text.light}
+            />
           </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>Failed to load categories</Text>
-          </View>
-        ) : (
-          categories.map((category) => (
-            <Pressable
-              key={category.id}
-              style={styles.categoryButton}
-              onPress={() => handleShopNow(category.slug)}
-            >
-              <Text style={styles.categoryButtonText}>{category.name}</Text>
-            </Pressable>
-          ))
-        )}
-      </ScrollView>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesScrollContainer}
+            style={styles.categoriesScrollView}
+          >
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                <Text style={styles.loadingText}>Loading</Text>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Failed to load categories</Text>
+              </View>
+            ) : (
+              categories.map((category) => (
+                <Pressable
+                  key={category.id}
+                  style={styles.categoryButton}
+                  onPress={() => handleShopNow(category.slug)}
+                >
+                  <Text style={styles.categoryButtonText}>
+                    {category.name} များ
+                  </Text>
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 }
@@ -127,25 +139,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 5,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
     flex: 1,
-  },
-  viewAllButton: {
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 16,
-  },
-  viewAllText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '500',
   },
   categoriesScrollView: {
     paddingLeft: 20,
@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   categoryButton: {
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 18,
+    backgroundColor: colors.background.secondary,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
     minWidth: 80,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   categoryButtonText: {
     color: '#000000',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
     textAlign: 'center',
   },
   loadingContainer: {

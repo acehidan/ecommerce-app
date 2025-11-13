@@ -13,6 +13,7 @@ import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import handleLogin from '../../services/auth/login';
 import LoadingScreen from '../loading';
+import colors from '../../constants/colors';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -100,7 +101,7 @@ export default function LoginScreen() {
       ) : (
         <View style={styles.content}>
           <View style={styles.header}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 styles.langButton,
                 language === 'ENG' && styles.activeLangButton,
@@ -115,7 +116,7 @@ export default function LoginScreen() {
               >
                 ENG
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               style={styles.signupButton}
@@ -221,14 +222,14 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.forgotPassword}
             onPress={handleForgotPasswordPress}
           >
             <Text style={styles.forgotPasswordText}>
               လျှို့ဝှက်နံပါတ်မေ့သွားပြီ
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.disabledButton]}
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginBottom: 30,
   },
@@ -279,12 +280,18 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   signupButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.border.primary,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: colors.background.primary,
   },
   signupButtonText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text.secondary,
+    fontWeight: '700',
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
   title: {
     fontSize: 24,

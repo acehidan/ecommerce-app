@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
 
 export default function OrderProcessing() {
   return (
@@ -9,7 +9,11 @@ export default function OrderProcessing() {
         {/* Logo/Brand Square */}
         <View style={styles.logoContainer}>
           <View style={styles.logoSquare}>
-            <Text style={styles.logoText}>ကိုမင်း</Text>
+            <Image
+              source={require('../assets/images/komin.jpg')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
         </View>
 
@@ -65,6 +69,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   logoText: {
     fontSize: 24,

@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Button from '../components/Button';
+import colors from '../../constants/colors';
 
 export default function OnboardingScreen() {
   const { continueAsGuest } = useAuthStore();
@@ -13,35 +15,47 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Ko Min D.I.Y Store</Text>
-        <Text style={styles.description}>
-          သင်ရဲ့ D.I.Y လိုအပ်ချက်များအတွက် တစ်နေရာတည်းမှာ ရရှိနိုင်သော ဆိုင် မှ
-          ကြိုဆိုပါတယ်ဗျ
-        </Text>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>Ko Min D.I.Y Store</Text>
+          <Text style={styles.description}>
+            သင်ရဲ့ D.I.Y လိုအပ်ချက်များအတွက်{'\n'}
+            တစ်နေရာတည်းမှာ ရရှိနိုင်သော ဆိုင် မှ{'\n'}
+            ကြိုဆိုပါတယ်ဗျ
+          </Text>
+        </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.loginButton}
+          <Button
+            title="အကောင့်ပြန်ဝင်မယ်"
             onPress={() => router.push('/auth/login')}
-          >
-            <Text style={styles.loginButtonText}>အကောင့်ပြန်ဝင်မယ်</Text>
-          </TouchableOpacity>
+            variant="filled"
+            size="large"
+            backgroundColor={colors.text.secondary}
+            textColor={colors.text.light}
+            style={styles.button}
+          />
 
-          <TouchableOpacity
-            style={styles.signupButton}
+          <Button
+            title="အကောင့်အသစ်ဖွင့်မယ်"
             onPress={() => router.push('/auth/signup')}
-          >
-            <Text style={styles.signupButtonText}>အကောင့်အသစ်ဖွင့်မယ်</Text>
-          </TouchableOpacity>
+            variant="filled"
+            size="large"
+            backgroundColor={colors.text.secondary}
+            textColor={colors.text.light}
+            style={styles.button}
+          />
 
-          <TouchableOpacity
-            style={styles.guestButton}
+          <Button
+            title="ဧည့်သည်အကောင့်နဲ့ဝင်မယ်"
             onPress={handleGuestLogin}
-          >
-            <Text style={styles.guestButtonText}>ဧည့်သည်အကောင့်နဲ့ဝင်မယ်</Text>
-          </TouchableOpacity>
+            variant="outline"
+            size="large"
+            borderColor={colors.text.secondary}
+            textColor={colors.text.secondary}
+            style={styles.button}
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -51,65 +65,36 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: colors.background.primary,
   },
   content: {
     flex: 1,
-    backgroundColor: 'white',
-    padding: 24,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  textContainer: {
+    // alignItems: 'center',
+    marginBottom: 30,
   },
   title: {
-    fontSize: 28,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginTop: 40,
+    color: colors.text.secondary,
+    marginBottom: 20,
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
   description: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginTop: 20,
+    color: colors.text.secondary,
+    letterSpacing: 1.5,
+    lineHeight: 28,
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
   buttonContainer: {
-    marginTop: 60,
     gap: 16,
   },
-  loginButton: {
-    backgroundColor: '#333',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  signupButton: {
-    backgroundColor: '#333',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  signupButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  guestButton: {
-    backgroundColor: 'white',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  guestButtonText: {
-    color: '#333',
-    fontSize: 16,
-    fontWeight: '600',
+  button: {
+    width: '100%',
   },
 });

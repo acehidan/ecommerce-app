@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
-import Navbar from '../components/Navbar';
+import PageHeader from '../components/PageHeader';
 
 const ORDERS = [
   {
@@ -76,12 +76,12 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <PageHeader title="မိမိအကောင့်" sticky={false} />
       <ScrollView
         style={styles.content}
         contentContainerStyle={{ paddingBottom: tabBarHeight }}
         showsVerticalScrollIndicator={false}
       >
-        <Navbar title="မိမိအကောင့်" />
         <View style={styles.menuContainer}>
           <Pressable
             style={styles.menuItem}

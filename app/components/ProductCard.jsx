@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import colors from '../../constants/colors';
 
 export default function ProductCard({ id, name, price, image, onPress }) {
   const handlePress = () => {
@@ -37,10 +38,10 @@ export default function ProductCard({ id, name, price, image, onPress }) {
 
 const styles = StyleSheet.create({
   productCard: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.secondary,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: colors.border.light,
   },
   productCardContent: {
     flex: 1,
@@ -62,26 +63,26 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 8,
     lineHeight: 18,
   },
   productPrice: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000000',
+    color: colors.text.primary,
   },
   viewButton: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.primary,
     marginHorizontal: 10,
     marginBottom: 12,
-    paddingVertical: 10,
+    paddingVertical: 13,
     borderRadius: 50,
     alignItems: 'center',
   },
   viewButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    color: colors.text.light,
+    fontSize: 10,
+    fontWeight: '700',
   },
 });

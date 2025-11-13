@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoadingScreen({
@@ -13,7 +13,11 @@ export default function LoadingScreen({
         {/* Logo/Brand Square */}
         <View style={styles.logoContainer}>
           <View style={styles.logoSquare}>
-            <Text style={styles.logoText}>{userName}</Text>
+            <Image
+              source={require('../assets/images/komin.jpg')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
         </View>
 
@@ -69,6 +73,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   logoText: {
     fontSize: 24,

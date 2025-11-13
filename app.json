@@ -1,16 +1,21 @@
 {
   "expo": {
-    "name": "rector",
+    "name": "komin-diy",
     "slug": "rector",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
-    "scheme": "rector",
+    "icon": "./assets/images/komin.jpg",
+    "splash": {
+      "image": "./assets/images/komin.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "scheme": "komin-diy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.acehidan.rector",
+      "bundleIdentifier": "com.komin.diy",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -18,12 +23,9 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/logo.png"
+      "favicon": "./assets/images/komin.jpg"
     },
-    "plugins": [
-      "expo-router",
-      "expo-web-browser"
-    ],
+    "plugins": ["expo-router", "expo-web-browser"],
     "experiments": {
       "typedRoutes": true
     },
@@ -37,6 +39,7 @@
     },
     "android": {
       "package": "com.acehidan.rector"
-    }
+    },
+    "owner": "acehidan"
   }
 }

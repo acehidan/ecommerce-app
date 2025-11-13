@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// import { Ionicons } from '@expo/vector-icons';
+import colors from '../../constants/colors';
 
 export default function Navbar({ title }) {
   return (
@@ -22,7 +23,7 @@ export default function Navbar({ title }) {
 
 const styles = StyleSheet.create({
   navbar: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.secondary,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -34,7 +35,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   appTitle: {
-    color: '#000000',
+    color: colors.text.primary,
     fontSize: 20,
     fontWeight: 'bold',
     flex: 1,
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 15,
-    backgroundColor: '#333333',
+    backgroundColor: colors.text.secondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -60,12 +61,12 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.accent.blue,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: colors.text.light,
     fontSize: 10,
     fontWeight: 'bold',
   },
@@ -73,12 +74,12 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#34C759',
+    backgroundColor: colors.accent.green,
     alignItems: 'center',
     justifyContent: 'center',
   },
   notificationText: {
-    color: '#FFFFFF',
+    color: colors.text.light,
     fontSize: 12,
     fontWeight: 'bold',
   },

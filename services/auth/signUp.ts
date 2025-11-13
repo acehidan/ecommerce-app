@@ -10,10 +10,14 @@ const handleSignUp = async (data: {
   try {
     const response = await api.post('/api/v1/signup', data);
 
-    if (response.data.token && response.data.user) {
+    // Handle new response structure: { success, message, data: { token, user } }
+    const token = response.data?.data?.token || response.data?.token;
+    const user = response.data?.data?.user || response.data?.user;
+
+    if (token && user) {
       await saveUserProfile({
-        token: response.data.token,
-        user: response.data.user,
+        token,
+        user,
       });
     }
 

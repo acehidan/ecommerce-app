@@ -7,14 +7,18 @@ import {
   FlatList,
   Image,
   Pressable,
-  TextInput,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
+import PageHeader from '../components/PageHeader';
+import SearchBar from '../components/SearchBar';
 import handleGetByCategory from '../../services/products/getByCategory';
 
 const CATEGORY_TITLES = {
@@ -24,6 +28,8 @@ const CATEGORY_TITLES = {
 };
 
 export default function Collection() {
+  const insets = useSafeAreaInsets();
+  const headerHeight = 56 + insets.top; // Approximate header height (padding + content + safe area)
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -55,7 +61,7 @@ export default function Collection() {
           image:
             item.images && item.images.length > 0
               ? item.images[0].url
-              : 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80', // fallback image
+              : 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg', // fallback image
           productCode: item.productCode,
           stockQuantity: item.stockQuantity,
           description: item.description,
@@ -112,14 +118,8 @@ export default function Collection() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>{title}</Text>
-          <Text style={styles.productCount}>Loading...</Text>
-        </View>
-        <View style={styles.loadingContainer}>
+        <PageHeader title={title} rightContent="Loading..." />
+        <View style={[styles.loadingContainer, { paddingTop: headerHeight }]}>
           <ActivityIndicator size="large" color="#333333" />
           <Text style={styles.loadingText}>ပစ္စည်းများ ရယူနေပါသည်...</Text>
         </View>
@@ -130,14 +130,8 @@ export default function Collection() {
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>{title}</Text>
-          <Text style={styles.productCount}>Error</Text>
-        </View>
-        <View style={styles.errorContainer}>
+        <PageHeader title={title} rightContent="Error" />
+        <View style={[styles.errorContainer, { paddingTop: headerHeight }]}>
           <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
           <Text style={styles.errorText}>{error}</Text>
           <Pressable
@@ -153,48 +147,35 @@ export default function Collection() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#000000" />
-        </Pressable>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <Text style={styles.productCount}>
-          ပစ္စည်း {filteredProducts.length} ခု
-        </Text>
-      </View>
-
-      <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#666666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={`${title} တွေ ရှာမယ်`}
-            placeholderTextColor="#666666"
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-        </View>
-        <Text style={styles.searchHint}>
-          * မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို
-          ရိုက်ပြီးရှာနိုင်ပါတယ်
-        </Text>
-      </View>
-
-      <FlatList
-        data={filteredProducts}
-        renderItem={renderProduct}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.productsGrid}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={48} color="#CCCCCC" />
-            <Text style={styles.emptyText}>ရှာတွေ့သော ပစ္စည်း မရှိပါ</Text>
-          </View>
-        )}
+      <PageHeader
+        title={title}
+        rightContent={`ပစ္စည်း ${filteredProducts.length} ခု`}
       />
+
+      <View style={{ paddingTop: headerHeight }}>
+        <SearchBar
+          placeholder={`${title} တွေ ရှာမယ်`}
+          value={searchQuery}
+          onChangeText={handleSearch}
+          hintText="* မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+        />
+
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderProduct}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.productsGrid}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="search-outline" size={48} color="#CCCCCC" />
+              <Text style={styles.emptyText}>ရှာတွေ့သော ပစ္စည်း မရှိပါ</Text>
+            </View>
+          )}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -203,57 +184,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    flex: 1,
-    textAlign: 'center',
-  },
-  productCount: {
-    fontSize: 14,
-    color: '#666666',
-    minWidth: 80,
-    textAlign: 'right',
-  },
-  searchSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#000000',
-  },
-  searchHint: {
-    color: '#999999',
-    fontSize: 10,
-    lineHeight: 16,
   },
   productsGrid: {
     paddingHorizontal: 20,
