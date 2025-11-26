@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 /**
@@ -19,20 +19,30 @@ export default function SearchBar({
   showHint = true,
   onPress,
 }) {
+  const SearchBarContent = (
+    <View style={styles.searchBar}>
+      <Ionicons name="search" size={20} color="#666666" />
+      <TextInput
+        style={styles.searchInput}
+        placeholder={placeholder}
+        placeholderTextColor="#666666"
+        value={value}
+        onChangeText={onChangeText}
+        editable={!onPress}
+        pointerEvents={onPress ? 'none' : 'auto'}
+      />
+    </View>
+  );
+
   return (
     <View style={styles.searchSection}>
-      <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color="#666666" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={placeholder}
-          placeholderTextColor="#666666"
-          value={value}
-          onChangeText={onChangeText}
-          onPressIn={onPress}
-          editable={!onPress}
-        />
-      </View>
+      {onPress ? (
+        <Pressable onPress={onPress} style={styles.searchBarContainer}>
+          {SearchBarContent}
+        </Pressable>
+      ) : (
+        SearchBarContent
+      )}
       {showHint && <Text style={styles.searchHint}>{hintText}</Text>}
     </View>
   );
@@ -43,6 +53,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 20,
   },
+  searchBarContainer: {
+    marginBottom: 8,
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -50,7 +63,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginBottom: 8,
   },
   searchInput: {
     flex: 1,

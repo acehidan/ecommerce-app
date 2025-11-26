@@ -54,9 +54,40 @@ export default function ProductDetail() {
     }
   }, [id]);
 
+  // Calculate unit price based on quantity and wholesale tiers
+  const getUnitPrice = (qty) => {
+    if (!product || qty === 0) return 0;
+
+    // If quantity is 1, use retail price
+    if (qty === 1) {
+      return product.retailUnitPrice;
+    }
+
+    // Check if wholesale tiers exist
+    if (product.wholeSale && product.wholeSale.length > 0) {
+      // Sort wholesale tiers by quantity (descending) to find the best match
+      const sortedWholesale = [...product.wholeSale].sort(
+        (a, b) => b.wholeSaleQuantity - a.wholeSaleQuantity
+      );
+
+      // Find the highest wholesale tier that the quantity qualifies for
+      const matchingTier = sortedWholesale.find(
+        (tier) => qty >= tier.wholeSaleQuantity
+      );
+
+      // If quantity qualifies for wholesale, use wholesale price
+      if (matchingTier) {
+        return matchingTier.wholeSaleUnitPrice;
+      }
+    }
+
+    // Default to retail price if no wholesale tier matches
+    return product.retailUnitPrice;
+  };
+
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
-    if (newQuantity >= 0) {
+    if (newQuantity >= 0 && product && newQuantity <= product.stockQuantity) {
       setQuantity(newQuantity);
     }
   };
@@ -67,8 +98,10 @@ export default function ProductDetail() {
         {
           id: product._id,
           name: product.name,
-          price: product.retailUnitPrice,
+          price: product.retailUnitPrice, // Will be recalculated in store
           image: product.images?.[0]?.url || '',
+          retailUnitPrice: product.retailUnitPrice,
+          wholeSale: product.wholeSale || [],
         },
         quantity
       );
@@ -152,7 +185,7 @@ export default function ProductDetail() {
           </View>
 
           <View style={styles.specsItem}>
-            <Text style={styles.specsTitle}>ဈေးနှုန်း</Text>
+            <Text style={styles.specsTitle}>ဈေးနှုန်း (အနည်းဆုံး)</Text>
             <Text style={styles.specValue}>
               MMK {product?.retailUnitPrice?.toLocaleString()}
             </Text>
@@ -165,8 +198,10 @@ export default function ProductDetail() {
             {product.wholeSale.map((wholesale, index) => (
               <View key={index} style={styles.wholesaleItem}>
                 <View style={styles.specsItem}>
-                  <Text>{wholesale.wholeSaleQuantity} ခု အထက်ဈေး</Text>
-                  <Text>
+                  <Text style={styles.specsTitle}>
+                    {wholesale.wholeSaleQuantity} ခု အထက်ဈေး
+                  </Text>
+                  <Text style={styles.specValue}>
                     MMK {wholesale?.wholeSaleUnitPrice?.toLocaleString()}
                   </Text>
                 </View>
@@ -283,6 +318,7 @@ const styles = StyleSheet.create({
   specsItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    // backgroundColor: 'red',
     justifyContent: 'space-between',
     marginBottom: 8,
   },
@@ -310,7 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   wholesaleItem: {
-    fontSize: 14,
+    fontSize: 10,
     color: colors.text.secondary,
     marginBottom: 8,
   },

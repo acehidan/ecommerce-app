@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,13 +14,44 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
 import Navbar from '../components/Navbar';
+import AuthRequiredModal from '../components/AuthRequiredModal';
 
 export default function Cart() {
   const router = useRouter();
   const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
+  const { isAuthenticated, user } = useAuthStore();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
+  // Check if user needs to authenticate (no user object means guest or not authenticated)
+  const needsAuth = !user;
+
+  // Debug log
+  console.log('Cart - Auth state:', {
+    isAuthenticated,
+    hasUser: !!user,
+    needsAuth,
+  });
+
+  // Show auth modal for users who need to authenticate
+  if (needsAuth) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Navbar title="စျေးဝယ်ခြင်းတောင်း" />
+        <View style={styles.emptyCart}>
+          <Ionicons name="cart-outline" size={64} color="#666666" />
+          <Text style={styles.emptyCartText}>Your cart is empty</Text>
+        </View>
+        <AuthRequiredModal
+          visible={true}
+          onClose={() => {
+            router.back();
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   if (items.length === 0) {
     return (

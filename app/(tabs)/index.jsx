@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import Navbar from '../components/Navbar';
 import SearchBar from '../components/SearchBar';
 import PromotionalBanner from '../components/PromotionalBanner';
@@ -95,7 +96,7 @@ export default function Home() {
           />
         }
       >
-        <SearchBar />
+        <SearchBar onPress={() => router.push('/search')} />
         <PromotionalBanner refreshTrigger={refreshTrigger} />
         <CategoriesSection
           refreshTrigger={refreshTrigger}

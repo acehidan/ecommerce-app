@@ -76,8 +76,20 @@ export default function PromotionalBanner({ refreshTrigger }) {
       return banner.image;
     }
     // Fallback image
-    return 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80';
+    return 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg';
   };
+
+  // Dummy banner data for fallback
+  const dummyBanner = {
+    _id: 'dummy-banner',
+    title: 'ကိုမင်း D.I.Y ပစ္စည်းများ',
+    description: 'အကောင်းဆုံး ပစ္စည်းများကို ရှာဖွေဝယ်ယူပါ',
+    image: 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg',
+  };
+
+  // Show dummy banner if there's an error or no banners
+  const displayBanners =
+    error || banners.length === 0 ? [dummyBanner] : banners;
 
   if (loading) {
     return (
@@ -87,10 +99,6 @@ export default function PromotionalBanner({ refreshTrigger }) {
         </View>
       </View>
     );
-  }
-
-  if (error || banners.length === 0) {
-    return null; // Don't show anything if there's an error or no banners
   }
 
   return (
@@ -105,28 +113,36 @@ export default function PromotionalBanner({ refreshTrigger }) {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {banners.map((banner, index) => (
+        {displayBanners.map((banner, index) => (
           <Pressable
-            key={banner._id}
+            key={banner._id || `banner-${index}`}
             style={styles.bannerWrapper}
             onPress={() => handleBannerPress(banner)}
+            disabled={banner._id === 'dummy-banner'}
           >
             <View style={styles.promotionalBanner}>
               <Image
                 source={{ uri: getBannerImage(banner) }}
                 style={styles.backgroundImage}
                 resizeMode="cover"
+                onError={() => {
+                  // If image fails to load, it will use the fallback in getBannerImage
+                  console.log('Banner image failed to load');
+                }}
               />
               <View style={styles.overlay}>
                 <View style={styles.bannerContent}>
                   <View style={styles.bannerText}>
-                    <Text style={styles.bannerTitle}>{banner.title}</Text>
-                    <Text style={styles.bannerSubtitle}>
-                      {banner.description}
+                    <Text style={styles.bannerTitle}>
+                      {banner.title || 'ကိုမင်း D.I.Y ပစ္စည်းများ'}
                     </Text>
-                    <Pressable style={styles.buyNowButton}>
+                    <Text style={styles.bannerSubtitle}>
+                      {banner.description ||
+                        'အကောင်းဆုံး ပစ္စည်းများကို ရှာဖွေဝယ်ယူပါ'}
+                    </Text>
+                    {/* <Pressable style={styles.buyNowButton}>
                       <Text style={styles.buyNowText}>မြန်မြန်ဝယ်မယ်</Text>
-                    </Pressable>
+                    </Pressable> */}
                   </View>
                 </View>
               </View>
@@ -134,9 +150,9 @@ export default function PromotionalBanner({ refreshTrigger }) {
           </Pressable>
         ))}
       </ScrollView>
-      {banners.length > 1 && (
+      {displayBanners.length > 1 && (
         <View style={styles.bannerDots}>
-          {banners.map((_, index) => (
+          {displayBanners.map((_, index) => (
             <View
               key={index}
               style={[

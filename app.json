@@ -38,7 +38,8 @@
       }
     },
     "android": {
-      "package": "com.acehidan.rector"
+      "package": "com.acehidan.rector",
+      "versionCode": 2
     },
     "owner": "acehidan"
   }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createOrder as createOrderService } from '../services/order/createOrder';
 
 export interface ContactInfo {
   name: string;
@@ -213,9 +214,8 @@ export const useCheckoutStore = create<CheckoutState>()(
 
       // Step 4 Actions
       createOrder: async (orderData: any) => {
-        const { createOrder } = await import('../services/order/createOrder');
         try {
-          const response = await createOrder(orderData);
+          const response = await createOrderService(orderData);
           set((state) => ({
             checkoutData: {
               ...state.checkoutData,

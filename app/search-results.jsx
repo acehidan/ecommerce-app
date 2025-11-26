@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   FlatList,
-  Image,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import handleGetStocks from '../services/products/getStocks';
+import ProductCard from './components/ProductCard';
 
 export default function SearchResults() {
   const { query, category } = useLocalSearchParams();
@@ -62,6 +62,7 @@ export default function SearchResults() {
   };
 
   const handleProductPress = (productId) => {
+    console.log('productId', productId);
     router.push(`/product/${productId}`);
   };
 
@@ -93,43 +94,18 @@ export default function SearchResults() {
   };
 
   const renderProductCard = ({ item }) => (
-    <View style={styles.productCard}>
-      <Pressable
-        style={styles.productCardContent}
-        onPress={() => handleProductPress(item._id)}
-      >
-        <View style={styles.productImageContainer}>
-          <Image
-            source={{
-              uri:
-                item.images && item.images.length > 0
-                  ? item.images[0].url
-                  : 'https://via.placeholder.com/150x150/E5E5E5/999999?text=No+Image',
-            }}
-            style={styles.productImage}
-            resizeMode="cover"
-          />
-          {item.stockQuantity <= 0 && (
-            <View style={styles.outOfStockOverlay}>
-              <Text style={styles.outOfStockText}>ပစ္စည်းကုန်ပါပြီ</Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.productInfo}>
-          <Text style={styles.productName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <Text style={styles.productPrice}>
-            MMK {item.retailUnitPrice.toLocaleString()}
-          </Text>
-        </View>
-      </Pressable>
-      <Pressable
-        style={styles.viewButton}
-        onPress={() => handleProductPress(item._id)}
-      >
-        <Text style={styles.viewButtonText}>ကြည့်မယ်</Text>
-      </Pressable>
+    <View style={styles.productItem}>
+      <ProductCard
+        id={item._id}
+        name={item.name}
+        price={item.retailUnitPrice}
+        image={
+          item.images && item.images.length > 0
+            ? item.images[0].url
+            : 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg'
+        }
+        onPress={() => handleProductPress(item.productCode)}
+      />
     </View>
   );
 
@@ -139,17 +115,14 @@ export default function SearchResults() {
         <Ionicons name="arrow-back" size={24} color="#000000" />
       </Pressable>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>ရှာဖွေရလဒ်များ</Text>
-        <Text style={styles.searchQuery}>
-          "{query}" အတွက် {searchResults.length} ခု ရှာတွေ့ပါပြီ
-        </Text>
+        <Text style={styles.headerTitle}>ကိုက်ညီသော ပစ္စည်းများ</Text>
       </View>
-      <Pressable
+      {/* <Pressable
         style={styles.filterButton}
         onPress={() => setFilterVisible(!filterVisible)}
       >
         <Ionicons name="filter-outline" size={24} color="#000000" />
-      </Pressable>
+      </Pressable> */}
     </View>
   );
 
@@ -200,7 +173,7 @@ export default function SearchResults() {
   return (
     <SafeAreaView style={styles.container}>
       {renderHeader()}
-      {renderSortOptions()}
+      {/* {renderSortOptions()} */}
 
       {error ? (
         <View style={styles.errorContainer}>
@@ -274,6 +247,7 @@ const styles = StyleSheet.create({
   sortContainer: {
     backgroundColor: '#FFFFFF',
     paddingVertical: 12,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
@@ -311,85 +285,9 @@ const styles = StyleSheet.create({
   productRow: {
     justifyContent: 'space-between',
   },
-  productCard: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    marginBottom: 16,
+  productItem: {
     width: '48%',
-  },
-  productCardContent: {
-    flex: 1,
-  },
-  productImageContainer: {
-    height: 150,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: '#FF3B30',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  discountText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  outOfStockOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  outOfStockText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  productInfo: {
-    padding: 12,
-    flex: 1,
-  },
-  productName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 8,
-    lineHeight: 18,
-  },
-  productPrice: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
-  },
-  viewButton: {
-    backgroundColor: '#333333',
-    marginHorizontal: 10,
-    marginBottom: 12,
-    paddingVertical: 10,
-    borderRadius: 50,
-    alignItems: 'center',
-  },
-  viewButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    marginBottom: 16,
   },
   noResultsContainer: {
     flex: 1,

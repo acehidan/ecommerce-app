@@ -13,23 +13,23 @@ import colors from '../../constants/colors';
 import Button from './Button';
 
 // Fallback categories for when API fails
-const CATEGORIES = [
-  {
-    id: 1,
-    name: 'Capacitor',
-    slug: 'capacitor',
-  },
-  {
-    id: 2,
-    name: 'Electronics',
-    slug: 'electronics',
-  },
-  {
-    id: 3,
-    name: 'Resistors',
-    slug: 'resistors',
-  },
-];
+// const CATEGORIES = [
+//   {
+//     id: 1,
+//     name: 'Capacitor',
+//     slug: 'capacitor',
+//   },
+//   {
+//     id: 2,
+//     name: 'Electronics',
+//     slug: 'electronics',
+//   },
+//   {
+//     id: 3,
+//     name: 'Resistors',
+//     slug: 'resistors',
+//   },
+// ];
 
 export default function CategoriesSection({ refreshTrigger, onLoadingChange }) {
   const [categories, setCategories] = useState([]);
@@ -60,15 +60,11 @@ export default function CategoriesSection({ refreshTrigger, onLoadingChange }) {
 
         setCategories(transformedCategories);
       } else {
-        setError(response.error || 'Failed to load categories');
-        // Fallback to static categories if API fails
-        setCategories(CATEGORIES);
+        setError('Failed to load');
       }
     } catch (err) {
-      console.error('Error fetching categories:', err);
-      setError('Failed to load categories');
-      // Fallback to static categories
-      setCategories(CATEGORIES);
+      console.error('Error fetching:', err);
+      setError('Failed to load');
     } finally {
       setLoading(false);
       if (onLoadingChange) onLoadingChange(false);

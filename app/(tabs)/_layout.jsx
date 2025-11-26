@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { useCartStore } from '../../store/cartStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Easing } from 'react-native';
 
 export default function TabLayout() {
   const totalItems = useCartStore((state) => state.getTotalItems());
@@ -12,6 +13,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
+        animation: 'shift',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
@@ -36,12 +38,14 @@ export default function TabLayout() {
             animation: 'timing',
             config: {
               duration: 250,
+              easing: Easing.bezier(0.4, 0.0, 0.2, 1),
             },
           },
           hide: {
             animation: 'timing',
             config: {
-              duration: 10,
+              duration: 200,
+              easing: Easing.bezier(0.4, 0.0, 0.2, 1),
             },
           },
         },

@@ -16,6 +16,7 @@ import { useWishlistStore } from '../../store/wishlistStore';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import PageHeader from '../components/PageHeader';
+import AuthRequiredModal from '../components/AuthRequiredModal';
 
 const ORDERS = [
   {
@@ -47,9 +48,18 @@ const ORDERS = [
 export default function Profile() {
   const wishlistItems = useWishlistStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
-  const logout = useAuthStore((state) => state.logout);
+  const { isAuthenticated, user, logout } = useAuthStore();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
+  // Check if user needs to authenticate (no user object means guest or not authenticated)
+  const needsAuth = !user;
+
+  // Debug log
+  console.log('Profile - Auth state:', {
+    isAuthenticated,
+    hasUser: !!user,
+    needsAuth,
+  });
 
   const handleLogout = () => {
     Alert.alert('အကောင့်မှထွက်မယ်', 'သင်အကောင့်မှထွက်ရန်သေချာပါသလား?', [
@@ -73,6 +83,26 @@ export default function Profile() {
       },
     ]);
   };
+
+  if (needsAuth) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <PageHeader title="မိမိအကောင့်" sticky={false} />
+        <View style={styles.emptyContainer}>
+          <Ionicons name="person-outline" size={64} color="#666666" />
+          <Text style={styles.emptyText}>
+            Please login to view your profile
+          </Text>
+        </View>
+        <AuthRequiredModal
+          visible={true}
+          onClose={() => {
+            router.back();
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -265,5 +295,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FF3B30',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666666',
+    marginTop: 16,
+    textAlign: 'center',
   },
 });

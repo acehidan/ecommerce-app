@@ -9,6 +9,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -87,14 +88,15 @@ export default function SignupScreen() {
   };
 
   const handleTermsPress = () => {
-    Alert.alert(
-      'Terms & Conditions',
-      'Terms and conditions will be displayed here'
+    Linking.openURL('https://komindiystore.com/terms-and-conditions').catch(
+      (err) => console.error('Failed to open URL:', err)
     );
   };
 
   const handlePoliciesPress = () => {
-    Alert.alert('Policies', 'Privacy policies will be displayed here');
+    Linking.openURL('https://komindiystore.com/privacy-policy').catch((err) =>
+      console.error('Failed to open URL:', err)
+    );
   };
 
   return (

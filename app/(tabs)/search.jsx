@@ -98,7 +98,7 @@ export default function Search() {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.textInput}
-              placeholder="ဉပမာ : ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့"
+              placeholder="ဉပမာ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး"
               value={itemName}
               onChangeText={setItemName}
               placeholderTextColor="#999999"
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     borderRadius: 12,
     // paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

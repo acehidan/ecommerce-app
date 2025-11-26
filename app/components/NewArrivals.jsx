@@ -73,7 +73,7 @@ export default function NewArrivals({ refreshTrigger, onLoadingChange }) {
           <View style={styles.placeholder} />
         </View>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load products</Text>
+          <Text style={styles.errorText}>No Products Found</Text>
         </View>
       </View>
     );

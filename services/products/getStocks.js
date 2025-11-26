@@ -50,20 +50,31 @@ const handleGetStocks = async (
   try {
     const params = new URLSearchParams();
 
-    if (searchParams.name) {
-      params.append('name', searchParams.name);
-    }
+    // saleType is always "regular" as constant
+    params.append('saleType', 'regular');
 
+    // Add category if provided
     if (searchParams.category) {
       params.append('category', searchParams.category);
     }
 
-    const response = await api.get(`/api/v1/stocks?${params.toString()}`);
+    // Add name if provided
+    if (searchParams.name) {
+      params.append('name', searchParams.name);
+    }
+
+    const response = await api.get(
+      `/api/v1/stocks/filter/advanced?${params.toString()}`
+    );
+
+    // Handle the new response structure: response.data.data.stocks
+    const stocks =
+      response.data?.data?.stocks || response.data?.stocks || response.data || [];
 
     return {
       success: true,
-      message: 'Stocks retrieved successfully.',
-      data: response.data.data || response.data,
+      message: response.data?.message || 'Stocks retrieved successfully.',
+      data: stocks,
     };
   } catch (error) {
     console.error('Error fetching stocks:', error);
