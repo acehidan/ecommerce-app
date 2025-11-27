@@ -7,6 +7,10 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from '../services/utils/toastConfig';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Easing } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Keep the native splash screen visible while we load fonts and initialize
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -31,6 +35,13 @@ export default function RootLayout() {
 
     initialize();
   }, [initializeAuth]);
+
+  useEffect(() => {
+    // Hide native splash screen once fonts are loaded and app is ready
+    if (loaded && isReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, isReady]);
 
   if (!loaded || !isReady) return null;
 
