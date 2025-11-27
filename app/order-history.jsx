@@ -6,19 +6,28 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { getOrderHistory, Order } from '../services/order/getOrderHistory';
+import { useAuthStore } from '../store/authStore';
 
 export default function OrderHistory() {
+  const { user, token } = useAuthStore();
   const [orders, setOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]); // Store all orders for filtering
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [selectedFilter, setSelectedFilter] = useState('all');
 
   const handleBack = () => {
     router.back();
@@ -29,7 +38,143 @@ export default function OrderHistory() {
   };
 
   const handleDateFilter = () => {
-    Alert.alert('ရက်ရွေးမယ်', 'ရက်စွဲ ရွေးချယ်ခြင်း');
+    setShowDateFilter(true);
+  };
+
+  const handleQuickFilter = (filterType) => {
+    setSelectedFilter(filterType);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let start = null;
+    let end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    switch (filterType) {
+      case 'today':
+        start = new Date(today);
+        break;
+      case 'week':
+        start = new Date(today);
+        start.setDate(today.getDate() - 7);
+        break;
+      case 'month':
+        start = new Date(today);
+        start.setMonth(today.getMonth() - 1);
+        break;
+      case 'all':
+        start = null;
+        end = null;
+        break;
+      default:
+        break;
+    }
+
+    setStartDate(start);
+    setEndDate(end);
+    applyDateFilter(start, end);
+  };
+
+  const applyDateFilter = (start, end) => {
+    if (!start && !end) {
+      // Show all orders
+      setOrders(allOrders);
+      setTotalOrders(allOrders.length);
+      const total = allOrders.reduce(
+        (sum, order) => sum + (order.totalAmount || 0),
+        0
+      );
+      setTotalAmount(total);
+      return;
+    }
+
+    const filtered = allOrders.filter((order) => {
+      const orderDate = new Date(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+
+      if (start && end) {
+        return orderDate >= start && orderDate <= end;
+      } else if (start) {
+        return orderDate >= start;
+      } else if (end) {
+        return orderDate <= end;
+      }
+      return true;
+    });
+
+    setOrders(filtered);
+    setTotalOrders(filtered.length);
+    const total = filtered.reduce(
+      (sum, order) => sum + (order.totalAmount || 0),
+      0
+    );
+    setTotalAmount(total);
+  };
+
+  const handleApplyFilter = () => {
+    applyDateFilter(startDate, endDate);
+    setShowDateFilter(false);
+  };
+
+  const handleClearFilter = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setSelectedFilter('all');
+    setOrders(allOrders);
+    setTotalOrders(allOrders.length);
+    const total = allOrders.reduce(
+      (sum, order) => sum + (order.totalAmount || 0),
+      0
+    );
+    setTotalAmount(total);
+    setShowDateFilter(false);
+  };
+
+  const formatDateForDisplay = (date) => {
+    if (!date) return '';
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const showDatePicker = (type) => {
+    // For simplicity, using Alert with date input
+    // In a real app, you'd use a proper date picker library
+    Alert.prompt(
+      type === 'start' ? 'စတင်ရက် ရွေးချယ်ပါ' : 'အဆုံးရက် ရွေးချယ်ပါ',
+      'ရက်စွဲ (DD/MM/YYYY)',
+      [
+        {
+          text: 'ပယ်ဖျက်မယ်',
+          style: 'cancel',
+        },
+        {
+          text: 'အတည်ပြုမယ်',
+          onPress: (dateStr) => {
+            if (dateStr) {
+              const parts = dateStr.split('/');
+              if (parts.length === 3) {
+                const date = new Date(
+                  parseInt(parts[2]),
+                  parseInt(parts[1]) - 1,
+                  parseInt(parts[0])
+                );
+                if (type === 'start') {
+                  setStartDate(date);
+                  setSelectedFilter('custom');
+                } else {
+                  setEndDate(date);
+                  setSelectedFilter('custom');
+                }
+              }
+            }
+          },
+        },
+      ],
+      'plain-text'
+    );
   };
 
   const handleReorder = (orderId) => {
@@ -70,26 +215,56 @@ export default function OrderHistory() {
       const response = await getOrderHistory();
 
       if (response.success) {
-        setOrders(response.data.orders);
-        setTotalOrders(response.data.count);
+        const orders = response.data.orders || [];
+        const count = response.data.count || orders.length;
 
-        const total = response.data.orders.reduce(
-          (sum, order) => sum + order.totalAmount,
+        // Store all orders for filtering
+        setAllOrders(orders);
+        setOrders(orders);
+        setTotalOrders(count);
+
+        const total = orders.reduce(
+          (sum, order) => sum + (order.totalAmount || 0),
           0
         );
         setTotalAmount(total);
+      } else {
+        setError(
+          response.message || 'အော်ဒါ မှတ်တမ်း ရယူရာတွင် အမှား ဖြစ်ပွားပါသည်'
+        );
       }
     } catch (err) {
-      setError('အော်ဒါ မှတ်တမ်း ရယူရာတွင် အမှား ဖြစ်ပွားပါသည်');
+      const errorMessage =
+        err.message || 'အော်ဒါ မှတ်တမ်း ရယူရာတွင် အမှား ဖြစ်ပွားပါသည်';
+      setError(errorMessage);
       console.error('Error fetching order history:', err);
+
+      // If authentication error, redirect to login
+      if (
+        errorMessage.includes('Authentication') ||
+        errorMessage.includes('login')
+      ) {
+        setTimeout(() => {
+          router.replace('/auth/login');
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchOrderHistory();
-  }, []);
+    // Only fetch if user is authenticated
+    if (user && token) {
+      fetchOrderHistory();
+    } else {
+      setLoading(false);
+      setError('အကောင့်ဝင်ရမည်');
+      setTimeout(() => {
+        router.replace('/auth/login');
+      }, 2000);
+    }
+  }, [user, token]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -139,9 +314,32 @@ export default function OrderHistory() {
         <View style={styles.placedOrdersHeader}>
           <Text style={styles.placedOrdersTitle}>မှာယူထားသော အော်ဒါများ</Text>
           <Pressable style={styles.dateFilterButton} onPress={handleDateFilter}>
+            <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
             <Text style={styles.dateFilterButtonText}>ရက်ရွေးမယ်</Text>
           </Pressable>
         </View>
+
+        {/* Date Filter Info */}
+        {(startDate || endDate || selectedFilter !== 'all') && (
+          <View style={styles.filterInfo}>
+            <Text style={styles.filterInfoText}>
+              {selectedFilter === 'today'
+                ? 'ယနေ့'
+                : selectedFilter === 'week'
+                ? 'ပြီးခဲ့သော ၇ ရက်'
+                : selectedFilter === 'month'
+                ? 'ပြီးခဲ့သော ၁ လ'
+                : startDate || endDate
+                ? `${formatDateForDisplay(startDate)} - ${formatDateForDisplay(
+                    endDate
+                  )}`
+                : 'အားလုံး'}
+            </Text>
+            <Pressable onPress={handleClearFilter}>
+              <Ionicons name="close-circle" size={20} color="#666666" />
+            </Pressable>
+          </View>
+        )}
 
         {/* Order List */}
         <View style={styles.orderList}>
@@ -216,6 +414,139 @@ export default function OrderHistory() {
           )}
         </View>
       </ScrollView>
+
+      {/* Date Filter Modal */}
+      <Modal
+        visible={showDateFilter}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowDateFilter(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>ရက်စွဲ စစ်ထုတ်မယ်</Text>
+              <Pressable onPress={() => setShowDateFilter(false)}>
+                <Ionicons name="close" size={24} color="#000000" />
+              </Pressable>
+            </View>
+
+            {/* Quick Filter Options */}
+            <View style={styles.quickFilters}>
+              <Text style={styles.sectionLabel}>အမြန်ရွေးချယ်မှု</Text>
+              <View style={styles.quickFilterButtons}>
+                <Pressable
+                  style={[
+                    styles.quickFilterButton,
+                    selectedFilter === 'today' &&
+                      styles.quickFilterButtonActive,
+                  ]}
+                  onPress={() => handleQuickFilter('today')}
+                >
+                  <Text
+                    style={[
+                      styles.quickFilterButtonText,
+                      selectedFilter === 'today' &&
+                        styles.quickFilterButtonTextActive,
+                    ]}
+                  >
+                    ယနေ့
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.quickFilterButton,
+                    selectedFilter === 'week' && styles.quickFilterButtonActive,
+                  ]}
+                  onPress={() => handleQuickFilter('week')}
+                >
+                  <Text
+                    style={[
+                      styles.quickFilterButtonText,
+                      selectedFilter === 'week' &&
+                        styles.quickFilterButtonTextActive,
+                    ]}
+                  >
+                    ပြီးခဲ့သော ၇ ရက်
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.quickFilterButton,
+                    selectedFilter === 'month' &&
+                      styles.quickFilterButtonActive,
+                  ]}
+                  onPress={() => handleQuickFilter('month')}
+                >
+                  <Text
+                    style={[
+                      styles.quickFilterButtonText,
+                      selectedFilter === 'month' &&
+                        styles.quickFilterButtonTextActive,
+                    ]}
+                  >
+                    ပြီးခဲ့သော ၁ လ
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.quickFilterButton,
+                    selectedFilter === 'all' && styles.quickFilterButtonActive,
+                  ]}
+                  onPress={() => handleQuickFilter('all')}
+                >
+                  <Text
+                    style={[
+                      styles.quickFilterButtonText,
+                      selectedFilter === 'all' &&
+                        styles.quickFilterButtonTextActive,
+                    ]}
+                  >
+                    အားလုံး
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Custom Date Range */}
+            <View style={styles.customDateRange}>
+              <Text style={styles.sectionLabel}>ကိုယ်ပိုင် ရက်စွဲ</Text>
+              <Pressable
+                style={styles.dateInput}
+                onPress={() => showDatePicker('start')}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#666666" />
+                <Text style={styles.dateInputText}>
+                  {startDate
+                    ? formatDateForDisplay(startDate)
+                    : 'စတင်ရက် ရွေးချယ်ပါ'}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={styles.dateInput}
+                onPress={() => showDatePicker('end')}
+              >
+                <Ionicons name="calendar-outline" size={20} color="#666666" />
+                <Text style={styles.dateInputText}>
+                  {endDate
+                    ? formatDateForDisplay(endDate)
+                    : 'အဆုံးရက် ရွေးချယ်ပါ'}
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.modalActions}>
+              <Pressable style={styles.clearButton} onPress={handleClearFilter}>
+                <Text style={styles.clearButtonText}>ရှင်းလင်းမယ်</Text>
+              </Pressable>
+              <Pressable style={styles.applyButton} onPress={handleApplyFilter}>
+                <Text style={styles.applyButtonText}>အတည်ပြုမယ်</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -334,11 +665,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   dateFilterButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
+  },
+  filterInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#F5F5F5',
+    marginHorizontal: 20,
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  filterInfoText: {
+    fontSize: 14,
+    color: '#666666',
   },
   orderList: {
     paddingHorizontal: 20,
@@ -475,5 +824,111 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  quickFilters: {
+    marginBottom: 24,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666666',
+    marginBottom: 12,
+  },
+  quickFilterButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  quickFilterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  quickFilterButtonActive: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
+  },
+  quickFilterButtonText: {
+    fontSize: 14,
+    color: '#000000',
+    fontWeight: '500',
+  },
+  quickFilterButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  customDateRange: {
+    marginBottom: 24,
+  },
+  dateInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 12,
+    gap: 12,
+  },
+  dateInputText: {
+    fontSize: 14,
+    color: '#000000',
+    flex: 1,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  clearButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666666',
+  },
+  applyButton: {
+    flex: 1,
+    backgroundColor: '#000000',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

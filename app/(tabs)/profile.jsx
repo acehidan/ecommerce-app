@@ -161,13 +161,12 @@ export default function Profile() {
             <Ionicons name="chevron-forward" size={20} color="#666666" />
           </Pressable>
 
-          <Pressable style={styles.menuItem}>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => router.push('/settings')}
+          >
             <View style={styles.menuIcon}>
-              <Ionicons
-                name="chatbox-ellipses-outline"
-                size={24}
-                color="#000000"
-              />
+              <Ionicons name="settings-outline" size={24} color="#000000" />
             </View>
             <View style={styles.menuTextContainer}>
               <Text style={styles.menuTitle}>ဆက်တင်</Text>
@@ -177,7 +176,7 @@ export default function Profile() {
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666666" />
           </Pressable>
-
+          {/* 
           <Pressable
             style={styles.menuItem}
             onPress={() => router.push('/chat')}
@@ -196,7 +195,7 @@ export default function Profile() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666666" />
-          </Pressable>
+          </Pressable> */}
 
           <Pressable style={styles.logoutButton} onPress={handleLogout}>
             <View style={styles.logoutContainer}>

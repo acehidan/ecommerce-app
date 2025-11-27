@@ -163,13 +163,13 @@ export default function AccountDetail() {
                 </View>
                 <View>
                   <Text style={styles.value}>
-                    {userProfile?.user?.userName || 'ထက်ဦးဝေယံ'}
+                    {userProfile?.user?.userName || 'Guest User'}
                   </Text>
                 </View>
               </View>
-              {/* <Pressable style={styles.editButton} onPress={handleEditName}>
+              <Pressable style={styles.editButton} onPress={handleEditName}>
                 <Text style={styles.editButtonText}>ပြင်မယ်</Text>
-              </Pressable> */}
+              </Pressable>
             </View>
           </View>
         </View>
@@ -183,7 +183,7 @@ export default function AccountDetail() {
               </View>
               <View>
                 <Text style={styles.value}>
-                  {userProfile?.user?.phoneNumber || '09 783742004'}
+                  {userProfile?.user?.phoneNumber || 'Not provided'}
                 </Text>
               </View>
             </View>
@@ -204,14 +204,14 @@ export default function AccountDetail() {
                 <Text style={styles.value}>{'*******'}</Text>
               </View>
             </View>
-            {/* <Pressable
+            <Pressable
               style={styles.changePasswordButton}
               onPress={handleChangePassword}
             >
               <Text style={styles.changePasswordButtonText}>
                 လျှို့ဝှက်နံပါတ်ပြောင်းမယ်
               </Text>
-            </Pressable> */}
+            </Pressable>
           </View>
         </View>
       </ScrollView>

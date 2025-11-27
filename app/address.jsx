@@ -13,11 +13,13 @@ import { router, useFocusEffect } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { getUserAddresses } from '../services/user/getUserAddresses';
 import { getUserProfile } from '../services/user/userProfile';
+import deleteAddress from '../services/user/deleteAddress';
 
 export default function Address() {
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingAddressId, setDeletingAddressId] = useState(null);
 
   useEffect(() => {
     fetchAddresses();
@@ -57,23 +59,93 @@ export default function Address() {
     }
   };
 
+  const handleDeleteAddress = (address) => {
+    Alert.alert(
+      'လိပ်စာ ဖျက်မယ်',
+      `သင်ဤလိပ်စာကို ဖျက်ရန်သေချာပါသလား?\n\n${address.note}\n${address.address}, ${address.township}, ${address.city}`,
+      [
+        {
+          text: 'မဖျက်ပါ',
+          style: 'cancel',
+        },
+        {
+          text: 'ဖျက်မယ်',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingAddressId(address._id);
+              const response = await deleteAddress(address._id);
+
+              if (response.success) {
+                // Remove the deleted address from the list
+                setAddresses((prevAddresses) =>
+                  prevAddresses.filter((addr) => addr._id !== address._id)
+                );
+                Alert.alert(
+                  'အောင်မြင်ပါသည်',
+                  'လိပ်စာ အောင်မြင်စွာ ဖျက်ပြီးပါပြီ'
+                );
+              } else {
+                Alert.alert(
+                  'အမှား',
+                  response.message || 'လိပ်စာဖျက်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်'
+                );
+              }
+            } catch (error) {
+              console.error('Error deleting address:', error);
+              Alert.alert('အမှား', 'လိပ်စာဖျက်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်');
+            } finally {
+              setDeletingAddressId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderAddressCard = (address) => (
     <View key={address._id} style={styles.addressCard}>
       <View style={styles.addressIcon}>
-        <Ionicons name="location" size={24} color="#000000" />
+        <Ionicons name="location" size={16} color="#000000" />
+        {/* <Text style={styles.addressLabel}>လိပ်စာ နာမည်</Text> */}
       </View>
 
       <View style={styles.addressInfo}>
-        <Text style={styles.addressLabel}>လိပ်စာ နာမည်</Text>
         <Text style={styles.addressName}>{address.note}</Text>
         <Text style={styles.addressDetails}>
           {address.address}, {address.township}, {address.city}
         </Text>
       </View>
 
-      <Pressable style={styles.editButton}>
-        <Text style={styles.editButtonText}>ပြင်မယ်</Text>
-      </Pressable>
+      <View style={styles.actionButtons}>
+        <Pressable
+          style={styles.editButton}
+          onPress={() => {
+            router.push({
+              pathname: '/add-address',
+              params: {
+                addressData: JSON.stringify(address),
+              },
+            });
+          }}
+        >
+          <Text style={styles.editButtonText}>ပြင်မယ်</Text>
+        </Pressable>
+        <Pressable
+          style={[
+            styles.deleteButton,
+            deletingAddressId === address._id && styles.deleteButtonDisabled,
+          ]}
+          onPress={() => handleDeleteAddress(address)}
+          disabled={deletingAddressId === address._id}
+        >
+          {deletingAddressId === address._id ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Ionicons name="trash-outline" size={16} color="#FFFFFF" />
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 
@@ -249,13 +321,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addressIcon: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: 20,
     backgroundColor: '#E5E5E5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 10,
   },
   addressInfo: {
     flex: 1,
@@ -277,6 +349,11 @@ const styles = StyleSheet.create({
     color: '#666666',
     lineHeight: 16,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   editButton: {
     backgroundColor: '#4A4A4A',
     borderRadius: 8,
@@ -287,5 +364,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '500',
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButtonDisabled: {
+    opacity: 0.6,
   },
 });
