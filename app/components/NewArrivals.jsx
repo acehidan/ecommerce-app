@@ -10,6 +10,7 @@ import {
 import { router } from 'expo-router';
 import ProductCard from './ProductCard';
 import handleGetNewArrivalsProducts from '../../services/products/getNewArrivalsProducts';
+import { useHomeCacheStore } from '../../store/homeCacheStore';
 import Button from './Button';
 import colors from '../../constants/colors';
 
@@ -17,30 +18,55 @@ export default function NewArrivals({ refreshTrigger, onLoadingChange }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { getProducts, setProducts: setProductsCache, isProductsStale } = useHomeCacheStore();
 
   useEffect(() => {
-    const fetchNewArrivals = async () => {
-      try {
+    // If refreshTrigger is set, always fetch fresh data
+    if (refreshTrigger > 0) {
+      fetchNewArrivals(false);
+      return;
+    }
+
+    // Check cache first
+    const cachedProducts = getProducts();
+    const isStale = isProductsStale();
+
+    if (cachedProducts && !isStale) {
+      // Use cached data immediately
+      setProducts(cachedProducts);
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+      // Fetch in background to update cache
+      fetchNewArrivals(true);
+    } else {
+      // Fetch fresh data
+      fetchNewArrivals(false);
+    }
+  }, [refreshTrigger]);
+
+  const fetchNewArrivals = async (isBackground = false) => {
+    try {
+      if (!isBackground) {
         setLoading(true);
         if (onLoadingChange) onLoadingChange(true);
-        const result = await handleGetNewArrivalsProducts();
-        if (result.success) {
-          // Limit to first 10 products
-          const limitedProducts = result.data.data.slice(0, 10);
-          setProducts(limitedProducts);
-        } else {
-          setError(result.error);
-        }
-      } catch (err) {
-        setError('Failed to fetch new arrivals');
-      } finally {
-        setLoading(false);
-        if (onLoadingChange) onLoadingChange(false);
       }
-    };
-
-    fetchNewArrivals();
-  }, [refreshTrigger]);
+      const result = await handleGetNewArrivalsProducts();
+      if (result.success) {
+        // Limit to first 10 products
+        const limitedProducts = result.data.data.slice(0, 10);
+        setProducts(limitedProducts);
+        // Update cache
+        setProductsCache(limitedProducts);
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('Failed to fetch new arrivals');
+    } finally {
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+    }
+  };
 
   const handleProductPress = (productId) => {
     router.push(`/product/${productId}`);

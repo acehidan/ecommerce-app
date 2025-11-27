@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import handleGetBanners from '../../services/banners/getBanners';
+import { useHomeCacheStore } from '../../store/homeCacheStore';
 import colors from '../../constants/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -22,14 +23,36 @@ export default function PromotionalBanner({ refreshTrigger }) {
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef(null);
+  const { getBanners, setBanners: setBannersCache, isBannersStale } = useHomeCacheStore();
 
   useEffect(() => {
-    fetchBanners();
+    // If refreshTrigger is set, always fetch fresh data
+    if (refreshTrigger > 0) {
+      fetchBanners(false);
+      return;
+    }
+
+    // Check cache first
+    const cachedBanners = getBanners();
+    const isStale = isBannersStale();
+
+    if (cachedBanners && !isStale) {
+      // Use cached data immediately
+      setBanners(cachedBanners);
+      setLoading(false);
+      // Fetch in background to update cache
+      fetchBanners(true);
+    } else {
+      // Fetch fresh data
+      fetchBanners(false);
+    }
   }, [refreshTrigger]);
 
-  const fetchBanners = async () => {
+  const fetchBanners = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) {
+        setLoading(true);
+      }
       setError(null);
       const result = await handleGetBanners();
       if (result.success) {
@@ -38,6 +61,8 @@ export default function PromotionalBanner({ refreshTrigger }) {
           (banner) => !banner.softDeleted
         );
         setBanners(activeBanners);
+        // Update cache
+        setBannersCache(activeBanners);
       } else {
         setError(result.error);
       }

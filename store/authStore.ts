@@ -75,9 +75,24 @@ export const useAuthStore = create<AuthState>()(
               user: profile.user,
               token: profile.token,
             });
+          } else {
+            // Explicitly set to false if no profile found
+            set({
+              isAuthenticated: false,
+              user: null,
+              token: null,
+              passwordChangeToken: null,
+            });
           }
         } catch (error) {
           console.error('Error initializing auth:', error);
+          // On error, also set to false
+          set({
+            isAuthenticated: false,
+            user: null,
+            token: null,
+            passwordChangeToken: null,
+          });
         }
       },
       updateUsername: (userName: string) => {

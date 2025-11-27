@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import handleGetAllCategory from '../../services/products/getAllCategory';
+import { useHomeCacheStore } from '../../store/homeCacheStore';
 import colors from '../../constants/colors';
 import Button from './Button';
 
@@ -35,15 +36,38 @@ export default function CategoriesSection({ refreshTrigger, onLoadingChange }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { getCategories, setCategories: setCategoriesCache, isCategoriesStale } = useHomeCacheStore();
 
   useEffect(() => {
-    fetchCategories();
+    // If refreshTrigger is set, always fetch fresh data
+    if (refreshTrigger > 0) {
+      fetchCategories(false);
+      return;
+    }
+
+    // Check cache first
+    const cachedCategories = getCategories();
+    const isStale = isCategoriesStale();
+
+    if (cachedCategories && !isStale) {
+      // Use cached data immediately
+      setCategories(cachedCategories);
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+      // Fetch in background to update cache
+      fetchCategories(true);
+    } else {
+      // Fetch fresh data
+      fetchCategories(false);
+    }
   }, [refreshTrigger]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (isBackground = false) => {
     try {
-      setLoading(true);
-      if (onLoadingChange) onLoadingChange(true);
+      if (!isBackground) {
+        setLoading(true);
+        if (onLoadingChange) onLoadingChange(true);
+      }
       setError(null);
       const response = await handleGetAllCategory();
       console.log('response', response);
@@ -51,7 +75,7 @@ export default function CategoriesSection({ refreshTrigger, onLoadingChange }) {
       if (response.success) {
         // Transform API response to match our component structure
         const transformedCategories = response.data.data.items
-          .slice(0, 10) // Limit to first 3 categories
+          .slice(0, 10) // Limit to first 10 categories
           .map((item, index) => ({
             id: index + 1,
             name: item.category,
@@ -59,6 +83,8 @@ export default function CategoriesSection({ refreshTrigger, onLoadingChange }) {
           }));
 
         setCategories(transformedCategories);
+        // Update cache
+        setCategoriesCache(transformedCategories);
       } else {
         setError('Failed to load');
       }
