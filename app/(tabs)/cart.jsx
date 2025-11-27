@@ -134,7 +134,7 @@ export default function Cart() {
       <View style={styles.checkoutButtonContainer}>
         <Pressable
           style={styles.checkoutButton}
-          onPress={() => router.push('/checkout-step1')}
+          onPress={() => router.push('/terms-and-conditions')}
         >
           <Text style={styles.checkoutButtonText}>ပိုက်ဆံရှင်းမယ်</Text>
         </Pressable>

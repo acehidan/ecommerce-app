@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createOrder as createOrderService } from '../services/order/createOrder';
+import {
+  createOrder as createOrderService,
+  CreateOrderResponse,
+} from '../services/order/createOrder';
 
 export interface ContactInfo {
   name: string;
@@ -15,6 +18,7 @@ export interface AddressInfo {
   township: string;
   fullAddress: string;
   deliveryType: string;
+  deliveryZone?: string;
 }
 
 export interface OrderItem {
@@ -108,7 +112,7 @@ interface CheckoutState {
   setPaymentDetails: (details: PaymentInfo['paymentDetails']) => void;
 
   // Step 4 Actions
-  createOrder: (orderData: any) => Promise<void>;
+  createOrder: (orderData: any) => Promise<CreateOrderResponse>;
   setOrderResponse: (orderResponse: OrderResponse) => void;
   completeCheckout: () => void;
   clearCheckoutData: () => void;

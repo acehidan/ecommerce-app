@@ -21,7 +21,8 @@ export default function CheckoutStep3() {
   const { setPaymentMethod, setReceiptImage, setPaymentDetails } =
     useCheckoutStore();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState('prepayment');
+    useState('cash-down');
+  const [selectedPaymentType, setSelectedPaymentType] = useState('kpay'); // 'cash' for COD, 'kpay' for cash-down
   const [selectedReceiptImage, setSelectedReceiptImage] = useState(null);
 
   // Calculate total (same as step 2)
@@ -31,9 +32,29 @@ export default function CheckoutStep3() {
   const grandTotal = getTotalPrice() + shippingFee + overweightCharge;
 
   const paymentMethods = [
-    { key: 'cod', label: 'အိမ်အရောက်ငွေချေ', type: 'radio' },
-    { key: 'prepayment', label: 'ငွေကြိုရှင်း', type: 'radio' },
+    { key: 'cash-on-delivery', label: 'အိမ်အရောက်ငွေချေ', type: 'radio' },
+    { key: 'cash-down', label: 'ငွေကြိုရှင်း', type: 'radio' },
   ];
+
+  // Payment type options based on selected payment method
+  const getPaymentTypeOptions = () => {
+    if (selectedPaymentMethod === 'cash-on-delivery') {
+      return [{ key: 'cash', label: 'ငွေသား', icon: 'cash-outline' }];
+    } else if (selectedPaymentMethod === 'cash-down') {
+      return [{ key: 'kpay', label: 'KPAY', icon: 'card-outline' }];
+    }
+    return [];
+  };
+
+  const handlePaymentMethodChange = (methodKey) => {
+    setSelectedPaymentMethod(methodKey);
+    // Reset payment type when payment method changes
+    if (methodKey === 'cash-on-delivery') {
+      setSelectedPaymentType('cash');
+    } else if (methodKey === 'cash-down') {
+      setSelectedPaymentType('kpay');
+    }
+  };
 
   const pickImage = async () => {
     try {
@@ -74,14 +95,21 @@ export default function CheckoutStep3() {
   const saveStep3Data = () => {
     setPaymentMethod(selectedPaymentMethod);
 
-    // Set sample payment details
-    setPaymentDetails({
-      bankName: 'A BANK',
-      transactionAmount: '-50,000.00',
-      transactionDate: '01/01/2023 04:04:04',
-      transactionNo: 'E1234567890+123456',
-      transferTo: 'Daw Hla Hla (123456789)',
-    });
+    // Set payment details based on selected payment type
+    if (selectedPaymentMethod === 'cash-down') {
+      setPaymentDetails({
+        paymentType: 'kpay',
+        bankName: 'KBZ Pay',
+        transactionAmount: `-${grandTotal.toLocaleString()}`,
+        transactionDate: new Date().toLocaleString('en-GB'),
+        transactionNo: '09782711003',
+        transferTo: 'ဦးမင်း',
+      });
+    } else if (selectedPaymentMethod === 'cash-on-delivery') {
+      setPaymentDetails({
+        paymentType: 'cash',
+      });
+    }
   };
 
   return (
@@ -119,7 +147,7 @@ export default function CheckoutStep3() {
                 <Pressable
                   key={method.key}
                   style={styles.paymentOption}
-                  onPress={() => setSelectedPaymentMethod(method.key)}
+                  onPress={() => handlePaymentMethodChange(method.key)}
                 >
                   <View style={styles.paymentOptionLeft}>
                     {method.type === 'checkbox' ? (
@@ -158,59 +186,102 @@ export default function CheckoutStep3() {
             </View>
           </View>
 
-          {/* Payment Receipt Section */}
-          <View style={styles.paymentReceiptSection}>
-            <Text style={styles.subsectionTitle}>ငွေပေးချေမှု ဖြတ်ပိုင်း</Text>
-
-            <View style={styles.receiptDetails}>
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>ငွေလွှဲရန်</Text>
-              </View>
-
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>စုစုပေါင်း</Text>
-                <Text style={styles.receiptValue}>
-                  MMK {grandTotal.toLocaleString()}
-                </Text>
-              </View>
-
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Kpay</Text>
-                <View style={styles.receiptRight}>
-                  <Text style={styles.receiptValue}>09782711003</Text>
-                  <Text style={styles.receiptName}>ဦ်းမင်း</Text>
-                </View>
+          {/* Payment Type Section - Only show if payment method is selected */}
+          {selectedPaymentMethod && (
+            <View style={styles.paymentTypeSection}>
+              <Text style={styles.subsectionTitle}>ငွေပေးချေမှု နည်းလမ်း</Text>
+              <View style={styles.paymentOptionsCard}>
+                {getPaymentTypeOptions().map((option) => (
+                  <Pressable
+                    key={option.key}
+                    style={styles.paymentTypeOption}
+                    onPress={() => setSelectedPaymentType(option.key)}
+                  >
+                    <View style={styles.paymentTypeOptionLeft}>
+                      {option.key === 'kpay' ? (
+                        <View style={styles.kpayIconContainer}>
+                          <View style={styles.kpayIcon}>
+                            <Text style={styles.kpayIconText}>KBZ</Text>
+                          </View>
+                        </View>
+                      ) : (
+                        <Ionicons
+                          name={option.icon}
+                          size={20}
+                          color="#000000"
+                          style={styles.paymentTypeIcon}
+                        />
+                      )}
+                      <Text style={styles.paymentOptionText}>
+                        {option.label}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.radioButton,
+                        selectedPaymentType === option.key &&
+                          styles.radioButtonSelected,
+                      ]}
+                    >
+                      {selectedPaymentType === option.key && (
+                        <View style={styles.radioButtonInner} />
+                      )}
+                    </View>
+                  </Pressable>
+                ))}
               </View>
             </View>
-          </View>
+          )}
 
-          {/* KBZPay QR Code Section - Only show if no receipt uploaded */}
-          {!selectedReceiptImage && (
-            <View style={styles.qrCodeSection}>
-              <View style={styles.qrCodeContainer}>
-                <View style={styles.qrCodeWrapper}>
-                  {/* Real QR Code Image */}
-                  <View style={styles.qrCodeImageContainer}>
-                    <Image
-                      source={require('../assets/images/QR.jpg')}
-                      style={styles.qrCodeImage}
-                      resizeMode="contain"
-                    />
+          {/* Payment Receipt Section - Only show for cash-down */}
+          {selectedPaymentMethod === 'cash-down' && (
+            <View style={styles.paymentReceiptSection}>
+              <Text style={styles.subsectionTitle}>
+                ငွေပေးချေမှု ဖြတ်ပိုင်း
+              </Text>
 
-                    {/* Embedded Profile Picture */}
-                    {/* <View style={styles.embeddedProfile}>
-                      <View style={styles.profileImage}>
-                        <Ionicons name="person" size={20} color="#666666" />
-                      </View>
-                    </View> */}
+              <View style={styles.receiptDetails}>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>ငွေလွှဲရန်</Text>
+                </View>
+
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>စုစုပေါင်း</Text>
+                  <Text style={styles.receiptValue}>
+                    MMK {grandTotal.toLocaleString()}
+                  </Text>
+                </View>
+
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Kpay</Text>
+                  <View style={styles.receiptRight}>
+                    <Text style={styles.receiptValue}>09782711003</Text>
+                    <Text style={styles.receiptName}>ဦ်းမင်း</Text>
                   </View>
                 </View>
               </View>
             </View>
           )}
 
+          {/* KBZPay QR Code Section - Only show if no receipt uploaded */}
+          {/* {!selectedReceiptImage && (
+            <View style={styles.qrCodeSection}>
+              <View style={styles.qrCodeContainer}>
+                <View style={styles.qrCodeWrapper}>
+                  <View style={styles.qrCodeImageContainer}>
+                    <Image
+                      source={require('../assets/images/QR.jpg')}
+                      style={styles.qrCodeImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          )} */}
+
           {/* Upload Receipt Section */}
-          <View style={styles.uploadSection}>
+          {/* <View style={styles.uploadSection}>
             <Text style={styles.subsectionTitle}>
               ငွေဖြတ်ပိုင်း ပုံတင်ခြင်း
             </Text>
@@ -245,7 +316,7 @@ export default function CheckoutStep3() {
                 <Ionicons name="chevron-forward" size={20} color="#666666" />
               </Pressable>
             )}
-          </View>
+          </View> */}
         </View>
       </ScrollView>
 
@@ -354,6 +425,9 @@ const styles = StyleSheet.create({
   paymentMethodSection: {
     marginBottom: 24,
   },
+  paymentTypeSection: {
+    marginBottom: 24,
+  },
   subsectionTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -361,20 +435,47 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   paymentOptionsCard: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E5E5',
     padding: 16,
   },
   paymentOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+  },
+  paymentTypeOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  paymentTypeOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  paymentTypeIcon: {
+    marginRight: 12,
+  },
+  kpayIconContainer: {
+    marginRight: 12,
+  },
+  kpayIcon: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#007AFF',
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kpayIconText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   paymentOptionLeft: {
     flexDirection: 'row',

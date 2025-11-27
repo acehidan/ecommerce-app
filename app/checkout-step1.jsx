@@ -16,6 +16,7 @@ import {
   getUserAddresses,
   UserAddress,
 } from '../services/user/getUserAddresses';
+import { getDeliveryZone } from '../services/delivery/getDeliveryZone';
 
 export default function CheckoutStep1() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function CheckoutStep1() {
     }
   }, [userAddresses, selectedAddressType]);
 
-  const saveStep1Data = () => {
+  const saveStep1Data = async () => {
     if (user && currentAddress) {
       // Save contact info
       setContactInfo({
@@ -81,7 +82,21 @@ export default function CheckoutStep1() {
         phoneNumber: user.phoneNumber,
       });
 
-      // Save address info
+      // Fetch delivery zone
+      let deliveryZone = '';
+      try {
+        const deliveryZoneResponse = await getDeliveryZone(
+          currentAddress.city,
+          currentAddress.township
+        );
+        if (deliveryZoneResponse.success) {
+          deliveryZone = deliveryZoneResponse.data.deliveryZone;
+        }
+      } catch (error) {
+        console.error('Error fetching delivery zone:', error);
+      }
+
+      // Save address info with delivery zone
       setAddressInfo({
         addressId: currentAddress._id,
         addressType: selectedAddressType || 'home',
@@ -89,6 +104,7 @@ export default function CheckoutStep1() {
         township: currentAddress.township,
         fullAddress: currentAddress.address,
         deliveryType: 'ဂိတ်ချနဲ့ ပို့မယ်',
+        deliveryZone,
       });
     }
   };
@@ -256,8 +272,8 @@ export default function CheckoutStep1() {
         </Pressable>
         <Pressable
           style={styles.confirmActionButton}
-          onPress={() => {
-            saveStep1Data();
+          onPress={async () => {
+            await saveStep1Data();
             console.log('Navigating to checkout-step2');
             router.push('/checkout-step2');
           }}

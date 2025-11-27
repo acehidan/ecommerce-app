@@ -14,11 +14,13 @@ import { useRouter } from 'expo-router';
 import { useCartStore } from '../store/cartStore';
 import { useCheckoutStore } from '../store/checkoutStore';
 import { useAuthStore } from '../store/authStore';
+import { getDeliveryZone } from '../services/delivery/getDeliveryZone';
+import { createOrder } from '../services/order/createOrder';
 
 export default function CheckoutStep4() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
-  const { checkoutData, completeCheckout, createOrder, clearCheckoutData } =
+  const { checkoutData, completeCheckout, clearCheckoutData, setAddressInfo } =
     useCheckoutStore();
   const { user } = useAuthStore();
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
@@ -29,8 +31,7 @@ export default function CheckoutStep4() {
 
   // Get selected payment method from checkout store or default to prepayment
   const selectedPaymentMethod = paymentInfo?.selectedMethod || 'prepayment';
-  // console.log('Payment method from store:', selectedPaymentMethod);
-  // console.log('Full payment info:', paymentInfo);
+  console.log('addressInfo', addressInfo);
 
   // Use store data or fallback to defaults
   const displayItems =
@@ -70,14 +71,54 @@ export default function CheckoutStep4() {
 
     try {
       // Validate required data
-      if (!user._id) {
-        throw new Error('User ID is required');
-      }
+
       if (!orderItems || orderItems.length === 0) {
         throw new Error('No items in cart');
       }
       if (!addressInfo?.fullAddress) {
         throw new Error('Address is required');
+      }
+
+      // Fetch delivery zone if not already set
+      let deliveryZone = addressInfo.deliveryZone;
+      if (!deliveryZone || deliveryZone.trim() === '') {
+        console.log('Delivery zone not found, fetching from API...');
+        console.log(
+          'City:',
+          addressInfo.city,
+          'Township:',
+          addressInfo.township
+        );
+
+        try {
+          const deliveryZoneResponse = await getDeliveryZone(
+            addressInfo.city,
+            addressInfo.township
+          );
+
+          console.log('Delivery zone response:', deliveryZoneResponse);
+
+          if (
+            deliveryZoneResponse.success &&
+            deliveryZoneResponse.data.deliveryZone
+          ) {
+            deliveryZone = deliveryZoneResponse.data.deliveryZone;
+            // Update addressInfo in store with the fetched delivery zone
+            setAddressInfo({
+              ...addressInfo,
+              deliveryZone,
+            });
+          } else {
+            throw new Error(
+              deliveryZoneResponse.message || 'Failed to fetch delivery zone'
+            );
+          }
+        } catch (error) {
+          console.error('Error fetching delivery zone:', error);
+          throw new Error(
+            'Unable to determine delivery zone. Please check your address and try again.'
+          );
+        }
       }
 
       // Map order items to the required format
@@ -87,35 +128,20 @@ export default function CheckoutStep4() {
       }));
 
       console.log('Products:', products);
+      console.log('Delivery Zone:', deliveryZone);
 
       // Map payment method
-      const paymentMethodMap = {
-        prepayment: 'cash-down',
-        cod: 'cash-on-delivery',
-      };
 
       const orderData = {
-        userId: user._id,
         products,
         address: addressInfo.fullAddress,
-        deliveryZone: '68bad3e54077df8ffba8e978',
+        deliveryZone: deliveryZone,
         platform: 'ecommerce',
-        paymentMethod: 'cash-down',
+        paymentMethod: paymentInfo.selectedMethod,
       };
 
-      // const orderData = {
-      //   userId: user._id,
-      //   products,
-      //   address: addressInfo.fullAddress,
-      //   deliveryZone: '68bad3e54077df8ffba8e978', // This should come from addressInfo or be configurable
-      //   platform: 'ecommerce',
-      //   paymentMethod: 'cash-down',
-      // };
-
       // Additional validation for API requirements
-      if (!orderData.userId || orderData.userId.trim() === '') {
-        throw new Error('User ID cannot be empty');
-      }
+
       if (!orderData.products || orderData.products.length === 0) {
         throw new Error('Products cannot be empty');
       }
@@ -126,11 +152,7 @@ export default function CheckoutStep4() {
         throw new Error('Delivery zone is required');
       }
 
-      // console.log('Creating order with data:', orderData);
-      // console.log('User ID:', user._id);
-      // console.log('Order items:', orderItems);
-      // console.log('Address info:', addressInfo);
-      // console.log('Selected payment method:', selectedPaymentMethod);
+      console.log('Order data:', orderData);
 
       const response = await createOrder(orderData);
 
@@ -355,7 +377,9 @@ export default function CheckoutStep4() {
                     <Ionicons name="home-outline" size={24} color="#666666" />
                   </View>
                   <Text style={styles.paymentMethodLabel}>
-                    အိမ်အရောက်ငွေချေ
+                    {selectedPaymentMethod === 'cash-on-delivery'
+                      ? 'အိမ်အရောက်ငွေချေ'
+                      : 'ငွေကြိုရှင်း'}
                   </Text>
                 </>
               )}
@@ -399,7 +423,7 @@ export default function CheckoutStep4() {
         </View>
 
         {/* Payment Receipt Section */}
-        <View style={styles.receiptSection}>
+        {/* <View style={styles.receiptSection}>
           <Text style={styles.sectionTitle}>ငွေဖြတ်ပိုင်း</Text>
 
           <View style={styles.receiptContainer}>
@@ -475,7 +499,7 @@ export default function CheckoutStep4() {
               </View>
             )}
           </View>
-        </View>
+        </View> */}
       </ScrollView>
 
       {/* Bottom Action Buttons */}
