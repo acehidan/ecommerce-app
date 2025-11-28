@@ -8,7 +8,6 @@ export default function Index() {
   const [isNavigationReady, setIsNavigationReady] = useState(false);
 
   useEffect(() => {
-    // Add a small delay to ensure the navigation is ready
     const timer = setTimeout(() => {
       setIsNavigationReady(true);
     }, 100);
@@ -21,7 +20,7 @@ export default function Index() {
 
     // Use replace instead of push to avoid navigation stack issues
     if (isAuthenticated) {
-      router.replace('/(tabs)');
+      router.replace('/auth/onboarding)');
     } else {
       router.replace('/auth/onboarding');
     }

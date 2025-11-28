@@ -2,7 +2,7 @@
   "expo": {
     "name": "komin-diy",
     "slug": "rector",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/komin.jpg",
     "splash": {
@@ -39,7 +39,7 @@
     },
     "android": {
       "package": "com.acehidan.rector",
-      "versionCode": 2
+      "versionCode": 3
     },
     "owner": "acehidan"
   }
