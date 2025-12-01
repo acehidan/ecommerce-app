@@ -12,14 +12,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
-import { requestPhoneChangeOTP } from '../services/user/requestPhoneChangeOTP';
+import { updatePhoneNumber } from '../services/user/updatePhoneNumber';
 
 export default function ChangePhone() {
   const router = useRouter();
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleGetOTP = async () => {
+  const handleUpdatePhone = async () => {
     if (!newPhoneNumber.trim()) {
       Toast.show({
         type: 'error',
@@ -47,37 +47,38 @@ export default function ChangePhone() {
     setLoading(true);
 
     try {
-      const response = await requestPhoneChangeOTP(newPhoneNumber.trim());
+      const response = await updatePhoneNumber(newPhoneNumber.trim());
 
       if (response.success) {
         Toast.show({
           type: 'success',
           text1: 'အောင်မြင်',
-          text2: response.message || 'OTP ကုဒ် ပို့ပေးပြီးပါပြီ',
+          text2: response.message || 'ဖုန်းနံပါတ် ပြောင်းလဲပြီးပါပြီ',
           position: 'top',
           visibilityTime: 2000,
           onHide: () => {
-            // Navigate to OTP verification page with phone number
-            router.push({
-              pathname: '/verify-phone-otp',
-              params: { newPhoneNumber: newPhoneNumber.trim() },
-            });
+            // Navigate back to account detail page
+            router.back();
           },
         });
       } else {
         Toast.show({
           type: 'error',
           text1: 'အမှား',
-          text2: response.message || 'OTP ကုဒ် ပို့ပေးခြင်း မအောင်မြင်ပါ',
+          text2: response.message || 'ဖုန်းနံပါတ် ပြောင်းလဲခြင်း မအောင်မြင်ပါ',
           position: 'top',
           visibilityTime: 3000,
         });
       }
     } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'ဖုန်းနံပါတ် ပြောင်းလဲခြင်း မအောင်မြင်ပါ';
       Toast.show({
         type: 'error',
         text1: 'အမှား',
-        text2: 'OTP ကုဒ် ပို့ပေးခြင်း မအောင်မြင်ပါ',
+        text2: errorMessage,
         position: 'top',
         visibilityTime: 3000,
       });
@@ -101,7 +102,7 @@ export default function ChangePhone() {
           <Pressable style={styles.backButton} onPress={handleCancel}>
             <Ionicons name="arrow-back" size={24} color="#000000" />
           </Pressable>
-          <Text style={styles.headerTitle}>Forget Password Screen</Text>
+          <Text style={styles.headerTitle}>ဖုန်းနံပါတ် ပြောင်းလဲမယ်</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -112,8 +113,7 @@ export default function ChangePhone() {
 
           {/* Instruction Text */}
           <Text style={styles.instructionText}>
-            မိမိပြောင်းလိုတဲ့ ဖုန်းနံပါတ် အသစ်ကို ရိုက်ထည့်ပြီး တစ်ခါသုံး
-            အတည်ပြု ကုဒ် ၆ လုံးနဲ့ အတည်ပြု လိုက်ပါ ။
+            မိမိပြောင်းလိုတဲ့ ဖုန်းနံပါတ် အသစ်ကို ရိုက်ထည့်ပြီး ပြောင်းလဲလိုက်ပါ ။
           </Text>
 
           {/* Phone Number Input Section */}
@@ -145,11 +145,11 @@ export default function ChangePhone() {
               styles.getOTPButton,
               loading && styles.getOTPButtonDisabled,
             ]}
-            onPress={handleGetOTP}
+            onPress={handleUpdatePhone}
             disabled={loading}
           >
             <Text style={styles.getOTPButtonText}>
-              {loading ? 'ဆက်သွယ်နေသည်...' : 'OTPကုဒ် ယူမယ်'}
+              {loading ? 'ဆက်သွယ်နေသည်...' : 'ဖုန်းနံပါတ် ပြောင်းလဲမယ်'}
             </Text>
           </Pressable>
         </View>

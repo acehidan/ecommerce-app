@@ -187,9 +187,9 @@ export default function AccountDetail() {
                 </Text>
               </View>
             </View>
-            {/* <Pressable style={styles.editButton} onPress={handleChangePhone}>
+            <Pressable style={styles.editButton} onPress={handleChangePhone}>
               <Text style={styles.editButtonText}>ပြင်မယ်</Text>
-            </Pressable> */}
+            </Pressable>
           </View>
         </View>
 

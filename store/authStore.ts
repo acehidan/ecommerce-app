@@ -32,6 +32,7 @@ interface AuthState {
   continueAsGuest: () => void;
   initializeAuth: () => Promise<void>;
   updateUsername: (userName: string) => void;
+  updatePhoneNumber: (phoneNumber: string, isVerified: boolean) => void;
   setPasswordChangeToken: (token: string | null) => void;
 }
 
@@ -87,6 +88,18 @@ export const useAuthStore = create<AuthState>()(
             user: {
               ...currentUser,
               userName,
+            },
+          });
+        }
+      },
+      updatePhoneNumber: (phoneNumber: string, isVerified: boolean) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({
+            user: {
+              ...currentUser,
+              phoneNumber,
+              isVerified,
             },
           });
         }
