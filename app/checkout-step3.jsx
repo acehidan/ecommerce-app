@@ -7,6 +7,8 @@ import {
   ScrollView,
   Image,
   Alert,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +26,7 @@ export default function CheckoutStep3() {
     useState('cash-down');
   const [selectedPaymentType, setSelectedPaymentType] = useState('kpay'); // 'cash' for COD, 'kpay' for cash-down
   const [selectedReceiptImage, setSelectedReceiptImage] = useState(null);
+  const [showKpayModal, setShowKpayModal] = useState(false);
 
   // Calculate total (same as step 2)
   const totalWeight = 3.8; // Example weight
@@ -200,9 +203,11 @@ export default function CheckoutStep3() {
                     <View style={styles.paymentTypeOptionLeft}>
                       {option.key === 'kpay' ? (
                         <View style={styles.kpayIconContainer}>
-                          <View style={styles.kpayIcon}>
-                            <Text style={styles.kpayIconText}>KBZ</Text>
-                          </View>
+                          <Image
+                            source={require('../assets/images/kpay.png')}
+                            style={styles.kpayIcon}
+                            resizeMode="contain"
+                          />
                         </View>
                       ) : (
                         <Ionicons
@@ -234,7 +239,7 @@ export default function CheckoutStep3() {
           )}
 
           {/* Payment Receipt Section - Only show for cash-down */}
-          {selectedPaymentMethod === 'cash-down' && (
+          {/* {selectedPaymentMethod === 'cash-down' && (
             <View style={styles.paymentReceiptSection}>
               <Text style={styles.subsectionTitle}>
                 ငွေပေးချေမှု ဖြတ်ပိုင်း
@@ -261,7 +266,7 @@ export default function CheckoutStep3() {
                 </View>
               </View>
             </View>
-          )}
+          )} */}
 
           {/* KBZPay QR Code Section - Only show if no receipt uploaded */}
           {/* {!selectedReceiptImage && (
@@ -331,14 +336,52 @@ export default function CheckoutStep3() {
         <Pressable
           style={styles.payActionButton}
           onPress={() => {
-            saveStep3Data();
-            console.log('Navigating to checkout-step4');
-            router.push('/checkout-step4');
+            // Show modal if kpay is selected
+            if (
+              selectedPaymentType === 'kpay' &&
+              selectedPaymentMethod === 'cash-down'
+            ) {
+              setShowKpayModal(true);
+            } else {
+              saveStep3Data();
+              router.push('/checkout-step4');
+            }
           }}
         >
           <Text style={styles.payActionText}>ငွေပေးချေမယ်</Text>
         </Pressable>
       </View>
+
+      {/* KBZPay Payment Modal */}
+      <Modal
+        visible={showKpayModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowKpayModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowKpayModal(false)}
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Payment Processing Card */}
+            <View style={styles.paymentProcessingCard}>
+              <Text style={styles.paymentProcessingTitle}>ငွေပေးချေခြင်း</Text>
+              <Text style={styles.paymentProcessingDescription}>
+                Online ငွေပေးချေမှု လုပ်ဆောင်ရန်အတွက် KBZPay App တွင်
+                ဆက်လက်လုပ်ဆောင်ဖို့လိုအပ်ပါတယ်
+              </Text>
+              <View style={styles.loadingDots}>
+                <ActivityIndicator size="small" color="#000000" />
+              </View>
+              <Text style={styles.waitingText}>ခနစောင့်ပေးပါ</Text>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -709,5 +752,48 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 50% opacity overlay
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '100%',
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paymentProcessingCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    alignItems: 'center',
+    width: '100%',
+  },
+  paymentProcessingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 12,
+  },
+  paymentProcessingDescription: {
+    fontSize: 14,
+    color: '#000000',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  loadingDots: {
+    marginVertical: 16,
+  },
+  waitingText: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 8,
   },
 });
