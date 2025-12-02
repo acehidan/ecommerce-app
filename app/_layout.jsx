@@ -7,32 +7,33 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from '../services/utils/toastConfig';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Easing } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 
 export default function RootLayout() {
+  console.log('welcome to komin-home');
   const [loaded] = useFonts({
     'NotoSansMyanmar-Regular': require('../assets/fonts/NotoSansMyanmar-Regular.ttf'),
   });
-  const [isReady, setIsReady] = useState(false);
-  const { initializeAuth } = useAuthStore();
 
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        if (typeof window !== 'undefined') {
-          window.frameworkReady?.();
-        }
-        await initializeAuth();
-        setIsReady(true);
-      } catch (error) {
-        console.error('Error initializing app:', error);
-        setIsReady(true); // Still set ready to prevent blocking
-      }
-    };
+    // Prevent the splash screen from auto-hiding
+    SplashScreen.preventAutoHideAsync();
+  }, []);
 
-    initialize();
-  }, [initializeAuth]);
+  useEffect(() => {
+    // Hide native splash screen once fonts are loaded
+    // Auth initialization will happen in index.jsx
+    if (loaded) {
+      // Small delay to ensure everything is ready
+      const timer = setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loaded]);
 
-  if (!loaded || !isReady) return null;
+  // Always render the Stack to allow index.jsx to handle auth routing
+  // The native splash screen will remain visible until hideAsync() is called
 
   return (
     <SafeAreaProvider>
@@ -79,156 +80,162 @@ export default function RootLayout() {
           },
         }}
       >
+        <Stack.Screen
+          name="index"
+          options={{
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen 
-          name="search" 
+        <Stack.Screen
+          name="search"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="product/[id]" 
+        <Stack.Screen
+          name="product/[id]"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="collection/[category]" 
+        <Stack.Screen
+          name="collection/[category]"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="checkout-step1" 
+        <Stack.Screen
+          name="checkout-step1"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="checkout-step2" 
+        <Stack.Screen
+          name="checkout-step2"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="checkout-step3" 
+        <Stack.Screen
+          name="checkout-step3"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="checkout-step4" 
+        <Stack.Screen
+          name="checkout-step4"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="order-success" 
+        <Stack.Screen
+          name="order-success"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="order-processing" 
+        <Stack.Screen
+          name="order-processing"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="order-history" 
+        <Stack.Screen
+          name="order-history"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="favorites" 
+        <Stack.Screen
+          name="favorites"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="cart" 
+        <Stack.Screen
+          name="cart"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="address" 
+        <Stack.Screen
+          name="address"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="add-address" 
+        <Stack.Screen
+          name="add-address"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="account-detail" 
+        <Stack.Screen
+          name="account-detail"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="update-username" 
+        <Stack.Screen
+          name="update-username"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="update-password" 
+        <Stack.Screen
+          name="update-password"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="change-phone" 
+        <Stack.Screen
+          name="change-phone"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="new-password" 
+        <Stack.Screen
+          name="new-password"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="new-arrivals" 
+        <Stack.Screen
+          name="new-arrivals"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="search-results" 
+        <Stack.Screen
+          name="search-results"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',
           }}
         />
-        <Stack.Screen 
-          name="chat" 
+        <Stack.Screen
+          name="chat"
           options={{
             presentation: 'card',
             animation: 'slide_from_right',

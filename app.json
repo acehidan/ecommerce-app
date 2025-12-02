@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/komin.jpg",
     "splash": {
-      "image": "./assets/images/komin.jpg",
+      "image": "./assets/images/splashicon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
