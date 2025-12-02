@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,44 +10,51 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import handleGetBanners from '../../services/banners/getBanners';
 import colors from '../../constants/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BANNER_WIDTH = SCREEN_WIDTH - 40; // Account for margin
+const BANNER_WIDTH = SCREEN_WIDTH; // Account for margin
 
 export default function PromotionalBanner({ refreshTrigger }) {
-  const [banners, setBanners] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef(null);
 
-  useEffect(() => {
-    fetchBanners();
-  }, [refreshTrigger]);
-
-  const fetchBanners = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Use TanStack Query to fetch banners
+  const {
+    data: bannersData,
+    isLoading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ['banners', refreshTrigger],
+    queryFn: async () => {
       const result = await handleGetBanners();
       if (result.success) {
         // Filter out soft deleted banners
         const activeBanners = result.data.data.filter(
           (banner) => !banner.softDeleted
         );
-        setBanners(activeBanners);
+        return activeBanners;
       } else {
-        setError(result.error);
+        throw new Error(result.error || 'Failed to fetch banners');
       }
-    } catch (err) {
-      setError('Failed to fetch banners');
-      console.error('Error fetching banners:', err);
-    } finally {
-      setLoading(false);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  // Refetch when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger) {
+      refetch();
     }
-  };
+  }, [refreshTrigger, refetch]);
+
+  const banners = bannersData || [];
+  const loading = isLoading;
+  const error = queryError;
 
   const handleScroll = (event) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
@@ -140,9 +147,9 @@ export default function PromotionalBanner({ refreshTrigger }) {
                       {banner.description ||
                         'အကောင်းဆုံး ပစ္စည်းများကို ရှာဖွေဝယ်ယူပါ'}
                     </Text>
-                    {/* <Pressable style={styles.buyNowButton}>
+                    <Pressable style={styles.buyNowButton}>
                       <Text style={styles.buyNowText}>မြန်မြန်ဝယ်မယ်</Text>
-                    </Pressable> */}
+                    </Pressable>
                   </View>
                 </View>
               </View>
@@ -184,7 +191,7 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
   },
   bannerWrapper: {
     width: BANNER_WIDTH,
@@ -193,7 +200,8 @@ const styles = StyleSheet.create({
   promotionalBanner: {
     height: 220,
     position: 'relative',
-    borderRadius: 5,
+    marginHorizontal: 10,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   backgroundImage: {

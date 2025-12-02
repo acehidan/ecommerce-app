@@ -4,18 +4,21 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  SafeAreaView,
   TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { updatePhoneNumber } from '../services/user/updatePhoneNumber';
+import { useAuthStore } from '../store/authStore';
+import PageHeader from './components/PageHeader';
 
 export default function ChangePhone() {
   const router = useRouter();
+  const { updatePhoneNumber: updatePhoneInStore } = useAuthStore();
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -50,6 +53,18 @@ export default function ChangePhone() {
       const response = await updatePhoneNumber(newPhoneNumber.trim());
 
       if (response.success) {
+        // Update auth store with new phone number if response includes user data
+        if (response.data?.user) {
+          updatePhoneInStore(
+            response.data.user.phoneNumber,
+            response.data.user.isVerified
+          );
+        } else {
+          // Fallback: update with the new phone number we just set
+          // Note: isVerified might be false initially until OTP is verified
+          updatePhoneInStore(newPhoneNumber.trim(), false);
+        }
+
         Toast.show({
           type: 'success',
           text1: 'အောင်မြင်',
@@ -58,7 +73,7 @@ export default function ChangePhone() {
           visibilityTime: 2000,
           onHide: () => {
             // Navigate back to account detail page
-            router.back();
+            router.push('/account-detail');
           },
         });
       } else {
@@ -98,13 +113,11 @@ export default function ChangePhone() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={handleCancel}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>ဖုန်းနံပါတ် ပြောင်းလဲမယ်</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+        <PageHeader
+          title="ဖုန်းနံပါတ် ပြောင်းလဲမယ်"
+          onBackPress={handleCancel}
+          sticky={false}
+        />
 
         {/* Content */}
         <View style={styles.content}>
@@ -113,7 +126,8 @@ export default function ChangePhone() {
 
           {/* Instruction Text */}
           <Text style={styles.instructionText}>
-            မိမိပြောင်းလိုတဲ့ ဖုန်းနံပါတ် အသစ်ကို ရိုက်ထည့်ပြီး ပြောင်းလဲလိုက်ပါ ။
+            မိမိပြောင်းလိုတဲ့ ဖုန်းနံပါတ် အသစ်ကို ရိုက်ထည့်ပြီး ပြောင်းလဲလိုက်ပါ
+            ။
           </Text>
 
           {/* Phone Number Input Section */}
@@ -143,13 +157,14 @@ export default function ChangePhone() {
           <Pressable
             style={[
               styles.getOTPButton,
-              loading && styles.getOTPButtonDisabled,
+              loading ||
+                (!newPhoneNumber.trim() && styles.getOTPButtonDisabled),
             ]}
             onPress={handleUpdatePhone}
             disabled={loading}
           >
             <Text style={styles.getOTPButtonText}>
-              {loading ? 'ဆက်သွယ်နေသည်...' : 'ဖုန်းနံပါတ် ပြောင်းလဲမယ်'}
+              {loading ? 'Loading...' : 'ဖုန်းနံပါတ် ပြောင်းလဲမယ်'}
             </Text>
           </Pressable>
         </View>
@@ -165,26 +180,6 @@ const styles = StyleSheet.create({
   },
   keyboardAvoidingView: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  headerSpacer: {
-    width: 40,
   },
   content: {
     flex: 1,
@@ -239,7 +234,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   getOTPButton: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#000',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -251,6 +246,6 @@ const styles = StyleSheet.create({
   getOTPButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666666',
+    color: '#fff',
   },
 });

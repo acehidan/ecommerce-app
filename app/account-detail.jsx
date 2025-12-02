@@ -20,8 +20,6 @@ import {
   getUserProfile,
   // updateUserProfile,
 } from '../services/user/userProfile';
-import { verifyPassword } from '../services/user/verifyPassword';
-import Toast from 'react-native-toast-message';
 import { useAuthStore } from '../store/authStore';
 
 export default function AccountDetail() {

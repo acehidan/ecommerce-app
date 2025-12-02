@@ -31,15 +31,21 @@ export const updatePhoneNumber = async (
 
     // Update local storage and store if API call is successful
     if (response.data.success && response.data.data?.user) {
+      const updatedUser = response.data.data.user;
+      
+      // Update user profile with full user object to ensure all fields are saved
       await updateUserProfile({
-        phoneNumber: response.data.data.user.phoneNumber,
-        isVerified: response.data.data.user.isVerified,
+        _id: updatedUser._id,
+        userName: updatedUser.userName,
+        phoneNumber: updatedUser.phoneNumber,
+        isVerified: updatedUser.isVerified,
+        role: updatedUser.role,
       });
 
-      // Update the auth store
+      // Update the auth store (this will also trigger persist middleware)
       useAuthStore.getState().updatePhoneNumber(
-        response.data.data.user.phoneNumber,
-        response.data.data.user.isVerified
+        updatedUser.phoneNumber,
+        updatedUser.isVerified
       );
     }
 

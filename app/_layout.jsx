@@ -8,6 +8,19 @@ import { toastConfig } from '../services/utils/toastConfig';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Easing } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Create a QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export default function RootLayout() {
   console.log('welcome to komin-home');
@@ -36,8 +49,9 @@ export default function RootLayout() {
   // The native splash screen will remain visible until hideAsync() is called
 
   return (
-    <SafeAreaProvider>
-      <Stack
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <Stack
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
@@ -241,9 +255,10 @@ export default function RootLayout() {
             animation: 'slide_from_right',
           }}
         />
-      </Stack>
-      <StatusBar style="dark" />
-      <Toast config={toastConfig} />
-    </SafeAreaProvider>
+        </Stack>
+        <StatusBar style="dark" />
+        <Toast config={toastConfig} />
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }
