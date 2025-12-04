@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,11 +18,14 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.textContainer}>
+          <Image
+            source={require('../../assets/images/komin.jpg')}
+            style={styles.logo}
+          />
           <Text style={styles.title}>Ko Min D.I.Y Store</Text>
           <Text style={styles.description}>
-            သင်ရဲ့ D.I.Y လိုအပ်ချက်များအတွက်{'\n'}
-            တစ်နေရာတည်းမှာ ရရှိနိုင်သော ဆိုင် မှ{'\n'}
-            ကြိုဆိုပါတယ်ဗျ
+            သင်ရဲ့ D.I.Y လိုအပ်ချက်များအတွက် တစ်နေရာတည်းမှာ ရရှိနိုင်သော ဆိုင်
+            မှ ကြိုဆိုပါတယ်ဗျ
           </Text>
         </View>
 
@@ -67,6 +70,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.primary,
   },
+  logo: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
   content: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -74,20 +83,19 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   textContainer: {
-    // alignItems: 'center',
     marginBottom: 30,
   },
   title: {
-    fontSize: 36,
+    fontSize: 30,
     fontWeight: 'bold',
     color: colors.text.secondary,
     marginBottom: 20,
     fontFamily: 'NotoSansMyanmar-Regular',
   },
   description: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.text.secondary,
-    letterSpacing: 1.5,
+    letterSpacing: 0.5,
     lineHeight: 28,
     fontFamily: 'NotoSansMyanmar-Regular',
   },

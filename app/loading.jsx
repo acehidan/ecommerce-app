@@ -30,13 +30,8 @@ export default function LoadingScreen({
         {/* Store Information */}
         <View style={styles.storeInfoContainer}>
           <Text style={styles.storeInfoText}>
-            အပြင်မှာ ကိုယ်တိုင်လာရောက် ကြည့်ရှုပြီး ဝယ်ယူလိုပါက
-          </Text>
-          <Text style={styles.storeInfoText}>
-            ဆိုင်လိပ်စာ "မဟာဗန္ဓုလလမ်း, အလယ် ဘလောက်, ဆူးလေ,
-          </Text>
-          <Text style={styles.storeInfoText}>
-            ရန်ကုန် " မှာ ရောင်းချပေးနေပါတယ်
+            အပြင်မှာ ကိုယ်တိုင်လာရောက် ကြည့်ရှုပြီး ဝယ်ယူလိုပါက ဆိုင်လိပ်စာ
+            မဟာဗန္ဓုလလမ်း, အလယ် ဘလောက်, ဆူးလေ, ရန်ကုန် မှာ ရောင်းချပေးနေပါတယ်
           </Text>
         </View>
       </View>
@@ -56,7 +51,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   logoContainer: {
-    marginBottom: 40,
+    marginBottom: 15,
   },
   logoSquare: {
     width: 120,
@@ -89,17 +84,21 @@ const styles = StyleSheet.create({
     marginBottom: 60,
   },
   statusText: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: 'bold',
     color: '#000000',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   storeInfoContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    position: 'absolute',
+    bottom: 20,
   },
   storeInfoText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#000000',
     textAlign: 'center',
     lineHeight: 22,

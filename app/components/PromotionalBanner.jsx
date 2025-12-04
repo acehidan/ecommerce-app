@@ -31,7 +31,7 @@ export default function PromotionalBanner({ refreshTrigger }) {
     queryKey: ['banners', refreshTrigger],
     queryFn: async () => {
       const result = await handleGetBanners();
-      if (result.success) {
+      if (result.success && result.data.status === 'success') {
         // Filter out soft deleted banners
         const activeBanners = result.data.data.filter(
           (banner) => !banner.softDeleted
@@ -72,19 +72,33 @@ export default function PromotionalBanner({ refreshTrigger }) {
     }
   };
 
+  const handleBuyNowPress = (banner) => {
+    // Navigate to banner products page if banner has an ID
+    if (banner._id && banner._id !== 'dummy-banner') {
+      router.push(`/banner/${banner._id}`);
+    }
+  };
+
   const getBannerImage = (banner) => {
     if (banner.useStockImage && banner.stockIds && banner.stockIds.length > 0) {
       const firstStock = banner.stockIds[0];
       if (firstStock.images && firstStock.images.length > 0) {
-        return firstStock.images[0].url;
+        // Check if images array has items and if they have url property
+        const firstImage = firstStock.images[0];
+        if (firstImage && firstImage.url) {
+          return firstImage.url;
+        }
       }
     }
-    if (banner.image) {
-      return banner.image;
+    // Check if banner has image object with url property
+    if (banner.image && banner.image.url) {
+      return banner.image.url;
     }
     // Fallback image
     return 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg';
   };
+
+  console.log('banners', banners);
 
   // Dummy banner data for fallback
   const dummyBanner = {
@@ -147,7 +161,11 @@ export default function PromotionalBanner({ refreshTrigger }) {
                       {banner.description ||
                         'အကောင်းဆုံး ပစ္စည်းများကို ရှာဖွေဝယ်ယူပါ'}
                     </Text>
-                    <Pressable style={styles.buyNowButton}>
+                    <Pressable
+                      style={styles.buyNowButton}
+                      onPress={() => handleBuyNowPress(banner)}
+                      disabled={!banner._id || banner._id === 'dummy-banner'}
+                    >
                       <Text style={styles.buyNowText}>မြန်မြန်ဝယ်မယ်</Text>
                     </Pressable>
                   </View>

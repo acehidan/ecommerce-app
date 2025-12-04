@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     right: 20,
   },
   waitText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#000000',
     fontFamily: 'NotoSansMyanmar-Regular',
   },
@@ -195,8 +195,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 400,
+    height: 400,
   },
   addressContainer: {
     alignItems: 'center',

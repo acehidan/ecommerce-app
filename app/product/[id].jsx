@@ -317,19 +317,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // backgroundColor: 'red',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   specsTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text.secondary,
-    marginBottom: 4,
-    marginTop: 12,
+    marginBottom: 0,
+    marginTop: 5,
   },
   specValue: {
     fontSize: 14,
     color: colors.text.primary,
-    marginBottom: 8,
+    marginBottom: 0,
     fontWeight: '700',
   },
   wholesaleContainer: {
