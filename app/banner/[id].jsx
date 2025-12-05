@@ -7,7 +7,6 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -19,6 +18,7 @@ import ProductCard from '../components/ProductCard';
 import PageHeader from '../components/PageHeader';
 import SearchBar from '../components/SearchBar';
 import handleGetBannerById from '../../services/banners/getBannerById';
+import Toast from 'react-native-toast-message';
 
 export default function BannerProducts() {
   const insets = useSafeAreaInsets();
@@ -72,20 +72,26 @@ export default function BannerProducts() {
           setProducts([]);
           setFilteredProducts([]);
         }
-      } else {
-        setError(response.error || 'Failed to fetch banner products');
-        Alert.alert(
-          'Error',
-          response.error || 'Failed to fetch banner products'
-        );
+        } else {
+          const errorMsg = response.error || 'Failed to fetch banner products';
+          setError(errorMsg);
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: errorMsg,
+          });
+        }
+      } catch (error) {
+        const errorMessage = 'Failed to fetch banner products';
+        setError(errorMessage);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: errorMessage,
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      const errorMessage = 'Failed to fetch banner products';
-      setError(errorMessage);
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   useEffect(() => {

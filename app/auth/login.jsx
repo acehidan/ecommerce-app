@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import handleLogin from '../../services/auth/login';
 import LoadingScreen from '../loading';
 import colors from '../../constants/colors';
+import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -21,22 +22,22 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [language, setLanguage] = useState('ENG');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showError, setShowError] = useState(false);
   const { login } = useAuthStore();
 
   const handleLoginPress = async () => {
     if (!phoneNumber || !password) {
-      setErrorMessage(
-        'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.'
-      );
-      setShowError(true);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2:
+          'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.',
+      });
       return;
     }
 
-    // Clear error when attempting login
-    setShowError(false);
-    setErrorMessage('');
+    console.log('phoneNumber', phoneNumber);
+    console.log('password', password);
+
     setIsLoading(true);
 
     try {
@@ -44,6 +45,7 @@ export default function LoginScreen() {
         phoneNumber,
         password,
       });
+      console.log('response', response);
 
       if (response.success) {
         console.log('Login response data:', response.data);
@@ -71,16 +73,19 @@ export default function LoginScreen() {
         // Navigate directly to home page without showing success alert
         router.replace('/(tabs)');
       } else {
-        setErrorMessage(
-          'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.'
-        );
-        setShowError(true);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: response.error || 'Login failed. Please try again.',
+        });
       }
     } catch (error) {
-      setErrorMessage(
-        'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.'
-      );
-      setShowError(true);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2:
+          'There is some information related to the account that is incorrect. Please check if it is correct and re-enter it.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -132,25 +137,8 @@ export default function LoginScreen() {
             ကိုထည့်ပါ။
           </Text>
 
-          {showError && (
-            <View style={styles.errorBanner}>
-              <Ionicons
-                name="warning-outline"
-                size={20}
-                color="#fff"
-                style={styles.errorIcon}
-              />
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            </View>
-          )}
-
           <View style={styles.inputContainer}>
-            <View
-              style={[
-                styles.inputWrapperContainer,
-                showError && styles.inputWrapperContainerError,
-              ]}
-            >
+            <View style={styles.inputWrapperContainer}>
               <View style={styles.inputLabelContainer}>
                 <Ionicons
                   name="call-outline"
@@ -165,13 +153,7 @@ export default function LoginScreen() {
                   style={styles.input}
                   placeholder="09xxxxxxxx"
                   value={phoneNumber}
-                  onChangeText={(text) => {
-                    setPhoneNumber(text);
-                    if (showError) {
-                      setShowError(false);
-                      setErrorMessage('');
-                    }
-                  }}
+                  onChangeText={setPhoneNumber}
                   keyboardType="phone-pad"
                 />
               </View>
@@ -179,12 +161,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <View
-              style={[
-                styles.inputWrapperContainer,
-                showError && styles.inputWrapperContainerError,
-              ]}
-            >
+            <View style={styles.inputWrapperContainer}>
               <View style={styles.inputLabelContainer}>
                 <Ionicons
                   name="key-outline"
@@ -199,13 +176,7 @@ export default function LoginScreen() {
                   style={styles.input}
                   placeholder="873614@"
                   value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (showError) {
-                      setShowError(false);
-                      setErrorMessage('');
-                    }
-                  }}
+                  onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
 
@@ -364,33 +335,5 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#666',
     opacity: 0.7,
-  },
-  errorBanner: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    right: 0,
-    zIndex: 1000,
-    backgroundColor: '#FF3B30',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 20,
-    width: '110%',
-  },
-  errorIcon: {
-    marginRight: 8,
-  },
-  errorText: {
-    color: '#fff',
-    fontSize: 14,
-    flex: 1,
-    lineHeight: 18,
-  },
-  inputWrapperContainerError: {
-    borderColor: '#FF3B30',
-    borderWidth: 1,
   },
 });

@@ -14,6 +14,7 @@ import { useAuthStore } from '../../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import handleVerifyOTP from '../../services/auth/vertifyOTP';
 import { saveUserProfile } from '../../services/user/userProfile';
+import Toast from 'react-native-toast-message';
 
 export default function OTPScreen() {
   const { phoneNumber, name } = useLocalSearchParams();
@@ -21,8 +22,6 @@ export default function OTPScreen() {
   const [resendTimer, setResendTimer] = useState(300);
   const [canResend, setCanResend] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [showError, setShowError] = useState(true);
   const inputRefs = useRef([]);
   const { login } = useAuthStore();
 
@@ -46,12 +45,6 @@ export default function OTPScreen() {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    // Clear error when user starts typing
-    if (showError) {
-      setShowError(false);
-      setErrorMessage('');
-    }
 
     // Auto-focus next input
     if (value && index < 5) {
@@ -103,27 +96,30 @@ export default function OTPScreen() {
           phoneNumber: response.data.data.user.phoneNumber,
         });
 
-        Alert.alert(
-          'Success',
-          response.data.message || 'Phone number verified successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/(tabs)'),
-            },
-          ]
-        );
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: response.data.message || 'Phone number verified successfully!',
+        });
+        // Small delay before navigation to show toast
+        setTimeout(() => {
+          router.replace('/(tabs)');
+        }, 500);
       } else {
-        setErrorMessage(
-          'OTP verification code is incorrect. Please check if the code is correct and re-enter it.'
-        );
-        setShowError(true);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'OTP verification code is incorrect. Please check if the code is correct and re-enter it.',
+        });
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
     } catch (error) {
-      setErrorMessage('Something went wrong. Please try again.');
-      setShowError(true);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong. Please try again.',
+      });
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } finally {
@@ -172,18 +168,6 @@ export default function OTPScreen() {
           ဖုန်းနံပါတ်သို့ ပို့ပေးထားသော ၆ လုံး အတည်ပြုကုဒ် ကိုထည့်ပါ။
         </Text>
 
-        {showError && (
-          <View style={styles.errorBanner}>
-            <Ionicons
-              name="warning-outline"
-              size={20}
-              color="#fff"
-              style={styles.errorIcon}
-            />
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
-        )}
-
         <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
             <TextInput
@@ -191,7 +175,7 @@ export default function OTPScreen() {
               ref={(ref) => {
                 if (ref) inputRefs.current[index] = ref;
               }}
-              style={[styles.otpInput, showError && styles.otpInputError]}
+              style={styles.otpInput}
               value={digit}
               onChangeText={(value) => handleOtpChange(value, index)}
               onKeyPress={({ nativeEvent }) =>
@@ -301,33 +285,5 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#666',
     opacity: 0.7,
-  },
-  errorBanner: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    right: 0,
-    zIndex: 1000,
-    backgroundColor: '#FF3B30',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 30,
-    width: '110%',
-  },
-  errorIcon: {
-    marginRight: 8,
-  },
-  errorText: {
-    color: '#fff',
-    fontSize: 14,
-    flex: 1,
-    lineHeight: 18,
-  },
-  otpInputError: {
-    borderColor: '#FF3B30',
-    borderWidth: 2,
   },
 });
