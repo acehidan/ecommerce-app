@@ -2,8 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { clearUserProfile } from './user/userProfile';
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || 'https://your-api-url.com/api';
+const API_BASE_URL = 'https://api.komindiystore.com/';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
