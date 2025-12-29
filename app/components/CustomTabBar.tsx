@@ -4,10 +4,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Feather from '@expo/vector-icons/Feather';
-import Animated, { LinearTransition } from 'react-native-reanimated';
-
-const AnimatedTouchableOpacity =
-  Animated.createAnimatedComponent(TouchableOpacity);
+// Temporarily disabled Reanimated due to Worklets version mismatch
+// import Animated, { LinearTransition } from 'react-native-reanimated';
+// const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 import {
   Text,
@@ -59,10 +58,10 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
         };
 
         return (
-          <AnimatedTouchableOpacity
-            layout={LinearTransition.springify()}
+          <TouchableOpacity
             key={route.key}
             onPress={onPress}
+            onLongPress={onLongPress}
             style={[
               styles.tabItem,
               { backgroundColor: isFocused ? 'black' : 'transparent' },
@@ -95,7 +94,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({
             )}
             {getIconByRouteName(route.name, isFocused ? 'white' : 'black')}
             {isFocused && <Text style={styles.text}>{label as string}</Text>}
-          </AnimatedTouchableOpacity>
+          </TouchableOpacity>
         );
       })}
     </View>

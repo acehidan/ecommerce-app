@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "rector",
-    "slug": "rector",
+    "name": "uedc-app",
+    "slug": "uedc-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
-    "scheme": "rector",
+    "scheme": "uedc-app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.acehidan.rector",
+      "bundleIdentifier": "com.uedc.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -29,11 +29,11 @@
         "origin": false
       },
       "eas": {
-        "projectId": "86b225e7-e6c3-4db1-93a5-18bd6d52c0e3"
+        "projectId": "a6323934-1812-4013-986a-534c2031d450"
       }
     },
     "android": {
-      "package": "com.acehidan.rector"
+      "package": "com.uedc.app"
     }
   }
 }
