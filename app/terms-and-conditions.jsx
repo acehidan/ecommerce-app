@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -54,58 +48,24 @@ export default function TermsAndConditions() {
             <View style={styles.bulletItem}>
               <View style={styles.bulletPoint} />
               <Text style={styles.bulletText}>
-                လာပို့သူ Deli ရှေ့တွင် ဖြစ်စေ
+                လာပို့သူ Deli ရှေ့တွင် ဖြစ်စေ ရုံးတွင် ဖြစ်စေ ပစ္စည်းအနာအဆာ
+                အရေအတွက် တစ်ခါတည်း စစ်ဆေးပေးပါရန်
               </Text>
             </View>
             <View style={styles.bulletItem}>
               <View style={styles.bulletPoint} />
               <Text style={styles.bulletText}>
-                ရုံးတွင် ဖြစ်စေ ပစ္စည်းအနာအဆာ အရေအတွက်
-              </Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.bulletText}>
-                တစ်ခါတည်း စစ်ဆေးပေးပါရန်
-              </Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.bulletText}>
-                Error တစ်စုံတစ်ရာ ရှိပါက လာပို့သူ ( သို့မဟုတ် )
-              </Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.bulletText}>
-                ရုံးတွင် ပစ္စည်းရွေးယူစရာ မလိုဘဲ Return
-              </Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.bulletText}>
-                ပြန်ပေးပါရန် ။ရွေးယူပြီးမှ ဖြစ် ပေါ်လာသော
-              </Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.bulletText}>
-                ကျိုးပဲ့ခြင်း ပစ္စည်းလျော့ခြင်း ဖြစ်ပေါ်လာပါက
-              </Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.bulletText}>
+                Error တစ်စုံတစ်ရာ ရှိပါက လာပို့သူ ( သို့မဟုတ် ) ရုံးတွင်
+                ပစ္စည်းရွေးယူစရာ မလိုဘဲ Return ပြန်ပေးပါရန် ။ရွေးယူပြီးမှ ဖြစ်
+                ပေါ်လာသော ကျိုးပဲ့ခြင်း ပစ္စည်းလျော့ခြင်း ဖြစ်ပေါ်လာပါက
                 ဆိုင်ဖက်မှ တာဝန်ယူမည် မဟုတ်ပါ။
               </Text>
             </View>
           </View>
           <View style={styles.thankYouSection}>
-            <Ionicons name="heart" size={16} color="#FFD700" />
             <Text style={styles.thankYouText}>
-              A ဝယ်ယူအားပေးမှုကို ကျေးဇူးတင်ပါသည်..
+              ဝယ်ယူအားပေးမှုကို ကျေးဇူးတင်ပါသည်..
             </Text>
-            <Ionicons name="heart" size={16} color="#FFD700" />
           </View>
         </View>
 
@@ -124,8 +84,8 @@ export default function TermsAndConditions() {
         {/* Disclaimer */}
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
-            * ပစ္စည်းများ ဝယ်ယူရာတွင် အထက်ဖော်ပြပါအချက်လက်များကို
-            သဘောတူရန် လိုအပ်ပါတယ်။
+            * ပစ္စည်းများ ဝယ်ယူရာတွင် အထက်ဖော်ပြပါအချက်လက်များကို သဘောတူရန်
+            လိုအပ်ပါတယ်။
           </Text>
         </View>
       </ScrollView>
@@ -293,4 +253,3 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
-

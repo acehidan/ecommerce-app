@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCheckoutStore } from '../store/checkoutStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OrderSuccess() {
   const router = useRouter();
