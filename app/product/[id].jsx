@@ -21,7 +21,6 @@ import colors from '../../constants/colors';
 
 export default function ProductDetail() {
   const { id } = useLocalSearchParams();
-  console.log(id);
   const insets = useSafeAreaInsets();
   const headerHeight = 56 + insets.top; // Approximate header height (padding + content + safe area)
   const addItem = useCartStore((state) => state.addItem);
@@ -37,6 +36,7 @@ export default function ProductDetail() {
       try {
         setLoading(true);
         const result = await handleGetProductById(id);
+        console.log('result', result);
         if (result.success) {
           setProduct(result.data.data.data);
         } else {
@@ -67,12 +67,12 @@ export default function ProductDetail() {
     if (product.wholeSale && product.wholeSale.length > 0) {
       // Sort wholesale tiers by quantity (descending) to find the best match
       const sortedWholesale = [...product.wholeSale].sort(
-        (a, b) => b.wholeSaleQuantity - a.wholeSaleQuantity
+        (a, b) => b.wholeSaleQuantity - a.wholeSaleQuantity,
       );
 
       // Find the highest wholesale tier that the quantity qualifies for
       const matchingTier = sortedWholesale.find(
-        (tier) => qty >= tier.wholeSaleQuantity
+        (tier) => qty >= tier.wholeSaleQuantity,
       );
 
       // If quantity qualifies for wholesale, use wholesale price
@@ -102,8 +102,9 @@ export default function ProductDetail() {
           image: product.images?.[0]?.url || '',
           retailUnitPrice: product.retailUnitPrice,
           wholeSale: product.wholeSale || [],
+          unitWeight: product.unitWeight || 0,
         },
-        quantity
+        quantity,
       );
       router.push('/cart');
     }
@@ -180,7 +181,8 @@ export default function ProductDetail() {
           <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>အလေးချိန်</Text>
             <Text style={styles.specValue}>
-              {product.unitWeight} {product.weightUnit}
+              {product.unitWeight}
+              {product.weightUnit}
             </Text>
           </View>
 
@@ -246,6 +248,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    paddingHorizontal: 3,
   },
   imageContainer: {
     position: 'relative',
@@ -334,7 +337,6 @@ const styles = StyleSheet.create({
   },
   wholesaleContainer: {
     paddingHorizontal: 20,
-    marginBottom: 100,
   },
   wholesaleTitle: {
     fontSize: 16,
@@ -348,15 +350,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 45,
+    paddingBottom: 5,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5',

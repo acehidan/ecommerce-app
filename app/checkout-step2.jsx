@@ -1,27 +1,51 @@
-import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../store/cartStore';
 import { useCheckoutStore } from '../store/checkoutStore';
+import colors from '../constants/colors';
+import PageHeader from './components/PageHeader';
+import { useEffect, useState } from 'react';
+import getDeliveries from '../services/delivery/getDeliveries';
 
 export default function CheckoutStep2() {
   const router = useRouter();
+  const [deliveryData, setDeliveryData] = useState(null);
+
   const { items, getTotalPrice } = useCartStore();
-  const { setOrderItems, setOrderSummary } = useCheckoutStore();
+  const { setOrderItems, setOrderSummary, checkoutData } = useCheckoutStore();
+  const deliveryZone = checkoutData?.addressInfo?.deliveryZone;
+
+  const getDelidata = async () => {
+    const response = await getDeliveries();
+    console.log('response', response);
+    const deliveryData = response.data.find(
+      (delivery) => delivery._id === deliveryZone,
+    );
+    console.log('deliveryData', deliveryData);
+    setDeliveryData(deliveryData);
+
+    // TODO: Implement delivery data logic
+  };
+
+  useEffect(() => {
+    if (deliveryZone) {
+      getDelidata();
+    }
+  }, [deliveryZone]);
 
   // Calculate total weight
   const totalWeight = items.reduce(
-    (sum, item) => sum + (item.weight || 1.0),
-    0
+    (sum, item) => sum + item.unitWeight * item.quantity,
+    0,
   );
 
   // Calculate shipping fee (example: MMK 3,000)
-  const shippingFee = 3000;
+  const shippingFee = deliveryData?.shippingFee || 0;
 
   // Calculate overweight charge (example: MMK 2,000 for weights over 3KG)
-  const overweightCharge = totalWeight > 3 ? 2000 : 0;
+  const overweightCharge =
+    totalWeight > 3 ? deliveryData?.overweightCharge || 0 : 0;
 
   // Calculate grand total
   const grandTotal = getTotalPrice() + shippingFee + overweightCharge;
@@ -41,9 +65,15 @@ export default function CheckoutStep2() {
     // Save order summary
     setOrderSummary({
       subtotal: getTotalPrice(),
-      shippingFee,
-      overweightCharge,
-      grandTotal,
+      shippingFee: deliveryData?.deliveryFee?.toLocaleString() || '0',
+      overweightCharge:
+        deliveryData?.additionalWeightCharge * (totalWeight - 2) || 0,
+      grandTotal:
+        getTotalPrice() +
+        deliveryData?.deliveryFee +
+        (totalWeight > 2
+          ? deliveryData?.additionalWeightCharge * (totalWeight - 2)
+          : 0),
       totalWeight,
     });
   };
@@ -51,17 +81,7 @@ export default function CheckoutStep2() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>စစ်ဆေးပါ</Text>
-          <View style={styles.progressInfo}>
-            <Text style={styles.totalSteps}>စုစုပေါင်း အဆင့် ၄ ဆင့်</Text>
-          </View>
-        </View>
-      </View>
+      <PageHeader title="စစ်ဆေးပါ" sticky={false} backIcon={true} />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Purchased Items Section */}
@@ -69,7 +89,7 @@ export default function CheckoutStep2() {
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleContainer}>
               <Text style={styles.sectionTitle}>ဝယ်ယူထားသော</Text>
-              <Text style={styles.sectionTitle}> ပစ္စည်းများ</Text>
+              <Text style={styles.sectionTitle}>ပစ္စည်းများ</Text>
             </View>
             <View style={styles.stepBadge}>
               <Text style={styles.stepBadgeText}>အဆင့် နံပါတ် ၂</Text>
@@ -87,9 +107,6 @@ export default function CheckoutStep2() {
                 <Text style={styles.itemQuantity}>{item.quantity} ခု</Text>
                 <View style={styles.itemDetails}>
                   <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemWeight}>
-                    {(item.weight || 1.0).toFixed(1)} KG
-                  </Text>
                 </View>
                 <Text style={styles.itemPrice}>
                   MMK {item.price.toLocaleString()}
@@ -113,11 +130,11 @@ export default function CheckoutStep2() {
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>ပို့ဆောင်ခ</Text>
             <Text style={styles.summaryValue}>
-              MMK {shippingFee.toLocaleString()}
+              MMK {deliveryData?.deliveryFee?.toLocaleString() || '0'}
             </Text>
           </View>
 
-          {overweightCharge > 0 && (
+          {totalWeight > 2 && (
             <View style={styles.summaryRow}>
               <View style={styles.overweightRow}>
                 <Text style={styles.summaryLabel}>ဝန်ပိုကြေး</Text>
@@ -126,7 +143,10 @@ export default function CheckoutStep2() {
                 </Text>
               </View>
               <Text style={styles.summaryValue}>
-                MMK {overweightCharge.toLocaleString()}
+                MMK{' '}
+                {(
+                  deliveryData?.additionalWeightCharge * (totalWeight - 2) || 0
+                ).toLocaleString()}
               </Text>
             </View>
           )}
@@ -134,7 +154,14 @@ export default function CheckoutStep2() {
           <View style={[styles.summaryRow, styles.grandTotalRow]}>
             <Text style={styles.grandTotalLabel}>စုစုပေါင်း</Text>
             <Text style={styles.grandTotalValue}>
-              MMK {grandTotal.toLocaleString()}
+              MMK{' '}
+              {(
+                getTotalPrice() +
+                deliveryData?.deliveryFee +
+                (totalWeight > 2
+                  ? deliveryData?.additionalWeightCharge * (totalWeight - 2)
+                  : 0)
+              ).toLocaleString()}
             </Text>
           </View>
         </View>
@@ -166,7 +193,6 @@ export default function CheckoutStep2() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   topBar: {
     backgroundColor: '#333333',
@@ -232,7 +258,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#000000',
-    marginBottom: 16,
   },
   stepBadge: {
     backgroundColor: '#E5E5E5',
@@ -298,6 +323,10 @@ const styles = StyleSheet.create({
   },
   orderSummarySection: {
     marginBottom: 32,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -340,6 +369,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000000',
   },
+
   bottomActions: {
     flexDirection: 'row',
     paddingHorizontal: 20,

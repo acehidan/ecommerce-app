@@ -18,33 +18,6 @@ import { useAuthStore } from '../../store/authStore';
 import PageHeader from '../components/PageHeader';
 import AuthRequiredModal from '../components/AuthRequiredModal';
 
-const ORDERS = [
-  {
-    id: 1,
-    date: '2024-02-15',
-    status: 'Delivered',
-    total: 299.99,
-    items: [
-      {
-        name: 'Premium Wireless Headphones',
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: 2,
-    date: '2024-02-10',
-    status: 'In Transit',
-    total: 399.98,
-    items: [
-      {
-        name: 'Modern Minimalist Watch',
-        quantity: 2,
-      },
-    ],
-  },
-];
-
 export default function Profile() {
   const wishlistItems = useWishlistStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
@@ -267,11 +240,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E5E5',
     borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 1,
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginBottom: 12,
