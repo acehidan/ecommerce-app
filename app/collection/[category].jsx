@@ -1,16 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useLocalSearchParams, router } from 'expo-router';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  Image,
   Pressable,
-  ActivityIndicator,
-  Alert,
 } from 'react-native';
-import { router } from 'expo-router';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -19,7 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
 import PageHeader from '../components/PageHeader';
 import SearchBar from '../components/SearchBar';
+import LoadingState from '../components/LoadingState';
 import handleGetByCategory from '../../services/products/getByCategory';
+import colors from '../../constants/colors';
 
 const CATEGORY_TITLES = {
   capacitor: 'Capacitor များ',
@@ -27,83 +25,89 @@ const CATEGORY_TITLES = {
   electronics: 'Electronics',
 };
 
+/**
+ * Sub-component for empty search results
+ */
+const EmptyState = React.memo(() => (
+  <View style={styles.emptyContainer}>
+    <Ionicons name="search-outline" size={64} color={colors.text.muted} />
+    <Text style={styles.emptyText}>ရှာတွေ့သော ပစ္စည်း မရှိပါ</Text>
+  </View>
+));
+
+/**
+ * Sub-component for error state
+ */
+const ErrorState = ({ headerHeight, error, onRetry }) => (
+  <View style={[styles.centerContainer, { paddingTop: headerHeight }]}>
+    <Ionicons name="alert-circle-outline" size={64} color={colors.error.main} />
+    <Text style={styles.errorText}>{error}</Text>
+    <Pressable style={styles.retryButton} onPress={onRetry}>
+      <Text style={styles.retryButtonText}>ပြန်လည်ကြိုးစားမယ်</Text>
+    </Pressable>
+  </View>
+);
+
 export default function Collection() {
   const insets = useSafeAreaInsets();
-  const headerHeight = 56 + insets.top; // Approximate header height (padding + content + safe area)
+  const headerHeight = 56 + insets.top;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const { category } = useLocalSearchParams();
-
   const title = CATEGORY_TITLES[category] || category || 'Collection';
 
-  useEffect(() => {
-    if (category) {
-      fetchProductsByCategory();
-    }
-  }, [category]);
+  const fetchProductsByCategory = useCallback(async () => {
+    if (!category) return;
 
-  const fetchProductsByCategory = async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await handleGetByCategory(category);
 
       if (response.success) {
-        // Transform API response to match ProductCard component structure
-        const transformedProducts = response.data.data.data.map((item) => ({
+        const transformedProducts = (response.data?.data?.data || []).map((item) => ({
           id: item._id,
           name: item.name,
           price: item.retailUnitPrice,
-          image:
-            item.images && item.images.length > 0
-              ? item.images[0].url
-              : 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg', // fallback image
+          image: item.images?.[0]?.url || 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg',
           productCode: item.productCode,
           stockQuantity: item.stockQuantity,
           description: item.description,
           category: item.category,
         }));
-
         setProducts(transformedProducts);
-        setFilteredProducts(transformedProducts);
       } else {
-        setError(response.error);
-        Alert.alert('Error', response.error);
+        setError(response.error || 'Failed to fetch products');
       }
-    } catch (error) {
-      const errorMessage = 'Failed to fetch products';
-      setError(errorMessage);
-      Alert.alert('Error', errorMessage);
+    } catch (err) {
+      setError('Internal server error');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [category]);
 
   useEffect(() => {
-    setFilteredProducts(products);
-  }, [products]);
+    fetchProductsByCategory();
+  }, [fetchProductsByCategory]);
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    if (query.trim() === '') {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter((product) =>
-        product.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredProducts(filtered);
-    }
-  };
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+    const query = searchQuery.toLowerCase();
+    return products.filter((product) =>
+      product.name.toLowerCase().includes(query) ||
+      product.productCode?.toLowerCase().includes(query)
+    );
+  }, [products, searchQuery]);
 
-  const handleProductPress = (productId) => {
-    router.push(`/product/${productId}`);
-  };
+  const handleProductPress = useCallback((productCode) => {
+    router.push(`/product/${productCode}`);
+  }, []);
 
-  const renderProduct = ({ item }) => (
+  const renderProduct = useCallback(({ item }) => (
     <View style={styles.productItem}>
       <ProductCard
         id={item.id}
@@ -113,69 +117,47 @@ export default function Collection() {
         onPress={() => handleProductPress(item.productCode)}
       />
     </View>
-  );
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <PageHeader title={title} rightContent="Loading..." />
-        <View style={[styles.loadingContainer, { paddingTop: headerHeight }]}>
-          <ActivityIndicator size="large" color="#333333" />
-          <Text style={styles.loadingText}>ပစ္စည်းများ ရယူနေပါသည်...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <PageHeader title={title} rightContent="Error" />
-        <View style={[styles.errorContainer, { paddingTop: headerHeight }]}>
-          <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
-          <Text style={styles.errorText}>{error}</Text>
-          <Pressable
-            style={styles.retryButton}
-            onPress={fetchProductsByCategory}
-          >
-            <Text style={styles.retryButtonText}>ပြန်လည်ကြိုးစားမယ်</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  ), [handleProductPress]);
 
   return (
     <SafeAreaView style={styles.container}>
       <PageHeader
         title={title}
-        rightContent={`ပစ္စည်း ${filteredProducts.length} ခု`}
+        rightContent={!isLoading && !error ? `ပစ္စည်း ${filteredProducts.length} ခု` : null}
+        sticky={true}
+        showBackButton={true}
       />
 
-      <View style={{ paddingTop: headerHeight }}>
-        <SearchBar
-          placeholder={`${title} တွေ ရှာမယ်`}
-          value={searchQuery}
-          onChangeText={handleSearch}
-          hintText="* မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+      {isLoading ? (
+        <LoadingState headerHeight={headerHeight} />
+      ) : error ? (
+        <ErrorState
+          headerHeight={headerHeight}
+          error={error}
+          onRetry={fetchProductsByCategory}
         />
+      ) : (
+        <View style={{ paddingTop: headerHeight, flex: 1 }}>
+          <SearchBar
+            placeholder={`${title} တွေ ရှာမယ်`}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            hintText="မိမိရှာလိုတဲ့ ပစ္စည်းရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+            showHint={true}
+          />
 
-        <FlatList
-          data={filteredProducts}
-          renderItem={renderProduct}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.productsGrid}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={48} color="#CCCCCC" />
-              <Text style={styles.emptyText}>ရှာတွေ့သော ပစ္စည်း မရှိပါ</Text>
-            </View>
-          )}
-        />
-      </View>
+          <FlatList
+            data={filteredProducts}
+            renderItem={renderProduct}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={EmptyState}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -183,66 +165,61 @@ export default function Collection() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
-  productsGrid: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+    flexGrow: 1,
   },
   row: {
     justifyContent: 'space-between',
   },
   productItem: {
     width: '48%',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
   },
   errorText: {
-    marginTop: 16,
-    marginBottom: 24,
+    marginTop: 20,
+    marginBottom: 30,
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.tertiary,
     textAlign: 'center',
     lineHeight: 24,
   },
   retryButton: {
-    backgroundColor: '#333333',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: colors.shadow.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   retryButtonText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 100,
   },
   emptyText: {
-    marginTop: 16,
+    marginTop: 20,
     fontSize: 16,
-    color: '#CCCCCC',
-    textAlign: 'center',
+    color: colors.text.muted,
+    fontWeight: '500',
   },
 });
+

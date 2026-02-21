@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   rightText: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.text.tertiary,
     textAlign: 'right',
     fontFamily: 'NotoSansMyanmar-Regular',
