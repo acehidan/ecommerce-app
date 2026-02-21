@@ -1,6 +1,6 @@
-import React from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import colors from '../../constants/colors';
 
 /**
  * Reusable SearchBar Component
@@ -12,11 +12,11 @@ import { Ionicons } from '@expo/vector-icons';
  * @param {function} onPress - Handler when search bar is pressed (for navigation)
  */
 export default function SearchBar({
-  placeholder = 'လိုချင်တဲ့ ပစ္စည်းတွေ ရှာမယ်',
+  placeholder,
   value,
   onChangeText,
-  hintText = '* မိမိရှာလိုတဲ့ ပစ္စည်းရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်',
-  showHint = true,
+  hintText,
+  showHint,
   onPress,
 }) {
   const SearchBarContent = (
@@ -51,10 +51,7 @@ export default function SearchBar({
 const styles = StyleSheet.create({
   searchSection: {
     paddingHorizontal: 10,
-    marginBottom: 20,
-  },
-  searchBarContainer: {
-    marginBottom: 8,
+    marginBottom: 10,
   },
   searchBar: {
     flexDirection: 'row',
@@ -62,18 +59,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     borderRadius: 50,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: 60,
+    marginHorizontal: 10,
+
   },
   searchInput: {
     flex: 1,
     marginLeft: 12,
-    fontSize: 16,
-    color: '#000000',
+    fontSize: 14,
+    color: colors.text.primary,
   },
   searchHint: {
     textAlign: 'center',
-    color: '#999999',
-    fontSize: 10,
+    color: colors.text.muted,
+    fontSize: 8,
     lineHeight: 16,
+    marginTop: 4,
   },
 });

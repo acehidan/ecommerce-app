@@ -79,6 +79,16 @@ export const colors = {
     dark: 'rgba(0, 0, 0, 0.3)', // Dark shadow
   },
 
+  button: {
+    primary: '#0B231C',
+    secondary: '#F5F5F5',
+    accent: '#3B82F6',
+    success: '#4CAF50',
+    error: '#F44336',
+    warning: '#FF9800',
+    info: '#2196F3',
+  },
+
   // Common UI Colors
   white: '#FFFFFF',
   black: '#000000',

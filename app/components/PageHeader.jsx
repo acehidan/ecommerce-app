@@ -21,12 +21,11 @@ export default function PageHeader({
   title,
   onBackPress,
   rightContent,
-  showBorder = true,
-  sticky = true,
-  backIconColor = colors.text.primary,
+  sticky,
   style,
   titleStyle,
   rightContentStyle,
+  showBackButton
 }) {
   const insets = useSafeAreaInsets();
 
@@ -41,19 +40,19 @@ export default function PageHeader({
   const headerStyle = [
     styles.header,
     sticky && [styles.stickyHeader, { top: insets.top }],
-    showBorder && styles.headerWithBorder,
+    styles.headerWithBorder,
     style,
   ];
 
   return (
     <View style={headerStyle}>
-      <Pressable style={styles.backButton} onPress={handleBackPress}>
-        <Ionicons name="arrow-back" size={24} color={backIconColor} />
-      </Pressable>
+      {showBackButton && <Pressable style={styles.backButton} onPress={handleBackPress}>
+        <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+      </Pressable>}
       <Text style={[styles.headerTitle, titleStyle]}>{title}</Text>
       <View style={[styles.rightContent, rightContentStyle]}>
         {typeof rightContent === 'string' ||
-        typeof rightContent === 'number' ? (
+          typeof rightContent === 'number' ? (
           <Text style={styles.rightText}>{rightContent}</Text>
         ) : rightContent ? (
           rightContent
@@ -89,12 +88,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text.primary,
     flex: 1,
     marginLeft: 10,
-    fontFamily: 'NotoSansMyanmar-Regular',
   },
   rightContent: {
     minWidth: 80,

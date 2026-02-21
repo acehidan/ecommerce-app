@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -17,14 +17,71 @@ import {
 import PageHeader from '../components/PageHeader';
 import SearchBar from '../components/SearchBar';
 import handleGetAllCategory from '../../services/products/getAllCategory';
+import colors from '../../constants/colors';
+import LoadingState from '../components/LoadingState';
+
+/**
+ * Sub-component for individual category items
+ */
+const CategoryItem = React.memo(({ item, onPress }) => (
+  <Pressable
+    style={({ pressed }) => [
+      styles.categoryItem,
+      pressed && styles.categoryItemPressed,
+    ]}
+    onPress={() => onPress(item.name)}
+  >
+    <View style={styles.categoryContent}>
+      <View style={styles.categoryInfo}>
+        <Text style={styles.categoryName}>{item.name}</Text>
+        <Text style={styles.categoryCount}>
+          ပစ္စည်း စုစုပေါင်း - {item.itemCount} ခု
+        </Text>
+      </View>
+      <View style={styles.iconContainer}>
+        <Ionicons name="chevron-forward" size={20} color={colors.text.primary} />
+      </View>
+    </View>
+  </Pressable>
+));
+
+/**
+ * Sub-component for error state
+ */
+const ErrorState = ({ headerHeight, error, onRetry }) => (
+  <View style={[styles.centerContainer, { paddingTop: headerHeight }]}>
+    <Ionicons
+      name="alert-circle-outline"
+      size={64}
+      color={colors.error.main}
+    />
+    <Text style={styles.errorText}>{error}</Text>
+    <Pressable style={styles.retryButton} onPress={onRetry}>
+      <Text style={styles.retryButtonText}>ပြန်လည်ကြိုးစားမယ်</Text>
+    </Pressable>
+  </View>
+);
+
+/**
+ * Sub-component for empty search results
+ */
+const EmptyState = () => (
+  <View style={styles.emptyContainer}>
+    <Ionicons
+      name="search-outline"
+      size={64}
+      color={colors.text.muted}
+    />
+    <Text style={styles.emptyText}>ရှာတွေ့သော အမျိုးအစား မရှိပါ</Text>
+  </View>
+);
 
 export default function Categories() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 60 + insets.bottom + 16;
   const headerHeight = 56 + insets.top;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState([]);
-  const [filteredCategories, setFilteredCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -37,123 +94,77 @@ export default function Categories() {
       setIsLoading(true);
       setError(null);
       const response = await handleGetAllCategory();
-      console.log('response', response);
+      console.log(response);
 
       if (response.success) {
-        // Transform API response to match our component structure
-        const transformedCategories = response.data.data.items.map(
+        const transformedCategories = (response.data?.data?.items || []).map(
           (item, index) => ({
             id: index + 1,
             name: item.category,
             itemCount: item.totalStockItems,
-          })
+          }),
         );
-
         setCategories(transformedCategories);
-        setFilteredCategories(transformedCategories);
       } else {
-        setError(response.error);
-        Alert.alert('Error', response.error);
+        const errMsg = response.error || 'Failed to fetch categories';
+        setError(errMsg);
       }
-    } catch (error) {
-      const errorMessage = 'Failed to fetch categories';
-      setError(errorMessage);
-      Alert.alert('Error', errorMessage);
+    } catch (err) {
+      setError('Internal server error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    if (query.trim() === '') {
-      setFilteredCategories(categories);
-    } else {
-      const filtered = categories.filter((category) =>
-        category.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredCategories(filtered);
-    }
-  };
-
-  const handleCategoryPress = (categoryId) => {
-    router.push(`/collection/${categoryId}`);
-  };
-
-  const renderCategory = ({ item }) => (
-    <Pressable
-      style={styles.categoryItem}
-      onPress={() => handleCategoryPress(item.name)}
-    >
-      <View style={styles.categoryContent}>
-        <View style={styles.categoryInfo}>
-          <Text style={styles.categoryName}>{item.name}</Text>
-          <Text style={styles.categoryCount}>
-            ပစ္စည်း စုစုပေါင်း - {item.itemCount} ခု
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color="#999999" />
-      </View>
-    </Pressable>
-  );
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <PageHeader title="ပစ္စည်း အမျိုးအစားများ" sticky={false} />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#333333" />
-          <Text style={styles.loadingText}>အမျိုးအစားများ ရယူနေပါသည်</Text>
-        </View>
-      </SafeAreaView>
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return categories;
+    const query = searchQuery.toLowerCase();
+    return categories.filter((category) =>
+      category.name.toLowerCase().includes(query),
     );
-  }
+  }, [categories, searchQuery]);
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <PageHeader title="ပစ္စည်း အမျိုးအစားများ" sticky={false} />
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
-          <Text style={styles.errorText}>{error}</Text>
-          <Pressable style={styles.retryButton} onPress={fetchCategories}>
-            <Text style={styles.retryButtonText}>ပြန်လည်ကြိုးစားမယ်</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleCategoryPress = useCallback((categoryName) => {
+    router.push(`/collection/${categoryName}`);
+  }, []);
+
+  const renderItem = useCallback(({ item }) => (
+    <CategoryItem item={item} onPress={handleCategoryPress} />
+  ), [handleCategoryPress]);
 
   return (
     <SafeAreaView style={styles.container}>
       <PageHeader title="ပစ္စည်း အမျိုးအစားများ" sticky={true} />
 
-      <View style={{ paddingTop: headerHeight }}>
-        <SearchBar
-          placeholder="အမျိုးအစားတွေ ရှာမယ်"
-          value={searchQuery}
-          onChangeText={handleSearch}
-          hintText="* မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+      {isLoading ? (
+        <LoadingState headerHeight={headerHeight} />
+      ) : error ? (
+        <ErrorState
+          headerHeight={headerHeight}
+          error={error}
+          onRetry={fetchCategories}
         />
+      ) : (
+        <View style={{ paddingTop: headerHeight, flex: 1 }}>
+          <SearchBar
+            placeholder="အမျိုးအစားတွေ ရှာမယ်"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            hintText="မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+            showHint={true}
+          />
 
-        <FlatList
-          data={filteredCategories}
-          renderItem={renderCategory}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={[
-            styles.categoriesList,
-            { paddingBottom: tabBarHeight },
-          ]}
-          showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={48} color="#CCCCCC" />
-              <Text style={styles.emptyText}>ရှာတွေ့သော အမျိုးအစား မရှိပါ</Text>
-            </View>
-          )}
-        />
-      </View>
+          <FlatList
+            data={filteredCategories}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListEmptyComponent={EmptyState}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -161,14 +172,20 @@ export default function Categories() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
-  categoriesList: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+    flexGrow: 1,
   },
   categoryItem: {
     paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+  },
+  categoryItemPressed: {
+    backgroundColor: colors.background.secondary,
   },
   categoryContent: {
     flexDirection: 'row',
@@ -180,68 +197,72 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000000',
-    marginBottom: 4,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 6,
   },
   categoryCount: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.tertiary,
+    fontWeight: '400',
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   separator: {
     height: 1,
-    backgroundColor: '#E5E5E5',
-    marginLeft: 0,
+    backgroundColor: colors.border.light,
+    opacity: 0.5,
   },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
   },
-  loadingText: {
-    marginTop: 16,
+  statusText: {
+    marginTop: 20,
     fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-    width: '100%',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    color: colors.text.tertiary,
+    fontWeight: '500',
   },
   errorText: {
-    marginTop: 16,
-    marginBottom: 24,
+    marginTop: 20,
+    marginBottom: 30,
     fontSize: 16,
-    color: '#666666',
+    color: colors.text.tertiary,
     textAlign: 'center',
     lineHeight: 24,
   },
   retryButton: {
-    backgroundColor: '#333333',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: colors.shadow.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   retryButtonText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 100,
   },
   emptyText: {
-    marginTop: 16,
+    marginTop: 20,
     fontSize: 16,
-    color: '#CCCCCC',
-    textAlign: 'center',
-    width: '100%',
+    color: colors.text.muted,
+    fontWeight: '500',
   },
 });
