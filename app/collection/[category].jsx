@@ -58,7 +58,7 @@ export default function Collection() {
   const [error, setError] = useState(null);
 
   const { category } = useLocalSearchParams();
-  const title = CATEGORY_TITLES[category] || category || 'Collection';
+  const title = `${category} များ` || 'Collection';
 
   const fetchProductsByCategory = useCallback(async () => {
     if (!category) return;

@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    height: 70,
     backgroundColor: colors.background.primary,
   },
   stickyHeader: {
@@ -89,10 +89,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
     color: colors.text.primary,
     flex: 1,
     marginLeft: 10,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    // Simulate boldness since Regular font weight doesn't support bold
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   rightContent: {
     minWidth: 80,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,126 +8,113 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import handleGetAllCategory from '../../services/products/getAllCategory';
 import colors from '../../constants/colors';
 import Button from './Button';
 
-// Fallback categories for when API fails
-// const CATEGORIES = [
-//   {
-//     id: 1,
-//     name: 'Capacitor',
-//     slug: 'capacitor',
-//   },
-//   {
-//     id: 2,
-//     name: 'Electronics',
-//     slug: 'electronics',
-//   },
-//   {
-//     id: 3,
-//     name: 'Resistors',
-//     slug: 'resistors',
-//   },
-// ];
+// --- Sub-components ---
+
+const CategoryItem = ({ name, slug }) => {
+  const handlePress = useCallback(() => {
+    router.push(`/collection/${slug}`);
+  }, [slug]);
+
+  return (
+    <Pressable style={styles.categoryButton} onPress={handlePress}>
+      <Text style={styles.categoryButtonText}>{name} များ</Text>
+    </Pressable>
+  );
+};
+
+// --- Main Component ---
 
 export default function CategoriesSection({ refreshTrigger, onLoadingChange }) {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [refreshTrigger]);
-
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      if (onLoadingChange) onLoadingChange(true);
-      setError(null);
+  // Use TanStack Query for categories fetching
+  const {
+    data: categories,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['all-categories'],
+    queryFn: async () => {
       const response = await handleGetAllCategory();
-      console.log('response', response);
-
-      if (response.success) {
-        // Transform API response to match our component structure
-        const transformedCategories = response.data.data.items
-          .slice(0, 10) // Limit to first 3 categories
+      if (response && response.success) {
+        // Transform API response
+        return response.data.data.items
+          .slice(0, 10)
           .map((item, index) => ({
             id: index + 1,
             name: item.category,
             slug: item.category,
           }));
-
-        setCategories(transformedCategories);
-      } else {
-        setError('Failed to load');
       }
-    } catch (err) {
-      console.error('Error fetching:', err);
-      setError('Failed to load');
-    } finally {
-      setLoading(false);
-      if (onLoadingChange) onLoadingChange(false);
-    }
-  };
+      throw new Error(response?.error || 'Failed to load categories');
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  const handleShopNow = (slug) => {
-    router.push(`/collection/${slug}`);
-  };
+  // Notify parent of loading state changes
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  // Handle manual refresh trigger
+  useEffect(() => {
+    if (refreshTrigger) {
+      refetch();
+    }
+  }, [refreshTrigger, refetch]);
+
+  const showContent = useMemo(() => {
+    return !isLoading && categories && categories.length > 0;
+  }, [isLoading, categories]);
+
+  if (!showContent && !isLoading) return null;
+
+  if (isError) {
+    return null;
+  }
 
   return (
     <View style={styles.section}>
-      {!loading && categories.length > 0 && (
-        <View>
-          <View style={styles.categoriesHeader}>
-            <Text style={styles.sectionTitle}>ပစ္စည်းအမျိူးအစားများ</Text>
-            <Button
-              title="အမျိုးအစားများ"
-              onPress={() => router.push('/categories')}
-              variant="outline"
-              size="medium"
-              borderColor={colors.text.light}
-              textColor={colors.text.light}
-            />
+      <View style={styles.categoriesHeader}>
+        <Text style={styles.sectionTitle}>ပစ္စည်းအမျိူးအစားများ</Text>
+        <Button
+          title="အားလုံးကြည့်မယ်"
+          onPress={() => router.push('/categories')}
+          variant="outline"
+          size="medium"
+        />
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoriesScrollContainer}
+        style={styles.categoriesScrollView}
+      >
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={colors.white} />
+            <Text style={styles.loadingText}>ခနစောင့်ပါ...</Text>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesScrollContainer}
-            style={styles.categoriesScrollView}
-          >
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
-                <Text style={styles.loadingText}>Loading</Text>
-              </View>
-            ) : error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Failed to load categories</Text>
-              </View>
-            ) : (
-              categories.map((category) => (
-                <Pressable
-                  key={category.id}
-                  style={styles.categoryButton}
-                  onPress={() => handleShopNow(category.slug)}
-                >
-                  <Text style={styles.categoryButtonText}>
-                    {category.name} များ
-                  </Text>
-                </Pressable>
-              ))
-            )}
-          </ScrollView>
-        </View>
-      )}
+        ) : (
+          categories.map((item) => (
+            <CategoryItem key={item.id} name={item.name} slug={item.slug} />
+          ))
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
-    paddingVertical: 20,
+    paddingVertical: 24,
     backgroundColor: '#0B231C',
   },
   categoriesHeader: {
@@ -135,54 +122,59 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text.light,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: 'rgba(255, 255, 255, 0.4)',
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 1,
     flex: 1,
   },
   categoriesScrollView: {
     paddingLeft: 20,
-    marginTop: 8,
   },
   categoriesScrollContainer: {
-    paddingHorizontal: 2,
+    paddingRight: 20,
     gap: 12,
   },
   categoryButton: {
-    backgroundColor: colors.background.secondary,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 80,
-    marginRight: 12,
+    backgroundColor: colors.background.primary,
+    minWidth: 126,
+    paddingHorizontal: 24,
+    height: 62,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryButtonText: {
-    color: '#000000',
     fontSize: 14,
+    fontFamily: 'NotoSansMyanmar-Regular',
     fontWeight: '700',
-    textAlign: 'center',
+    // Subtle shadow for Myanmar text clarity
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 1,
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
     paddingVertical: 12,
   },
   loadingText: {
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 14,
-    marginLeft: 8,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    marginLeft: 12,
   },
   errorContainer: {
-    paddingHorizontal: 20,
     paddingVertical: 12,
   },
   errorText: {
-    color: '#FF6B6B',
+    color: colors.error.light,
     fontSize: 14,
-    textAlign: 'center',
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
 });

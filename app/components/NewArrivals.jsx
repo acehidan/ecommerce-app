@@ -1,83 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  Pressable,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import ProductCard from './ProductCard';
 import handleGetNewArrivalsProducts from '../../services/products/getNewArrivalsProducts';
 import Button from './Button';
 import colors from '../../constants/colors';
 
+// --- Constants ---
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const DISPLAY_LIMIT = 10;
+const FALLBACK_IMAGE = 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg';
+
+// --- Main Component ---
+
 export default function NewArrivals({ refreshTrigger, onLoadingChange }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchNewArrivals = async () => {
-      try {
-        setLoading(true);
-        if (onLoadingChange) onLoadingChange(true);
-        const result = await handleGetNewArrivalsProducts();
-        if (result.success) {
-          // Limit to first 10 products
-          const limitedProducts = result.data.data.slice(0, 10);
-          setProducts(limitedProducts);
-        } else {
-          setError(result.error);
-        }
-      } catch (err) {
-        setError('Failed to fetch new arrivals');
-      } finally {
-        setLoading(false);
-        if (onLoadingChange) onLoadingChange(false);
+  // Use TanStack Query for products fetching
+  const {
+    data: products,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['new-arrivals'],
+    queryFn: async () => {
+      const result = await handleGetNewArrivalsProducts();
+      if (result && result.success && result.data?.data) {
+        return result.data.data.slice(0, DISPLAY_LIMIT);
       }
-    };
+      throw new Error(result?.error || 'Failed to fetch new arrivals');
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-    fetchNewArrivals();
-  }, [refreshTrigger]);
+  // Notify parent of loading state changes
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
 
-  const handleProductPress = (productId) => {
-    router.push(`/product/${productId}`);
-  };
+  // Handle manual refresh trigger
+  useEffect(() => {
+    if (refreshTrigger) {
+      refetch();
+    }
+  }, [refreshTrigger, refetch]);
 
-  if (loading && products.length === 0) {
-    return null;
-  }
+  const handleProductPress = useCallback((productCode) => {
+    router.push(`/product/${productCode}`);
+  }, []);
 
-  // if (loading) {
-  //   return (
-  //     <View style={styles.section}>
-  //       <View style={styles.header}>
-  //         <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
-  //         <View style={styles.placeholder} />
-  //       </View>
-  //       <View style={styles.loadingContainer}>
-  //         <ActivityIndicator size="small" color="#333333" />
-  //         <Text style={styles.loadingText}>Loading...</Text>
-  //       </View>
-  //     </View>
-  //   );
-  // }
+  const showContent = useMemo(() => {
+    return !isLoading && products && products.length > 0;
+  }, [isLoading, products]);
 
-  if (error) {
-    return (
-      <View style={styles.section}>
-        <View style={styles.header}>
-          <Text style={styles.sectionTitle}>အသစ်ရောက် ပစ္စည်းများ</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>No Products Found</Text>
-        </View>
-      </View>
-    );
-  }
+  // Hide section if either there is an error or no content exists when not loading/refreshing
+  if (!showContent && !isLoading && !refreshTrigger) return null;
+  if (isError && !products) return null;
 
   return (
     <View style={styles.section}>
@@ -87,67 +74,64 @@ export default function NewArrivals({ refreshTrigger, onLoadingChange }) {
           title="ထပ်ကြည့်မယ်"
           variant="outline"
           size="medium"
+          onPress={() => router.push('/(tabs)/search')}
           borderColor={colors.text.primary}
           textColor={colors.text.primary}
-          onPress={() => router.push('/new-arrivals')}
         />
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.productsScrollContainer}
-        style={styles.productsScrollView}
-      >
-        {products.map((product) => (
-          <View key={product._id} style={styles.horizontalProductItem}>
-            <ProductCard
-              id={product._id}
-              name={product.name}
-              price={product.retailUnitPrice}
-              image={
-                product.images?.[0]?.url ||
-                'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg'
-              }
-              onPress={() => handleProductPress(product.productCode)}
-            />
-          </View>
-        ))}
-      </ScrollView>
+      {isLoading && !products ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={styles.loadingText}>ခနစောင့်ပါ...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.productsScrollContainer}
+          style={styles.productsScrollView}
+          decelerationRate="fast"
+          snapToAlignment="start"
+        >
+          {products?.map((product) => (
+            <View key={product._id} style={styles.productWrapper}>
+              <ProductCard
+                id={product._id}
+                name={product.name}
+                price={product.retailUnitPrice}
+                image={product.images?.[0]?.url || FALLBACK_IMAGE}
+                onPress={() => handleProductPress(product.productCode)}
+              />
+            </View>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
-    paddingVertical: 20,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 24,
+    backgroundColor: colors.background.primary,
   },
   header: {
     paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
     flex: 1,
-  },
-  viewMoreButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#000',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  viewMoreText: {
-    color: '#000000',
-    fontSize: 12,
-    fontWeight: '500',
+    // Faux bold effect for Myanmar font
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   productsScrollView: {
     paddingLeft: 20,
@@ -156,32 +140,20 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     gap: 16,
   },
-  horizontalProductItem: {
-    width: 160,
-  },
-  placeholder: {
-    width: 80,
+  productWrapper: {
+    width: 165,
   },
   loadingContainer: {
+    width: SCREEN_WIDTH,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingVertical: 40,
   },
   loadingText: {
     fontSize: 14,
-    color: '#666666',
-    marginLeft: 8,
-  },
-  errorContainer: {
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#FF0000',
-    textAlign: 'center',
+    color: colors.text.muted,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    marginLeft: 12,
   },
 });

@@ -108,8 +108,8 @@ export default function Button({
             variant === 'outline'
               ? textColor || borderColor || colors.text.light
               : variant === 'filled'
-              ? textColor || colors.text.light
-              : textColor || colors.text.primary
+                ? textColor || colors.text.light
+                : textColor || colors.text.primary
           }
         />
       ) : (
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSansMyanmar-Regular',
     fontWeight: '700',
     textAlign: 'center',
+
   },
   text_small: {
     fontSize: 10,

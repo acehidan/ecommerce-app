@@ -1,89 +1,110 @@
 import {
   ScrollView,
   StyleSheet,
-  View,
   RefreshControl,
+  StatusBar,
+  View,
   ActivityIndicator,
+  Text,
 } from 'react-native';
-import { useState, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Navbar from '../components/Navbar';
+import PageHeader from '../components/PageHeader';
 import SearchBar from '../components/SearchBar';
 import PromotionalBanner from '../components/PromotionalBanner';
 import CategoriesSection from '../components/CategoriesSection';
 import NewArrivals from '../components/NewArrivals';
 import colors from '../../constants/colors';
 
+// --- Constants ---
+const NAVBAR_HEIGHT = 80;
+const TABBAR_FIXED_HEIGHT = 60;
+const MIN_LOADING_TIME = 500; // 0.5s minimum duration
+
 export default function Home() {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 60 + insets.bottom + 16; // Tab bar height + bottom inset + padding
-  const navbarHeight = 80; // Approximate navbar height (padding + content)
   const [refreshing, setRefreshing] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Use a ref to track how many components are currently loading
   const loadingCountRef = useRef(0);
+  const refreshStartTimeRef = useRef(0);
   const timeoutRef = useRef(null);
 
-  const handleLoadingChange = (isLoading) => {
+  /**
+   * Synchronized loading handler
+   * Ensures the Pull-to-Refresh spinner stays visible until all 
+   * child components have finished their data fetching and 
+   * at least MIN_LOADING_TIME has passed.
+   */
+  const handleLoadingChange = useCallback((isLoading) => {
     if (isLoading) {
       loadingCountRef.current += 1;
     } else {
       loadingCountRef.current = Math.max(0, loadingCountRef.current - 1);
-      // When all components finish loading, stop the refresh indicator
+
+      // If we were refreshing and everything is now loaded, check for min time
       if (loadingCountRef.current === 0) {
-        setRefreshing((prev) => {
-          if (prev) {
-            // Clear timeout if still exists
-            if (timeoutRef.current) {
-              clearTimeout(timeoutRef.current);
-              timeoutRef.current = null;
-            }
-            return false;
+        const elapsedTime = Date.now() - refreshStartTimeRef.current;
+        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+
+        setTimeout(() => {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
           }
-          return prev;
-        });
+          setRefreshing(false);
+        }, remainingTime);
       }
     }
-  };
+  }, []);
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadingCountRef.current = 0;
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    // Trigger refresh by updating the refreshTrigger value
-    // This will cause CategoriesSection and NewArrivals to re-fetch their data
+    refreshStartTimeRef.current = Date.now();
+    loadingCountRef.current = 0; // Reset count for the new cycle
+
+    // Trigger a refresh across all components
     setRefreshTrigger((prev) => prev + 1);
-    // Fallback timeout in case API calls take too long or fail silently
+
+    // Safety timeout: stop the spinner after 10 seconds
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setRefreshing(false);
-      loadingCountRef.current = 0;
-      timeoutRef.current = null;
-    }, 10000); // 10 second timeout
-  };
+      console.warn('Refresh timed out');
+    }, 10000);
+  }, []);
+
+  const bottomPadding = TABBAR_FIXED_HEIGHT + insets.bottom + 16;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={[styles.stickyNavbar, { top: insets.top }]}>
-        <Navbar title="ကိုမင်း D.I.Y ပစ္စည်းများ" />
-      </View>
-      {/* {refreshing && (
+      <StatusBar barStyle="dark-content" />
+
+      {/* Sticky Top Header */}
+      <PageHeader title="ကိုမင်း D.I.Y ပစ္စည်းများ" sticky={true} />
+
+      {/* Loading Animation Overlay */}
+      {refreshing && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.text.primary} />
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>ခနစောင့်ပေးပါ...</Text>
+          </View>
         </View>
-      )} */}
+      )}
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingBottom: tabBarHeight,
-            paddingTop: navbarHeight,
+            paddingBottom: bottomPadding,
+            paddingTop: NAVBAR_HEIGHT, // Reserve space for sticky navbar
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -91,17 +112,28 @@ export default function Home() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.text.primary}
-            colors={[colors.text.primary]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       >
-        <SearchBar onPress={() => router.push('/search')} />
+        <SearchBar
+          onPress={() => router.push('/search')}
+          placeholder="အမျိုးအစားတွေ ရှာမယ်"
+          hintText="မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+          showHint={true}
+        />
+
+        {/* Banner Section - uses refreshTrigger to reload */}
         <PromotionalBanner refreshTrigger={refreshTrigger} />
+
+        {/* Categories - reports loading state to sync with refreshControl */}
         <CategoriesSection
           refreshTrigger={refreshTrigger}
           onLoadingChange={handleLoadingChange}
         />
+
+        {/* New Products - reports loading state to sync with refreshControl */}
         <NewArrivals
           refreshTrigger={refreshTrigger}
           onLoadingChange={handleLoadingChange}
@@ -116,29 +148,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.primary,
   },
-  stickyNavbar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    backgroundColor: colors.secondary,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.background.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
-  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    zIndex: 2000,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingBox: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
 });
