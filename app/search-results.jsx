@@ -2,26 +2,25 @@ import {
   View,
   Text,
   StyleSheet,
-  Pressable,
-  ScrollView,
   FlatList,
   ActivityIndicator,
-  TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import handleGetStocks from '../services/products/getStocks';
 import ProductCard from './components/ProductCard';
+import PageHeader from './components/PageHeader';
+import colors from '../constants/colors';
 
 export default function SearchResults() {
   const { query, category } = useLocalSearchParams();
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('relevance');
-  const [filterVisible, setFilterVisible] = useState(false);
   const [error, setError] = useState(null);
+  const insets = useSafeAreaInsets();
+  const headerHeight = 56 + insets.top;
 
   useEffect(() => {
     fetchSearchResults();
@@ -57,40 +56,10 @@ export default function SearchResults() {
     }
   };
 
-  const handleBack = () => {
-    router.back();
-  };
 
   const handleProductPress = (productId) => {
-    console.log('productId', productId);
+    // console.log('productId', productId);
     router.push(`/product/${productId}`);
-  };
-
-  const handleSort = (sortType) => {
-    setSortBy(sortType);
-    let sortedResults = [...searchResults];
-
-    switch (sortType) {
-      case 'price-low':
-        sortedResults.sort((a, b) => a.retailUnitPrice - b.retailUnitPrice);
-        break;
-      case 'price-high':
-        sortedResults.sort((a, b) => b.retailUnitPrice - a.retailUnitPrice);
-        break;
-      case 'stock':
-        sortedResults.sort((a, b) => b.stockQuantity - a.stockQuantity);
-        break;
-      case 'newest':
-        sortedResults.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-        break;
-      default:
-        // Keep original order for relevance
-        break;
-    }
-
-    setSearchResults(sortedResults);
   };
 
   const renderProductCard = ({ item }) => (
@@ -109,59 +78,10 @@ export default function SearchResults() {
     </View>
   );
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <Pressable style={styles.backButton} onPress={handleBack}>
-        <Ionicons name="arrow-back" size={24} color="#000000" />
-      </Pressable>
-      <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>ကိုက်ညီသော ပစ္စည်းများ</Text>
-      </View>
-      {/* <Pressable
-        style={styles.filterButton}
-        onPress={() => setFilterVisible(!filterVisible)}
-      >
-        <Ionicons name="filter-outline" size={24} color="#000000" />
-      </Pressable> */}
-    </View>
-  );
-
-  const renderSortOptions = () => (
-    <View style={styles.sortContainer}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {[
-          { key: 'relevance', label: 'သက်ဆိုင်မှု' },
-          { key: 'price-low', label: 'စျေးနည်း' },
-          { key: 'price-high', label: 'စျေးများ' },
-          { key: 'stock', label: 'လက်ကျန်' },
-          { key: 'newest', label: 'အသစ်ဆုံး' },
-        ].map((option) => (
-          <TouchableOpacity
-            key={option.key}
-            style={[
-              styles.sortOption,
-              sortBy === option.key && styles.sortOptionActive,
-            ]}
-            onPress={() => handleSort(option.key)}
-          >
-            <Text
-              style={[
-                styles.sortOptionText,
-                sortBy === option.key && styles.sortOptionTextActive,
-              ]}
-            >
-              {option.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
-
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        {renderHeader()}
+        <PageHeader title="ကိုက်ညီသော ပစ္စည်းများ" showBackButton={true} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#000000" />
           <Text style={styles.loadingText}>ရှာဖွေနေသည်...</Text>
@@ -172,40 +92,41 @@ export default function SearchResults() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {renderHeader()}
-      {/* {renderSortOptions()} */}
+      <PageHeader title="ကိုက်ညီသော ပစ္စည်းများ" showBackButton={true} sticky={true} />
 
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color="#FF3B30" />
-          <Text style={styles.errorText}>အမှားတစ်ခုဖြစ်ပွားခဲ့သည်</Text>
-          <Text style={styles.errorSubtext}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={fetchSearchResults}
-          >
-            <Text style={styles.retryButtonText}>ပြန်လည်ကြိုးစားမယ်</Text>
-          </TouchableOpacity>
-        </View>
-      ) : searchResults.length > 0 ? (
-        <FlatList
-          data={searchResults}
-          renderItem={renderProductCard}
-          keyExtractor={(item) => item._id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.productList}
-          columnWrapperStyle={styles.productRow}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : (
-        <View style={styles.noResultsContainer}>
-          <Ionicons name="search-outline" size={60} color="#CCCCCC" />
-          <Text style={styles.noResultsText}>ရှာဖွေမှုရလဒ်မရှိပါ</Text>
-          <Text style={styles.noResultsSubtext}>
-            အခြားစကားလုံးများဖြင့် ပြန်လည်ရှာဖွေကြည့်ပါ
-          </Text>
-        </View>
-      )}
+      <View style={{ paddingTop: headerHeight }}>
+        {error ? (
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle-outline" size={60} color="#FF3B30" />
+            <Text style={styles.errorText}>အမှားတစ်ခုဖြစ်ပွားခဲ့သည်</Text>
+            <Text style={styles.errorSubtext}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={fetchSearchResults}
+            >
+              <Text style={styles.retryButtonText}>ပြန်လည်ကြိုးစားမယ်</Text>
+            </TouchableOpacity>
+          </View>
+        ) : searchResults.length > 0 ? (
+          <FlatList
+            data={searchResults}
+            renderItem={renderProductCard}
+            keyExtractor={(item) => item._id.toString()}
+            numColumns={2}
+            contentContainerStyle={styles.productList}
+            columnWrapperStyle={styles.productRow}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <View style={styles.noResultsContainer}>
+            <Ionicons name="search-outline" size={60} color="#CCCCCC" />
+            <Text style={styles.noResultsText}>ရှာဖွေမှုရလဒ်မရှိပါ</Text>
+            <Text style={styles.noResultsSubtext}>
+              အခြားစကားလုံးများဖြင့် ပြန်လည်ရှာဖွေကြည့်ပါ
+            </Text>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -213,29 +134,9 @@ export default function SearchResults() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.primary,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 12,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-  },
+
   searchQuery: {
     fontSize: 14,
     color: '#666666',
@@ -244,31 +145,7 @@ const styles = StyleSheet.create({
   filterButton: {
     padding: 8,
   },
-  sortContainer: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  sortOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F5',
-  },
-  sortOptionActive: {
-    backgroundColor: '#000000',
-  },
-  sortOptionText: {
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
-  },
-  sortOptionTextActive: {
-    color: '#FFFFFF',
-  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -281,6 +158,7 @@ const styles = StyleSheet.create({
   },
   productList: {
     padding: 16,
+
   },
   productRow: {
     justifyContent: 'space-between',

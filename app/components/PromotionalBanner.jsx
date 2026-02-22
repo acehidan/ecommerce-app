@@ -39,11 +39,11 @@ const resolveBannerImage = (banner) => {
 // --- Sub-components ---
 
 const BannerItem = ({ banner, index }) => {
-  const handleBannerPress = useCallback(() => {
-    if (banner.stockIds?.[0]?.productCode) {
-      router.push(`/product/${banner.stockIds[0].productCode}`);
-    }
-  }, [banner]);
+  // const handleBannerPress = useCallback(() => {
+  //   if (banner.stockIds?.[0]?.productCode) {
+  //     router.push(`/product/${banner.stockIds[0].productCode}`);
+  //   }
+  // }, [banner]);
 
   const handleBuyNow = useCallback(() => {
     if (banner._id && banner._id !== 'dummy-banner') {
@@ -57,7 +57,7 @@ const BannerItem = ({ banner, index }) => {
   return (
     <Pressable
       style={styles.bannerWrapper}
-      onPress={handleBannerPress}
+      // onPress={handleBannerPress}
       disabled={isDummy}
     >
       <View style={styles.promotionalBanner}>

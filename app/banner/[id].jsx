@@ -72,26 +72,26 @@ export default function BannerProducts() {
           setProducts([]);
           setFilteredProducts([]);
         }
-        } else {
-          const errorMsg = response.error || 'Failed to fetch banner products';
-          setError(errorMsg);
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: errorMsg,
-          });
-        }
-      } catch (error) {
-        const errorMessage = 'Failed to fetch banner products';
-        setError(errorMessage);
+      } else {
+        const errorMsg = response.error || 'Failed to fetch banner products';
+        setError(errorMsg);
         Toast.show({
           type: 'error',
           text1: 'Error',
-          text2: errorMessage,
+          text2: errorMsg,
         });
-      } finally {
-        setIsLoading(false);
       }
+    } catch (error) {
+      const errorMessage = 'Failed to fetch banner products';
+      setError(errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -156,8 +156,10 @@ export default function BannerProducts() {
   return (
     <SafeAreaView style={styles.container}>
       <PageHeader
+        sticky={true}
         title={bannerTitle}
         rightContent={`ပစ္စည်း ${filteredProducts.length} ခု`}
+        showBackButton={true}
       />
 
       <View style={{ paddingTop: headerHeight }}>
@@ -171,7 +173,8 @@ export default function BannerProducts() {
           placeholder={`${bannerTitle} တွေ ရှာမယ်`}
           value={searchQuery}
           onChangeText={handleSearch}
-          hintText="* မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
+          showHint={true}
+          hintText="မိမိရှာလိုတဲ့ ပစ္စည်း အမျိုးအစားရဲ့ နာမည် (သို့) စကားလုံး အချို့ကို ရိုက်ပြီးရှာနိုင်ပါတယ်"
         />
 
         <FlatList
@@ -200,6 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   productsGrid: {
+    paddingTop: 5,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },

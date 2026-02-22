@@ -9,8 +9,6 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   TouchableOpacity,
 } from 'react-native';
 import {
@@ -20,13 +18,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import handleGetAllCategory from '../../services/products/getAllCategory';
-import handleGetStocks from '../../services/products/getStocks';
 import Navbar from '../components/Navbar';
+import colors from '../../constants/colors';
 
 export default function Search() {
   const [itemName, setItemName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [storageType, setStorageType] = useState('');
   const [categories, setCategories] = useState([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
@@ -34,10 +31,6 @@ export default function Search() {
   const [hasSearched, setHasSearched] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
 
   const loadCategories = async () => {
     try {
@@ -51,18 +44,24 @@ export default function Search() {
         setCategories(categoryOptions);
       }
     } catch (error) {
+
       console.error('Error loading categories:', error);
     }
   };
 
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
   const handleSearch = async () => {
     if (!itemName.trim() && !selectedCategory) {
+      Alert.alert('Please enter a search query');
       return;
     }
 
     // Navigate to search results page with search parameters
     const searchParams = {
-      query: itemName.trim() || selectedCategory,
+      query: itemName.trim() || "",
       category: selectedCategory,
     };
 
@@ -145,42 +144,10 @@ export default function Search() {
             </View>
           )}
         </View>
-
-        {/* Storage Type Field */}
-        {/* <View style={styles.fieldContainer}>
-          <View style={styles.fieldHeader}>
-            <Ionicons name="business" size={20} color="#666666" />
-            <Text style={styles.fieldLabel}>သိုလှောင်မှု အမျိုးအစား</Text>
-          </View>
-          <View style={styles.radioContainer}>
-            <Pressable
-              style={styles.radioOption}
-              onPress={() => setStorageType('in-store')}
-            >
-              <View style={styles.radioButton}>
-                {storageType === 'in-store' && (
-                  <View style={styles.radioButtonSelected} />
-                )}
-              </View>
-              <Text style={styles.radioLabel}>ဆိုင်မှာပစ္စည်းရှိ</Text>
-            </Pressable>
-            <Pressable
-              style={styles.radioOption}
-              onPress={() => setStorageType('pre-order')}
-            >
-              <View style={styles.radioButton}>
-                {storageType === 'pre-order' && (
-                  <View style={styles.radioButtonSelected} />
-                )}
-              </View>
-              <Text style={styles.radioLabel}>ကြိုတင်မှာယူ</Text>
-            </Pressable>
-          </View>
-        </View> */}
       </ScrollView>
 
       {/* Search Results */}
-      {hasSearched && (
+      {/* {hasSearched && (
         <View style={styles.resultsContainer}>
           <View style={styles.resultsHeader}>
             <Text style={styles.resultsTitle}>
@@ -193,7 +160,7 @@ export default function Search() {
 
           {isSearching ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007AFF" />
+              <ActivityIndicator size="large" color={colors.primary} />
               <Text style={styles.loadingText}>ရှာဖွေနေသည်...</Text>
             </View>
           ) : searchResults.length > 0 ? (
@@ -245,7 +212,7 @@ export default function Search() {
             </View>
           )}
         </View>
-      )}
+      )} */}
 
       {/* Search Button */}
       <View style={styles.buttonContainer}>
@@ -271,27 +238,12 @@ export default function Search() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    flex: 1,
-    textAlign: 'center',
-  },
+
   notificationContainer: {
     position: 'relative',
   },
@@ -299,7 +251,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary.primary,
     borderRadius: 10,
     width: 20,
     height: 20,
@@ -307,7 +259,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notificationText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -318,7 +270,6 @@ const styles = StyleSheet.create({
   },
   fieldContainer: {
     marginBottom: 24,
-
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -332,12 +283,11 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginLeft: 8,
   },
   inputContainer: {
     borderRadius: 12,
-    // paddingHorizontal: 16,
     paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -346,77 +296,46 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
   },
   placeholderText: {
     fontSize: 14,
-    color: '#999999',
+    color: colors.text.secondary,
     flex: 1,
-  },
-  radioContainer: {
-    gap: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: 20,
-  },
-  radioOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#CCCCCC',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  radioButtonSelected: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#000',
-  },
-  radioLabel: {
-    fontSize: 14,
-    color: '#000000',
   },
   buttonContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: colors.background.secondary,
     marginBottom: 60,
   },
   searchButton: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.text.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
   },
   searchButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.light,
     fontSize: 16,
     fontWeight: 'bold',
   },
   searchButtonDisabled: {
-    backgroundColor: '#CCCCCC',
+    backgroundColor: colors.background.secondary,
   },
   selectedText: {
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
     flex: 1,
   },
   dropdownContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: colors.background.secondary,
     marginTop: 8,
-    maxHeight: 200,
+    maxHeight: 300,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -427,135 +346,17 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dropdownScroll: {
-    maxHeight: 200,
+    maxHeight: 300,
   },
   dropdownItem: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: colors.background.secondary,
   },
   dropdownItemText: {
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
   },
-  resultsContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  resultsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  clearButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-  },
-  clearButtonText: {
-    fontSize: 12,
-    color: '#666666',
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#666666',
-    marginTop: 8,
-  },
-  resultsList: {
-    flex: 1,
-  },
-  resultItem: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  resultImageContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#F5F5F5',
-  },
-  resultImage: {
-    width: '100%',
-    height: '100%',
-  },
-  noImageContainer: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F5F5F5',
-  },
-  resultInfo: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'space-between',
-  },
-  resultName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  resultCategory: {
-    fontSize: 12,
-    color: '#666666',
-    marginBottom: 4,
-    textTransform: 'capitalize',
-  },
-  resultPrice: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007AFF',
-    marginBottom: 4,
-  },
-  resultStock: {
-    fontSize: 12,
-    color: '#666666',
-  },
-  noResultsContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  noResultsText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666666',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  noResultsSubtext: {
-    fontSize: 14,
-    color: '#999999',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+
 });

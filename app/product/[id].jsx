@@ -45,7 +45,7 @@ export default function ProductDetail() {
         const result = await handleGetProductById(id);
         if (result.success) {
           setProduct(result.data.data.data);
-          console.log('product', result.data.data.data);
+          // console.log('product', result.data.data.data);
         } else {
           setError(result.error);
         }
@@ -242,15 +242,15 @@ export default function ProductDetail() {
             <Text style={styles.specValue}>{product.stockQuantity}</Text>
           </View>
 
-          {/* <View style={styles.specsItem}>
+          <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>အလေးချိန်</Text>
             <Text style={styles.specValue}>
-              {product.unitWeight} {product.weightUnit}
+              {product.weightUnit} {product.unitWeight}
             </Text>
-          </View> */}
+          </View>
 
           <View style={styles.specsItem}>
-            <Text style={styles.specsTitle}>ဈေးနှုန်း (အနည်းဆုံး)</Text>
+            <Text style={styles.specsTitle}>ဈေးနှုန်း</Text>
             <Text style={styles.specValue}>MMK {product?.retailUnitPrice}</Text>
           </View>
         </View>

@@ -92,7 +92,7 @@ export default function Categories() {
       setIsLoading(true);
       setError(null);
       const response = await handleGetAllCategory();
-      console.log(response);
+      // console.log(response);
 
       if (response.success) {
         const transformedCategories = (response.data?.data?.items || []).map(

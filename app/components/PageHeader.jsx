@@ -41,7 +41,7 @@ export default function PageHeader({
     styles.header,
     sticky && [styles.stickyHeader, { top: insets.top }],
     styles.headerWithBorder,
-    style,
+
   ];
 
   return (
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     height: 70,
-    backgroundColor: colors.background.primary,
+    backgroundColor: colors.background.secondary,
   },
   stickyHeader: {
     position: 'absolute',
