@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import {
   View,
@@ -8,6 +8,8 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import {
   SafeAreaView,
@@ -21,13 +23,18 @@ import colors from '../../constants/colors';
 
 export default function ProductDetail() {
   const { id } = useLocalSearchParams();
+  const items = useCartStore((state) => state.items);
   const insets = useSafeAreaInsets();
   const headerHeight = 56 + insets.top; // Approximate header height (padding + content + safe area)
   const addItem = useCartStore((state) => state.addItem);
   const [quantity, setQuantity] = useState(0);
+  const [selectedQuantity, setSelectedQuantity] = useState(0);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [buying, setBuying] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { width: screenWidth } = Dimensions.get('window');
 
   // console.log(product.data);
 
@@ -36,9 +43,9 @@ export default function ProductDetail() {
       try {
         setLoading(true);
         const result = await handleGetProductById(id);
-        console.log('result', result);
         if (result.success) {
           setProduct(result.data.data.data);
+          console.log('product', result.data.data.data);
         } else {
           setError(result.error);
         }
@@ -53,6 +60,12 @@ export default function ProductDetail() {
       fetchProduct();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (items.find((item) => item.productCode === id)) {
+      setQuantity(items.find((item) => item.productCode === id).quantity);
+    }
+  }, [items, id]);
 
   // Calculate unit price based on quantity and wholesale tiers
   const getUnitPrice = (qty) => {
@@ -89,25 +102,58 @@ export default function ProductDetail() {
     const newQuantity = quantity + change;
     if (newQuantity >= 0 && product && newQuantity <= product.stockQuantity) {
       setQuantity(newQuantity);
+      setSelectedQuantity((prev) => prev + change);
     }
   };
 
-  const handleBuyProduct = () => {
-    if (quantity > 0 && product) {
-      addItem(
-        {
-          id: product._id,
-          name: product.name,
-          price: product.retailUnitPrice, // Will be recalculated in store
-          image: product.images?.[0]?.url || '',
-          retailUnitPrice: product.retailUnitPrice,
-          wholeSale: product.wholeSale || [],
-          unitWeight: product.unitWeight || 0,
-        },
-        quantity,
-      );
-      router.push('/cart');
+  const handleBuyProduct = async () => {
+    if (quantity > 0 && product && !buying) {
+      setBuying(true);
+      try {
+        // Simulate a brief delay to show the loading modal
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        addItem(
+          {
+            id: product._id,
+            productCode: product.productCode,
+            name: product.name,
+            price: product.retailUnitPrice, // Will be recalculated in store
+            image: product.images?.[0]?.url || '',
+            retailUnitPrice: product.retailUnitPrice,
+            wholeSale: product.wholeSale || [],
+            unitWeight: product.unitWeight || 0,
+          },
+          selectedQuantity,
+        );
+
+        // Navigate to cart after adding item
+        router.push('/cart');
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+      } finally {
+        setBuying(false);
+      }
     }
+  };
+
+  const handleImageScroll = (event) => {
+    const slideWidth = screenWidth;
+    const offset = event.nativeEvent.contentOffset.x;
+    const newIndex = Math.round(offset / slideWidth);
+    setCurrentImageIndex(newIndex);
+  };
+
+  const renderImageIndicator = (index) => {
+    return (
+      <View
+        key={index}
+        style={[
+          styles.indicator,
+          index === currentImageIndex && styles.activeIndicator,
+        ]}
+      />
+    );
   };
 
   if (loading) {
@@ -135,26 +181,44 @@ export default function ProductDetail() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <PageHeader title="ပစ္စည်း အသေးစိတ်" sticky={true} />
+
+      <PageHeader title="ပစ္စည်း အသေးစိတ်" sticky={true} showBackButton={true} />
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={{ paddingTop: headerHeight - 20 }}
+        contentContainerStyle={{ paddingTop: headerHeight }}
       >
         <View style={styles.imageContainer}>
-          <Image
-            source={{
-              uri:
-                product.images?.[0]?.url ||
-                'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg',
-            }}
-            style={styles.mainImage}
-            resizeMode="cover"
-          />
-          {/* <View style={styles.priceBadge}>
-            <Text style={styles.priceBadgeText}>
-              {product.retailUnitPrice}ks
-            </Text>
-          </View> */}
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleImageScroll}
+            style={styles.carousel}
+          >
+            {product.images && product.images.length > 0 ? (
+              product.images.map((image, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: image.url }}
+                  style={[styles.carouselImage, { width: screenWidth }]}
+                  resizeMode="contain"
+                />
+              ))
+            ) : (
+              <Image
+                source={require('../../assets/images/komin.jpg')}
+                style={[styles.carouselImage, { width: screenWidth }]}
+                resizeMode="cover"
+              />
+            )}
+          </ScrollView>
+
+          {/* Image Indicators */}
+          <View style={styles.indicatorContainer}>
+            {product.images && product.images.length > 0
+              ? product.images.map((_, index) => renderImageIndicator(index))
+              : renderImageIndicator(0)}
+          </View>
         </View>
 
         <View style={styles.descriptionContainer}>
@@ -168,29 +232,26 @@ export default function ProductDetail() {
             <Text style={styles.specValue}>{product.category}</Text>
           </View>
 
-          <View style={styles.specsItem}>
+          {/* <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>ပစ္စည်းကုဒ်</Text>
             <Text style={styles.specValue}>{product.productCode}</Text>
-          </View>
+          </View> */}
 
           <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>လက်ကျန် အရေအတွက်</Text>
-            <Text style={styles.specValue}>{product.stockQuantity} ခု</Text>
+            <Text style={styles.specValue}>{product.stockQuantity}</Text>
           </View>
 
-          <View style={styles.specsItem}>
+          {/* <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>အလေးချိန်</Text>
             <Text style={styles.specValue}>
-              {product.unitWeight}
-              {product.weightUnit}
+              {product.unitWeight} {product.weightUnit}
             </Text>
-          </View>
+          </View> */}
 
           <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>ဈေးနှုန်း (အနည်းဆုံး)</Text>
-            <Text style={styles.specValue}>
-              MMK {product?.retailUnitPrice?.toLocaleString()}
-            </Text>
+            <Text style={styles.specValue}>MMK {product?.retailUnitPrice}</Text>
           </View>
         </View>
 
@@ -204,7 +265,7 @@ export default function ProductDetail() {
                     {wholesale.wholeSaleQuantity} ခု အထက်ဈေး
                   </Text>
                   <Text style={styles.specValue}>
-                    MMK {wholesale?.wholeSaleUnitPrice?.toLocaleString()}
+                    MMK {wholesale?.wholeSaleUnitPrice}
                   </Text>
                 </View>
               </View>
@@ -232,11 +293,30 @@ export default function ProductDetail() {
         <Pressable
           style={[styles.buyButton, quantity === 0 && styles.buyButtonDisabled]}
           onPress={handleBuyProduct}
-          disabled={quantity === 0}
+          disabled={quantity === 0 || buying}
         >
-          <Text style={styles.buyButtonText}>ပစ္စည်း ဝယ်မယ်</Text>
+          {buying ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.buyButtonText}>ပစ္စည်း ဝယ်မယ်</Text>
+          )}
         </Pressable>
       </View>
+
+      {/* Loading Modal */}
+      <Modal
+        transparent={true}
+        visible={buying}
+        animationType="fade"
+        statusBarTranslucent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator size="large" color={colors.button.primary} />
+            <Text style={styles.modalText}>Adding to cart...</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -244,20 +324,46 @@ export default function ProductDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 3,
   },
   imageContainer: {
     position: 'relative',
     height: 350,
     marginBottom: 20,
   },
+  carousel: {
+    height: '100%',
+  },
+  carouselImage: {
+    height: '100%',
+  },
   mainImage: {
     width: '100%',
     height: '100%',
+  },
+  indicatorContainer: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderColor: colors.button.primary,
+    borderWidth: 1,
+  },
+  activeIndicator: {
+    backgroundColor: colors.button.primary,
+    width: 20,
   },
   priceBadge: {
     position: 'absolute',
@@ -325,7 +431,7 @@ const styles = StyleSheet.create({
   specsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text.secondary,
+    color: colors.text.primary,
     marginBottom: 0,
     marginTop: 5,
   },
@@ -337,6 +443,7 @@ const styles = StyleSheet.create({
   },
   wholesaleContainer: {
     paddingHorizontal: 20,
+    marginBottom: 100,
   },
   wholesaleTitle: {
     fontSize: 16,
@@ -354,7 +461,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 5,
+    paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5',
@@ -391,7 +498,7 @@ const styles = StyleSheet.create({
   },
   buyButton: {
     flex: 1,
-    backgroundColor: '#333333',
+    backgroundColor: colors.button.primary,
     paddingVertical: 12,
     borderRadius: 50,
     alignItems: 'center',
@@ -425,5 +532,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
     marginTop: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    padding: 30,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333333',
+    marginTop: 16,
+    fontWeight: '600',
   },
 });
