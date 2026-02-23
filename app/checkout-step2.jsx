@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../store/cartStore';
@@ -15,6 +21,7 @@ export default function CheckoutStep2() {
   const { items, getTotalPrice } = useCartStore();
   const { setOrderItems, setOrderSummary, checkoutData } = useCheckoutStore();
   const deliveryZone = checkoutData?.addressInfo?.deliveryZone;
+  console.log('deliveryZone', deliveryZone);
 
   const getDelidata = async () => {
     const response = await getDeliveries();
@@ -67,12 +74,12 @@ export default function CheckoutStep2() {
       subtotal: getTotalPrice(),
       shippingFee: deliveryData?.deliveryFee?.toLocaleString() || '0',
       overweightCharge:
-        deliveryData?.additionalWeightCharge * (totalWeight - 2) || 0,
+        deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2) || 0,
       grandTotal:
         getTotalPrice() +
         deliveryData?.deliveryFee +
         (totalWeight > 2
-          ? deliveryData?.additionalWeightCharge * (totalWeight - 2)
+          ? deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2)
           : 0),
       totalWeight,
     });
@@ -80,8 +87,9 @@ export default function CheckoutStep2() {
 
   return (
     <SafeAreaView style={styles.container}>
+
       {/* Header */}
-      <PageHeader title="စစ်ဆေးပါ" sticky={false} backIcon={true} />
+      <PageHeader title="စစ်ဆေးပါ" sticky={false} showBackButton={true} rightContent="စုစုပေါင်း အဆင့် ၄ ဆင့်" />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Purchased Items Section */}
@@ -107,9 +115,10 @@ export default function CheckoutStep2() {
                 <Text style={styles.itemQuantity}>{item.quantity} ခု</Text>
                 <View style={styles.itemDetails}>
                   <Text style={styles.itemName}>{item.name}</Text>
+                  <Text style={styles.itemWeight}>{item.unitWeight} kg</Text>
                 </View>
                 <Text style={styles.itemPrice}>
-                  MMK {item.price.toLocaleString()}
+                  MMK {((item.price * item.quantity)).toLocaleString()}
                 </Text>
               </View>
             ))}
@@ -120,49 +129,51 @@ export default function CheckoutStep2() {
         <View style={styles.orderSummarySection}>
           <Text style={styles.sectionTitle}>အော်ဒါ အကျဉ်းချုပ်</Text>
 
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>စုစုပေါင်း</Text>
-            <Text style={styles.summaryValue}>
-              MMK {getTotalPrice().toLocaleString()}
-            </Text>
-          </View>
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>ပို့ဆောင်ခ</Text>
-            <Text style={styles.summaryValue}>
-              MMK {deliveryData?.deliveryFee?.toLocaleString() || '0'}
-            </Text>
-          </View>
-
-          {totalWeight > 2 && (
+          <View style={styles.summaryContainer}>
             <View style={styles.summaryRow}>
-              <View style={styles.overweightRow}>
-                <Text style={styles.summaryLabel}>ဝန်ပိုကြေး</Text>
-                <Text style={styles.weightText}>
-                  {totalWeight.toFixed(1)} KG
+              <Text style={styles.summaryLabel}>စုစုပေါင်း</Text>
+              <Text style={styles.summaryValue}>
+                MMK {getTotalPrice().toLocaleString()}
+              </Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>ပို့ဆောင်ခ</Text>
+              <Text style={styles.summaryValue}>
+                MMK {deliveryData?.deliveryFee?.toLocaleString() || '0'}
+              </Text>
+            </View>
+
+            {totalWeight > 2 && (
+              <View style={styles.summaryRow}>
+                <View style={styles.overweightRow}>
+                  <Text style={styles.summaryLabel}>ဝန်ပိုကြေး</Text>
+                  <Text style={styles.weightText}>
+                    {totalWeight.toFixed(1)} KG
+                  </Text>
+                </View>
+                <Text style={styles.summaryValue}>
+                  MMK{' '}
+                  {(
+                    deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2) || 0
+                  ).toLocaleString()}
                 </Text>
               </View>
-              <Text style={styles.summaryValue}>
+            )}
+
+            <View style={[styles.summaryRow, styles.grandTotalRow]}>
+              <Text style={styles.grandTotalLabel}>စုစုပေါင်း</Text>
+              <Text style={styles.grandTotalValue}>
                 MMK{' '}
                 {(
-                  deliveryData?.additionalWeightCharge * (totalWeight - 2) || 0
+                  getTotalPrice() +
+                  deliveryData?.deliveryFee +
+                  (totalWeight > 2
+                    ? deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2)
+                    : 0)
                 ).toLocaleString()}
               </Text>
             </View>
-          )}
-
-          <View style={[styles.summaryRow, styles.grandTotalRow]}>
-            <Text style={styles.grandTotalLabel}>စုစုပေါင်း</Text>
-            <Text style={styles.grandTotalValue}>
-              MMK{' '}
-              {(
-                getTotalPrice() +
-                deliveryData?.deliveryFee +
-                (totalWeight > 2
-                  ? deliveryData?.additionalWeightCharge * (totalWeight - 2)
-                  : 0)
-              ).toLocaleString()}
-            </Text>
           </View>
         </View>
       </ScrollView>
@@ -179,7 +190,7 @@ export default function CheckoutStep2() {
           style={styles.confirmActionButton}
           onPress={() => {
             saveStep2Data();
-            console.log('Navigating to checkout-step3');
+
             router.push('/checkout-step3');
           }}
         >
@@ -193,6 +204,7 @@ export default function CheckoutStep2() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background.primary,
   },
   topBar: {
     backgroundColor: '#333333',
@@ -255,20 +267,29 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 20,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    lineHeight: 38,
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   stepBadge: {
-    backgroundColor: '#E5E5E5',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
+    backgroundColor: colors.background.secondary,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 24,
+    boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.1)',
+    elevation: 1,
+    shadowColor: 'rgba(0, 0, 0, 0.1)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   stepBadgeText: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '500',
+    color: colors.button.primary,
+    fontWeight: '900',
   },
   itemsListHeader: {
     flexDirection: 'row',
@@ -293,7 +314,7 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
@@ -308,22 +329,27 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
-    marginBottom: 4,
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   itemWeight: {
     fontSize: 12,
-    color: '#666666',
+    color: colors.text.secondary,
   },
   itemPrice: {
     fontSize: 14,
     fontWeight: '600',
     color: '#000000',
   },
+  summaryContainer: {
+    marginTop: 12,
+  },
   orderSummarySection: {
     marginBottom: 32,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
@@ -332,16 +358,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 6,
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.tertiary,
+    fontFamily: 'NotoSansMyanmar-Regular',
+
   },
   summaryValue: {
     fontSize: 14,
     fontWeight: '500',
     color: '#000000',
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
   overweightRow: {
     flexDirection: 'row',
@@ -362,47 +391,50 @@ const styles = StyleSheet.create({
   grandTotalLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   grandTotalValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.text.primary,
   },
-
   bottomActions: {
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: colors.border.light,
   },
   backActionButton: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 30,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: colors.border.light,
   },
   backActionText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000000',
+    fontWeight: '700',
+    color: colors.text.primary,
   },
   confirmActionButton: {
     flex: 1,
-    backgroundColor: '#333333',
+    backgroundColor: colors.button.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 30,
     alignItems: 'center',
   },
   confirmActionText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

@@ -6,17 +6,63 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
 import { useCheckoutStore } from '../store/checkoutStore';
-import {
-  getUserAddresses,
-  UserAddress,
-} from '../services/user/getUserAddresses';
+import { getUserAddresses } from '../services/user/getUserAddresses';
 import { getDeliveryZone } from '../services/delivery/getDeliveryZone';
+import PageHeader from './components/PageHeader';
+import colors from '../constants/colors';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+const SkeletonItem = ({ style }) => {
+  const animatedValue = new Animated.Value(0);
+
+  React.useEffect(() => {
+    const startAnimation = () => {
+      Animated.sequence([
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]).start(() => startAnimation());
+    };
+
+    startAnimation();
+  }, []);
+
+  const opacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 0.7],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        {
+          backgroundColor: '#E1E9EE',
+          borderRadius: 4,
+        },
+        style,
+        { opacity },
+      ]}
+    />
+  );
+};
 
 export default function CheckoutStep1() {
   const router = useRouter();
@@ -49,8 +95,6 @@ export default function CheckoutStep1() {
         setLoading(false);
       }
     };
-
-    console.log('userAddresses', userAddresses);
 
     fetchUserData();
   }, [user, isAuthenticated]);
@@ -111,18 +155,11 @@ export default function CheckoutStep1() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>စစ်ဆေးပါ</Text>
-          <View style={styles.progressInfo}>
-            <Text style={styles.totalSteps}>စုစုပေါင်း အဆင့် ၄ ဆင့်</Text>
-          </View>
-        </View>
-      </View>
+      <PageHeader
+        title="စစ်ဆေးပါ"
+        showBackButton={true}
+        rightContent="စုစုပေါင်း အဆင့် ၄ ဆင့်"
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Important Information Section */}
@@ -146,32 +183,33 @@ export default function CheckoutStep1() {
         <View style={styles.contactSection}>
           <Text style={styles.subsectionTitle}>ဆက်သွယ်ရန်</Text>
           <View style={styles.contactCards}>
-            <View style={styles.contactCard}>
-              <View style={styles.contactCardHeader}>
-                <Ionicons name="person-outline" size={24} color="#666666" />
-                <Text style={styles.contactLabel}>နာမည်</Text>
-              </View>
-              <Text style={styles.contactValue}>
-                {loading ? (
-                  <ActivityIndicator size="small" color="#666666" />
-                ) : (
-                  user?.userName || 'Guest User'
-                )}
-              </Text>
-            </View>
-            <View style={styles.contactCard}>
-              <View style={styles.contactCardHeader}>
-                <Ionicons name="call-outline" size={24} color="#666666" />
-                <Text style={styles.contactLabel}>ဖုန်းနံပါတ်</Text>
-              </View>
-              <Text style={styles.contactValue}>
-                {loading ? (
-                  <ActivityIndicator size="small" color="#666666" />
-                ) : (
-                  user?.phoneNumber || 'Not provided'
-                )}
-              </Text>
-            </View>
+            {loading ? (
+              <>
+                <SkeletonItem style={styles.contactCard} />
+                <SkeletonItem style={styles.contactCard} />
+              </>
+            ) : (
+              <>
+                <View style={styles.contactCard}>
+                  <View style={styles.contactCardHeader}>
+                    <MaterialCommunityIcons name="account-circle-outline" size={17} color="black" />
+                    <Text style={styles.contactLabel}>နာမည်</Text>
+                  </View>
+                  <Text style={styles.contactValue}>
+                    {user?.userName || 'Guest User'}
+                  </Text>
+                </View>
+                <View style={styles.contactCard}>
+                  <View style={styles.contactCardHeader}>
+                    <MaterialCommunityIcons name="phone-outline" size={17} color="black" />
+                    <Text style={styles.contactLabel}>ဖုန်းနံပါတ်</Text>
+                  </View>
+                  <Text style={styles.contactValue}>
+                    {user?.phoneNumber || 'Not provided'}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
 
@@ -181,9 +219,9 @@ export default function CheckoutStep1() {
             <Text style={styles.subsectionTitle}>
               ပို့ဆောင်ရမဲ့ နေရပ်လိပ်စာ
             </Text>
-            <View style={styles.deliveryTypeBadge}>
+            {/* <View style={styles.deliveryTypeBadge}>
               <Text style={styles.deliveryTypeText}>ဂိတ်ချနဲ့ ပို့မယ်</Text>
-            </View>
+            </View> */}
           </View>
 
           {/* Address Type Tabs */}
@@ -202,7 +240,7 @@ export default function CheckoutStep1() {
                     style={[
                       styles.addressTabText,
                       selectedAddressType === type.key &&
-                        styles.addressTabTextActive,
+                      styles.addressTabTextActive,
                     ]}
                   >
                     {type.label}
@@ -213,52 +251,53 @@ export default function CheckoutStep1() {
           )}
 
           {/* Location Cards */}
-          <View style={styles.locationCards}>
-            <View style={styles.locationCard}>
-              <View style={styles.contactCardHeader}>
-                <Ionicons name="business-outline" size={24} color="#666666" />
-                <Text style={styles.locationLabel}>မြို့</Text>
-              </View>
-              <Text style={styles.locationValue}>
-                {loading ? (
-                  <ActivityIndicator size="small" color="#666666" />
-                ) : (
-                  currentAddress?.city || 'Not provided'
-                )}
-              </Text>
-            </View>
-            <View style={styles.locationCard}>
-              <View style={styles.contactCardHeader}>
-                <Ionicons name="home-outline" size={24} color="#666666" />
-                <Text style={styles.locationLabel}>မြို့နယ်</Text>
-              </View>
-              <Text style={styles.locationValue}>
-                {loading ? (
-                  <ActivityIndicator size="small" color="#666666" />
-                ) : (
-                  currentAddress?.township || 'Not provided'
-                )}
-              </Text>
-            </View>
+          <View style={styles.contactCards}>
+            {loading ? (
+              <>
+                <SkeletonItem style={styles.contactCard} />
+                <SkeletonItem style={styles.contactCard} />
+              </>
+            ) : (
+              <>
+                <View style={styles.contactCard}>
+                  <View style={styles.contactCardHeader}>
+                    <MaterialCommunityIcons name="city" size={17} color="black" />
+                    <Text style={styles.contactLabel}>မြို့</Text>
+                  </View>
+                  <Text style={styles.contactValue}>
+                    {currentAddress?.city || 'Not provided'}
+                  </Text>
+                </View>
+                <View style={styles.contactCard}>
+                  <View style={styles.contactCardHeader}>
+                    <MaterialIcons name="other-houses" size={17} color="black" />
+                    <Text style={styles.contactLabel}>မြို့နယ်</Text>
+                  </View>
+                  <Text style={styles.contactValue}>
+                    {currentAddress?.township || 'Not provided'}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
 
           {/* Exact Address */}
-          <View style={styles.exactAddressCard}>
-            <View style={styles.contactCardHeader}>
-              <Ionicons name="location-outline" size={24} color="#666666" />
-              <Text style={styles.exactAddressLabel}>
-                ပို့ဆောင်ရန် လိပ်စာ အတိအကျ
+          {loading ? (
+            <SkeletonItem style={styles.exactAddressCard} />
+          ) : (
+            <View style={styles.exactAddressCard}>
+              <View style={styles.contactCardHeader}>
+                <Ionicons name="location-outline" size={17} color="black" />
+                <Text style={styles.contactLabel}>
+                  ပို့ဆောင်ရန် လိပ်စာ အတိအကျ
+                </Text>
+              </View>
+
+              <Text style={styles.contactValue}>
+                {currentAddress?.address || 'No address provided'}
               </Text>
             </View>
-
-            <Text style={styles.exactAddressValue}>
-              {loading ? (
-                <ActivityIndicator size="small" color="#666666" />
-              ) : (
-                currentAddress?.address || 'No address provided'
-              )}
-            </Text>
-          </View>
+          )}
         </View>
       </ScrollView>
 
@@ -288,7 +327,7 @@ export default function CheckoutStep1() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.primary,
   },
   header: {
     backgroundColor: '#FFFFFF',
@@ -326,44 +365,71 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginBottom: 4,
   },
-  currentStepBadge: {
-    backgroundColor: '#E6E6E6',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderRadius: 24,
-  },
-  currentStepText: {
-    color: '#000',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  sectionTitleContainer: {
-    marginTop: 24,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-  },
   importantInfoSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
   },
+  sectionTitleContainer: {
+    marginVertical: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    lineHeight: 38,
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
+  },
+  currentStepBadge: {
+    backgroundColor: colors.background.secondary,
+    paddingHorizontal: 18,
+    height: 42,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 24,
+  },
+  currentStepText: {
+    color: colors.text.primary,
+    fontSize: 12,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
   contactSection: {
     marginBottom: 24,
   },
   subsectionTitle: {
+    color: colors.text.primary,
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
     marginBottom: 12,
+  },
+  contactCards: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  contactCard: {
+    backgroundColor: colors.background.secondary,
+    width: 163,
+    height: 106,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    paddingLeft: 26,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border.light,
   },
   contactCardHeader: {
     flexDirection: 'row',
@@ -371,27 +437,19 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  contactCards: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  contactCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
   contactLabel: {
     fontSize: 14,
-    color: '#666666',
-    marginTop: 8,
-    marginBottom: 4,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    color: colors.text.primary,
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.2,
+
   },
   contactValue: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
+    fontWeight: 'bold',
+    color: colors.text.primary,
   },
   deliverySection: {
     marginBottom: 24,
@@ -410,7 +468,7 @@ const styles = StyleSheet.create({
   },
   deliveryTypeText: {
     fontSize: 12,
-    color: '#000000',
+    color: colors.text.primary,
     fontWeight: '500',
   },
   addressTabs: {
@@ -419,21 +477,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addressTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    width: 49,
+    height: 42,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.border.light,
     borderRadius: 20,
     backgroundColor: '#E5E5E5',
   },
   addressTabActive: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.secondary,
   },
   addressTabText: {
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
     fontWeight: '500',
   },
   addressTabTextActive: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   locationCards: {
     flexDirection: 'row',
@@ -460,10 +522,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   exactAddressCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    marginTop: 20,
+    height: 127,
+    flexDirection: 'column',
+    paddingLeft: 20,
+    justifyContent: 'center',
+    backgroundColor: colors.background.secondary,
+    borderWidth: 2,
+    borderColor: colors.border.light,
+    borderRadius: 20,
+
   },
   exactAddressLabel: {
     fontSize: 14,
@@ -484,18 +552,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.secondary,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: colors.border.light,
   },
   backActionButton: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.button.light,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 50,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
   },
   backActionText: {
     fontSize: 16,
@@ -504,15 +570,15 @@ const styles = StyleSheet.create({
   },
   confirmActionButton: {
     flex: 1,
-    backgroundColor: '#333333',
+    backgroundColor: colors.button.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 50,
     alignItems: 'center',
   },
   confirmActionText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: colors.text.light,
   },
   errorContainer: {
     backgroundColor: '#FFE6E6',

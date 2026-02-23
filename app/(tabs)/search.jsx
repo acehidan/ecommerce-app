@@ -16,6 +16,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import handleGetAllCategory from '../../services/products/getAllCategory';
 import Navbar from '../components/Navbar';
@@ -83,15 +84,15 @@ export default function Search() {
       {/* Header */}
       <Navbar title="ပစ္စည်း တွေရှာမယ်" />
 
-      <ScrollView
+      <View
         style={styles.content}
         contentContainerStyle={{ paddingBottom: tabBarHeight }}
-        showsVerticalScrollIndicator={false}
+      // showsVerticalScrollIndicator={false}
       >
         {/* Item Name Field */}
         <View style={styles.fieldContainer}>
           <View style={styles.fieldHeader}>
-            <Ionicons name="document-text" size={20} color="#666666" />
+            <MaterialIcons name="inventory" size={20} color={colors.text.icons} />
             <Text style={styles.fieldLabel}>ပစ္စည်းနာမည်</Text>
           </View>
           <View style={styles.inputContainer}>
@@ -108,7 +109,7 @@ export default function Search() {
         {/* Item Type Field */}
         <View style={styles.fieldContainer}>
           <View style={styles.fieldHeader}>
-            <Ionicons name="pricetag" size={20} color="#666666" />
+            <MaterialIcons name="category" size={20} color={colors.text.icons} />
             <Text style={styles.fieldLabel}>ပစ္စည်းအမျိုးအစား</Text>
           </View>
           <Pressable
@@ -120,9 +121,9 @@ export default function Search() {
                 selectedCategory ? styles.selectedText : styles.placeholderText
               }
             >
-              {selectedCategory || 'ရှာလို့နဲ့ ပစ္စည်းအမျိုးအစားကို ရွေးချယ်ပါ'}
+              {selectedCategory || 'ရှာလိုတဲ့ ပစ္စည်းအမျိုးအစားကို ရွေးချယ်ပါ'}
             </Text>
-            <Ionicons name="chevron-down" size={20} color="#666666" />
+            <Ionicons name="chevron-down" size={20} color={colors.text.icons} />
           </Pressable>
 
           {showCategoryDropdown && (
@@ -144,75 +145,7 @@ export default function Search() {
             </View>
           )}
         </View>
-      </ScrollView>
-
-      {/* Search Results */}
-      {/* {hasSearched && (
-        <View style={styles.resultsContainer}>
-          <View style={styles.resultsHeader}>
-            <Text style={styles.resultsTitle}>
-              ရှာဖွေမှုရလဒ်များ ({searchResults.length})
-            </Text>
-            <Pressable onPress={clearSearch} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>ရှင်းလင်းမယ်</Text>
-            </Pressable>
-          </View>
-
-          {isSearching ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>ရှာဖွေနေသည်...</Text>
-            </View>
-          ) : searchResults.length > 0 ? (
-            <FlatList
-              data={searchResults}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item }) => (
-                <Pressable style={styles.resultItem}>
-                  <View style={styles.resultImageContainer}>
-                    {item.images && item.images.length > 0 ? (
-                      <Image
-                        source={{ uri: item.images[0].url }}
-                        style={styles.resultImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={styles.noImageContainer}>
-                        <Ionicons
-                          name="image-outline"
-                          size={40}
-                          color="#CCCCCC"
-                        />
-                      </View>
-                    )}
-                  </View>
-                  <View style={styles.resultInfo}>
-                    <Text style={styles.resultName}>{item.name}</Text>
-                    <Text style={styles.resultCategory}>{item.category}</Text>
-                    <Text style={styles.resultPrice}>
-                      MMK {item.retailUnitPrice.toLocaleString()}
-                    </Text>
-                    <Text style={styles.resultStock}>
-                      လက်ကျန်ရှိမှု: {item.stockQuantity}{' '}
-                      {item.retailQuantity > 1 ? 'ခု' : 'ခု'}
-                    </Text>
-                  </View>
-                </Pressable>
-              )}
-              style={styles.resultsList}
-              showsVerticalScrollIndicator={false}
-            />
-          ) : (
-            <View style={styles.noResultsContainer}>
-              <Ionicons name="search-outline" size={60} color="#CCCCCC" />
-              <Text style={styles.noResultsText}>ရှာဖွေမှုရလဒ်မရှိပါ</Text>
-              <Text style={styles.noResultsSubtext}>
-                အခြားစကားလုံးများဖြင့် ပြန်လည်ရှာဖွေကြည့်ပါ
-              </Text>
-            </View>
-          )}
-        </View>
-      )} */}
+      </View>
 
       {/* Search Button */}
       <View style={styles.buttonContainer}>
@@ -273,7 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: colors.border.light,
   },
   fieldHeader: {
     flexDirection: 'row',
@@ -358,5 +291,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.primary,
   },
-
 });

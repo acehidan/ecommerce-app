@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   Pressable,
   ScrollView,
@@ -15,12 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
-import Navbar from '../components/Navbar';
-import AuthRequiredModal from '../components/AuthRequiredModal';
+import { colors } from '../../constants/colors';
+import PageHeader from '../components/PageHeader';
 
 export default function Cart() {
   const router = useRouter();
-  const { items, removeItem, updateQuantity, getTotalPrice } = useCartStore();
+  const { items, updateQuantity, getTotalPrice } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
@@ -38,17 +36,25 @@ export default function Cart() {
   if (needsAuth) {
     return (
       <SafeAreaView style={styles.container}>
-        <Navbar title="စျေးဝယ်ခြင်းတောင်း" />
-        <View style={styles.emptyCart}>
-          <Ionicons name="cart-outline" size={64} color="#666666" />
-          <Text style={styles.emptyCartText}>Your cart is empty</Text>
+        <PageHeader title="စျေးခြင်း" sticky={false} backIcon={true} />
+        <View style={styles.emptyContainer}>
+          <Ionicons name="person-outline" size={64} color="#666666" />
+          <Text style={styles.emptyText}>
+            Please login to view your profile
+          </Text>
+          <Pressable
+            style={styles.loginButton}
+            onPress={() => router.push('/auth/login')}
+          >
+            <Text style={styles.loginButtonText}>Login</Text>
+          </Pressable>
         </View>
-        <AuthRequiredModal
-          visible={true}
+        {/* <AuthRequiredModal
+          visible={showModal}
           onClose={() => {
-            router.back();
+            setShowModal(false);
           }}
-        />
+        /> */}
       </SafeAreaView>
     );
   }
@@ -56,10 +62,10 @@ export default function Cart() {
   if (items.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
-        <Navbar title="စျေးဝယ်ခြင်းတောင်း" />
+        <PageHeader title="စျေးခြင်း" sticky={false} backIcon={true} />
         <View style={styles.emptyCart}>
-          <Ionicons name="cart-outline" size={64} color="#666666" />
-          <Text style={styles.emptyCartText}>Your cart is empty</Text>
+          <Ionicons name="cart-outline" size={64} color={colors.text.primary} />
+          <Text style={styles.emptyCartText}>စျေးခြင်းထဲမှာ ပစ္စည်းမရှိသေးပါ</Text>
         </View>
       </SafeAreaView>
     );
@@ -67,7 +73,7 @@ export default function Cart() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Navbar title="စျေးဝယ်ခြင်းတောင်း" />
+      <PageHeader title="စျေးခြင်း" sticky={false} backIcon={true} />
       <View style={styles.content}>
         <View style={styles.sectionTitleContainer}>
           <Text style={styles.sectionTitle}>ပစ္စည်းများစာရင်း</Text>
@@ -83,12 +89,11 @@ export default function Cart() {
             <View key={item.id} style={styles.cartItem}>
               <View style={styles.itemInfo}>
                 <View style={styles.itemDetails}>
-                  <View>
+                  <View style={{ width: '50%' }}>
                     <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemWeight}>1.0 KG</Text>
                   </View>
                   <Text style={styles.itemPrice}>
-                    MMK {item.price.toLocaleString()}
+                    MMK {(item.price * item.quantity).toLocaleString()}
                   </Text>
                 </View>
                 <View style={styles.quantityRow}>
@@ -126,9 +131,7 @@ export default function Cart() {
 
         <View style={styles.totalSection}>
           <Text style={styles.totalLabel}>စုစုပေါင်း</Text>
-          <Text style={styles.totalAmount}>
-            MMK {getTotalPrice().toLocaleString()}
-          </Text>
+          <Text style={styles.totalAmount}>MMK {getTotalPrice().toLocaleString()}</Text>
         </View>
       </View>
       <View style={styles.checkoutButtonContainer}>
@@ -146,9 +149,8 @@ export default function Cart() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
-
   content: {
     flex: 1,
     paddingHorizontal: 20,
@@ -157,23 +159,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 10,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
     marginVertical: 16,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+
   },
   cartList: {
     flex: 1,
   },
   cartItem: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
     padding: 12,
-    marginBottom: 12,
-    // borderWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    marginBottom: 12, // borderWidth: 1,
+    borderBottomColor: colors.border.light,
     borderBottomWidth: 1,
   },
   itemInfo: {
@@ -185,25 +190,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text.primary,
     marginBottom: 4,
   },
   itemWeight: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.primary,
     marginBottom: 12,
   },
   quantityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginVertical: 12,
   },
   quantityLabel: {
-    fontSize: 14,
-    color: '#000000',
-    marginRight: 12,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    fontSize: 12,
+    color: colors.text.primary,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   quantityContainer: {
     borderRadius: 50,
@@ -233,7 +241,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   itemPrice: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#000000',
   },
@@ -241,12 +249,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.secondary,
     paddingVertical: 20,
     paddingHorizontal: 12,
     marginBottom: 16,
-    borderRadius: 50,
+    borderRadius: 20,
     marginTop: 16,
+    elevation: 1,
+    shadowColor: colors.button.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   totalLabel: {
     fontSize: 18,
@@ -267,12 +280,37 @@ const styles = StyleSheet.create({
     marginBottom: 60,
   },
   checkoutButton: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.button.primary,
     paddingVertical: 16,
     borderRadius: 50,
     alignItems: 'center',
   },
   checkoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666666',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  loginButton: {
+    backgroundColor: colors.button.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 50,
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  loginButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',

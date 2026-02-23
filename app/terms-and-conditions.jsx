@@ -5,6 +5,8 @@ import {
 } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import PageHeader from './components/PageHeader';
+import colors from '../constants/colors';
 
 export default function TermsAndConditions() {
   const insets = useSafeAreaInsets();
@@ -21,13 +23,7 @@ export default function TermsAndConditions() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#000000" />
-        </Pressable>
-        <Text style={styles.headerTitle}>သဘောတူညီချက်များ</Text>
-        <View style={styles.headerRight} />
-      </View>
+      <PageHeader title="သဘောတူညီချက်များ" />
 
       <ScrollView
         style={styles.content}
@@ -37,8 +33,8 @@ export default function TermsAndConditions() {
         {/* Parcel Notice Section */}
         <View style={styles.noticeCard}>
           <View style={styles.noticeHeader}>
-            <View style={styles.noticeIcon}>
-              <Ionicons name="alert-circle" size={24} color="#FF0000" />
+            <View style={[styles.noticeIcon, { backgroundColor: '#FF3B30' }]}>
+              <Text style={styles.badgeText}>၁</Text>
             </View>
             <Text style={styles.noticeTitle}>
               ပါဆယ်ထုတ်နဲ့ပက်သက်၍ သတိပြုရန်
@@ -46,14 +42,14 @@ export default function TermsAndConditions() {
           </View>
           <View style={styles.bulletList}>
             <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
+              <View style={styles.customBullet} />
               <Text style={styles.bulletText}>
                 လာပို့သူ Deli ရှေ့တွင် ဖြစ်စေ ရုံးတွင် ဖြစ်စေ ပစ္စည်းအနာအဆာ
                 အရေအတွက် တစ်ခါတည်း စစ်ဆေးပေးပါရန်
               </Text>
             </View>
             <View style={styles.bulletItem}>
-              <View style={styles.bulletPoint} />
+              <View style={styles.customBullet} />
               <Text style={styles.bulletText}>
                 Error တစ်စုံတစ်ရာ ရှိပါက လာပို့သူ ( သို့မဟုတ် ) ရုံးတွင်
                 ပစ္စည်းရွေးယူစရာ မလိုဘဲ Return ပြန်ပေးပါရန် ။ရွေးယူပြီးမှ ဖြစ်
@@ -62,9 +58,9 @@ export default function TermsAndConditions() {
               </Text>
             </View>
           </View>
-          <View style={styles.thankYouSection}>
-            <Text style={styles.thankYouText}>
-              ဝယ်ယူအားပေးမှုကို ကျေးဇူးတင်ပါသည်..
+          <View style={styles.thankYouLine}>
+            <Text style={styles.thankYouTextWithEmoji}>
+              🙏 ဝယ်ယူအားပေးမှုကို ကျေးဇူးတင်ပါသည်။ 🙏
             </Text>
           </View>
         </View>
@@ -72,10 +68,10 @@ export default function TermsAndConditions() {
         {/* D.I.Y. Products Notice */}
         <View style={styles.noticeCard}>
           <View style={styles.noticeHeader}>
-            <View style={styles.noticeIcon}>
-              <Ionicons name="alert-circle" size={24} color="#FF0000" />
+            <View style={[styles.noticeIcon, { backgroundColor: '#FF3B30' }]}>
+              <Text style={styles.badgeText}>၂</Text>
             </View>
-            <Text style={styles.noticeText}>
+            <Text style={styles.noticeTitle}>
               D.I.Y ပစ္စည်းများ တွင် အာမခံမပါဝင်ပါ။
             </Text>
           </View>
@@ -134,87 +130,91 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   noticeCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: colors.background.secondary,
+    borderRadius: 20,
+    padding: 24,
     marginHorizontal: 20,
     marginTop: 20,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+
   },
   noticeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    // marginBottom: 20,
   },
   noticeIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFE5E5',
+    width: 20,
+    height: 20,
+    display: 'flex',
+    flexDirection: 'row',
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
+  badgeText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   noticeTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    fontFamily: 'NotoSansMyanmar-Regular',
+    fontWeight: '700',
+    color: colors.black,
     flex: 1,
-  },
-  noticeText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
-    flex: 1,
+
   },
   bulletList: {
-    marginLeft: 8,
+    marginLeft: 4,
+    marginVertical: 16,
   },
   bulletItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  bulletPoint: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FF0000',
+  customBullet: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FF4B2B',
     marginTop: 6,
     marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FFD1C9',
   },
   bulletText: {
-    fontSize: 14,
-    color: '#000000',
-    lineHeight: 20,
+    fontSize: 12,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    color: colors.black,
+    lineHeight: 24,
     flex: 1,
+    fontWeight: '500',
   },
-  thankYouSection: {
+  thankYouLine: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
-    gap: 8,
+
   },
-  thankYouText: {
-    fontSize: 14,
-    color: '#666666',
-    fontStyle: 'italic',
+  thankYouTextWithEmoji: {
+    fontSize: 12,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    color: colors.black,
+    fontWeight: '600',
   },
   disclaimer: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingHorizontal: 40,
+    paddingVertical: 32,
     marginTop: 8,
   },
   disclaimerText: {
-    fontSize: 12,
-    color: '#666666',
-    lineHeight: 18,
+    fontSize: 14,
+    color: colors.black,
+    lineHeight: 22,
     textAlign: 'center',
+    fontWeight: '600',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -222,34 +222,38 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingBottom: 20,
     gap: 12,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    backgroundColor: colors.background.secondary,
+
   },
   disagreeButton: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+    height: 58,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderColor: colors.background.secondary,
+    borderRadius: 50,
+    paddingHorizontal: 40,
+    display: 'flex',
+    justifyContent: 'center',
     alignItems: 'center',
+
   },
   disagreeButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.black,
   },
   agreeButton: {
     flex: 1,
-    backgroundColor: '#4A4A4A',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: colors.black,
+    borderRadius: 50,
+    height: 58,
+    display: 'flex',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   agreeButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.white,
   },
 });

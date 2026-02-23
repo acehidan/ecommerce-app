@@ -22,7 +22,6 @@ export default function PageHeader({
   onBackPress,
   rightContent,
   sticky,
-  style,
   titleStyle,
   rightContentStyle,
   showBackButton

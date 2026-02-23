@@ -21,6 +21,7 @@ export const colors = {
     tertiary: '#666666', // Medium gray - tertiary text
     light: '#FFFFFF', // White text
     muted: '#999999', // Muted gray text
+    icons: '#1C1B1F', // Icon color
   },
 
   // Background Colors
@@ -82,6 +83,7 @@ export const colors = {
   button: {
     primary: '#0B231C',
     secondary: '#F5F5F5',
+    light: '#FFFFFF',
     accent: '#3B82F6',
     success: '#4CAF50',
     error: '#F44336',
