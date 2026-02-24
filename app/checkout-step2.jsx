@@ -21,19 +21,18 @@ export default function CheckoutStep2() {
   const { items, getTotalPrice } = useCartStore();
   const { setOrderItems, setOrderSummary, checkoutData } = useCheckoutStore();
   const deliveryZone = checkoutData?.addressInfo?.deliveryZone;
-  console.log('deliveryZone', deliveryZone);
 
   const getDelidata = async () => {
     const response = await getDeliveries();
-    console.log('response', response);
     const deliveryData = response.data.find(
       (delivery) => delivery._id === deliveryZone,
     );
-    console.log('deliveryData', deliveryData);
     setDeliveryData(deliveryData);
 
     // TODO: Implement delivery data logic
   };
+
+  console.log("items", items);
 
   useEffect(() => {
     if (deliveryZone) {
@@ -52,7 +51,7 @@ export default function CheckoutStep2() {
 
   // Calculate overweight charge (example: MMK 2,000 for weights over 3KG)
   const overweightCharge =
-    totalWeight > 3 ? deliveryData?.overweightCharge || 0 : 0;
+    totalWeight > 2 ? deliveryData?.overweightCharge : 0;
 
   // Calculate grand total
   const grandTotal = getTotalPrice() + shippingFee + overweightCharge;
@@ -63,7 +62,7 @@ export default function CheckoutStep2() {
       id: item.id,
       name: item.name,
       quantity: item.quantity,
-      weight: item.weight || 1.0,
+      weight: item.unitWeight,
       price: item.price,
     }));
 
@@ -73,8 +72,9 @@ export default function CheckoutStep2() {
     setOrderSummary({
       subtotal: getTotalPrice(),
       shippingFee: deliveryData?.deliveryFee?.toLocaleString() || '0',
-      overweightCharge:
-        deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2) || 0,
+      overweightCharge: totalWeight > 2 ?
+        deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2) || 0
+        : 0,
       grandTotal:
         getTotalPrice() +
         deliveryData?.deliveryFee +

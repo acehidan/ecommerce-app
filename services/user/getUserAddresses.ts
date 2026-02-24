@@ -30,11 +30,9 @@ export interface UserProfileResponse {
   };
 }
 
-export const getUserAddresses = async (
-  userId: string
-): Promise<UserProfileResponse> => {
+export const getUserAddresses = async (): Promise<UserProfileResponse> => {
   try {
-    const response = await api.get(`/api/v1/user-profile/${userId}`);
+    const response = await api.get(`/api/v1/addresses`);
     return response.data;
   } catch (error) {
     console.error('Error fetching user addresses:', error);

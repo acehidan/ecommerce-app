@@ -6,16 +6,15 @@ import {
   Pressable,
   ScrollView,
   Image,
-  Alert,
-  Modal,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCartStore } from '../store/cartStore';
 import { useCheckoutStore } from '../store/checkoutStore';
-import * as ImagePicker from 'expo-image-picker';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import PageHeader from './components/PageHeader';
+import colors from '../constants/colors';
 
 export default function CheckoutStep3() {
   const router = useRouter();
@@ -23,27 +22,19 @@ export default function CheckoutStep3() {
   const { setPaymentMethod, setReceiptImage, setPaymentDetails } =
     useCheckoutStore();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState('cash-down');
-  const [selectedPaymentType, setSelectedPaymentType] = useState('kpay'); // 'cash' for COD, 'kpay' for cash-down
-  const [selectedReceiptImage, setSelectedReceiptImage] = useState(null);
-  const [showKpayModal, setShowKpayModal] = useState(false);
-
-  // Calculate total (same as step 2)
-  const totalWeight = 3.8; // Example weight
-  const shippingFee = 3000;
-  const overweightCharge = totalWeight > 3 ? 2000 : 0;
-  const grandTotal = getTotalPrice() + shippingFee + overweightCharge;
+    useState('cash-on-delivery');
+  const [selectedPaymentType, setSelectedPaymentType] = useState('cash'); // 'cash' for COD, 'kpay' for cash-down
 
   const paymentMethods = [
     { key: 'cash-on-delivery', label: 'အိမ်အရောက်ငွေချေ', type: 'radio' },
-    { key: 'cash-down', label: 'ငွေကြိုရှင်း', type: 'radio' },
+    { key: 'k-pay', label: 'ငွေကြိုရှင်း', type: 'radio' },
   ];
 
   // Payment type options based on selected payment method
   const getPaymentTypeOptions = () => {
     if (selectedPaymentMethod === 'cash-on-delivery') {
       return [{ key: 'cash', label: 'ငွေသား', icon: 'cash-outline' }];
-    } else if (selectedPaymentMethod === 'cash-down') {
+    } else if (selectedPaymentMethod === 'k-pay') {
       return [{ key: 'kpay', label: 'KPAY', icon: 'card-outline' }];
     }
     return [];
@@ -54,59 +45,18 @@ export default function CheckoutStep3() {
     // Reset payment type when payment method changes
     if (methodKey === 'cash-on-delivery') {
       setSelectedPaymentType('cash');
-    } else if (methodKey === 'cash-down') {
+    } else if (methodKey === 'k-pay') {
       setSelectedPaymentType('kpay');
     }
   };
 
-  const pickImage = async () => {
-    try {
-      // Request permission to access media library
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (permissionResult.granted === false) {
-        Alert.alert(
-          'Permission Required',
-          'Permission to access camera roll is required!'
-        );
-        return;
-      }
-
-      // Launch image picker
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        setSelectedReceiptImage(result.assets[0]);
-        setReceiptImage(result.assets[0]);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
-    }
-  };
-
-  const removeImage = () => {
-    setSelectedReceiptImage(null);
-    setReceiptImage(null);
-  };
-
-  const saveStep3Data = () => {
+  const saveStep3Data = async () => {
     setPaymentMethod(selectedPaymentMethod);
 
     // Set payment details based on selected payment type
-    if (selectedPaymentMethod === 'cash-down') {
+    if (selectedPaymentMethod === 'k-pay') {
       setPaymentDetails({
         paymentType: 'kpay',
-        bankName: 'KBZ Pay',
-        transactionAmount: `-${grandTotal.toLocaleString()}`,
-        transactionDate: new Date().toLocaleString('en-GB'),
-        transactionNo: '09782711003',
-        transferTo: 'ဦးမင်း',
       });
     } else if (selectedPaymentMethod === 'cash-on-delivery') {
       setPaymentDetails({
@@ -118,27 +68,26 @@ export default function CheckoutStep3() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>စစ်ဆေးပါ</Text>
-          <View style={styles.progressInfo}>
-            <Text style={styles.totalSteps}>စုစုပေါင်း အဆင့် ၄ ဆင့်</Text>
-          </View>
-        </View>
-      </View>
+      <PageHeader
+        title="စစ်ဆေးပါ"
+        showBackButton={true}
+        rightContent="စုစုပေါင်း အဆင့် ၄ ဆင့်"
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Payment Information Section */}
         <View style={styles.paymentInfoSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              ငွေပေးချေမှုဆိုင်ရာ အချက်အလက်များ
-            </Text>
-            <View style={styles.stepBadge}>
-              <Text style={styles.stepBadgeText}>အဆင့် နံပါတ် ၃</Text>
+            <View style={styles.sectionTitleContainer}>
+              <Text style={styles.sectionTitle}>
+                ငွေပေးချေမှုဆိုင်ရာ
+              </Text>
+              <Text style={styles.sectionTitle}>
+                အချက်အလက်များ
+              </Text>
+            </View>
+            <View style={styles.currentStepBadge}>
+              <Text style={styles.currentStepText}>အဆင့် နံပါတ် ၃</Text>
             </View>
           </View>
 
@@ -158,7 +107,7 @@ export default function CheckoutStep3() {
                         style={[
                           styles.checkbox,
                           selectedPaymentMethod === method.key &&
-                            styles.checkboxSelected,
+                          styles.checkboxSelected,
                         ]}
                       >
                         {selectedPaymentMethod === method.key && (
@@ -174,7 +123,7 @@ export default function CheckoutStep3() {
                         style={[
                           styles.radioButton,
                           selectedPaymentMethod === method.key &&
-                            styles.radioButtonSelected,
+                          styles.radioButtonSelected,
                         ]}
                       >
                         {selectedPaymentMethod === method.key && (
@@ -210,12 +159,7 @@ export default function CheckoutStep3() {
                           />
                         </View>
                       ) : (
-                        <Ionicons
-                          name={option.icon}
-                          size={20}
-                          color="#000000"
-                          style={styles.paymentTypeIcon}
-                        />
+                        <MaterialCommunityIcons name="currency-usd" size={20} color="black" />
                       )}
                       <Text style={styles.paymentOptionText}>
                         {option.label}
@@ -225,7 +169,7 @@ export default function CheckoutStep3() {
                       style={[
                         styles.radioButton,
                         selectedPaymentType === option.key &&
-                          styles.radioButtonSelected,
+                        styles.radioButtonSelected,
                       ]}
                     >
                       {selectedPaymentType === option.key && (
@@ -237,91 +181,6 @@ export default function CheckoutStep3() {
               </View>
             </View>
           )}
-
-          {/* Payment Receipt Section - Only show for cash-down */}
-          {/* {selectedPaymentMethod === 'cash-down' && (
-            <View style={styles.paymentReceiptSection}>
-              <Text style={styles.subsectionTitle}>
-                ငွေပေးချေမှု ဖြတ်ပိုင်း
-              </Text>
-
-              <View style={styles.receiptDetails}>
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>ငွေလွှဲရန်</Text>
-                </View>
-
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>စုစုပေါင်း</Text>
-                  <Text style={styles.receiptValue}>
-                    MMK {grandTotal.toLocaleString()}
-                  </Text>
-                </View>
-
-                <View style={styles.receiptRow}>
-                  <Text style={styles.receiptLabel}>Kpay</Text>
-                  <View style={styles.receiptRight}>
-                    <Text style={styles.receiptValue}>09782711003</Text>
-                    <Text style={styles.receiptName}>ဦ်းမင်း</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          )} */}
-
-          {/* KBZPay QR Code Section - Only show if no receipt uploaded */}
-          {/* {!selectedReceiptImage && (
-            <View style={styles.qrCodeSection}>
-              <View style={styles.qrCodeContainer}>
-                <View style={styles.qrCodeWrapper}>
-                  <View style={styles.qrCodeImageContainer}>
-                    <Image
-                      source={require('../assets/images/QR.jpg')}
-                      style={styles.qrCodeImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-                </View>
-              </View>
-            </View>
-          )} */}
-
-          {/* Upload Receipt Section */}
-          {/* <View style={styles.uploadSection}>
-            <Text style={styles.subsectionTitle}>
-              ငွေဖြတ်ပိုင်း ပုံတင်ခြင်း
-            </Text>
-
-            {selectedReceiptImage ? (
-              <View style={styles.receiptPreviewContainer}>
-                <View style={styles.receiptPreview}>
-                  <Image
-                    source={{ uri: selectedReceiptImage.uri }}
-                    style={styles.receiptPreviewImage}
-                    resizeMode="cover"
-                  />
-                  <Pressable
-                    style={styles.removeImageButton}
-                    onPress={removeImage}
-                  >
-                    <Ionicons name="close-circle" size={24} color="#FF4444" />
-                  </Pressable>
-                </View>
-                <Text style={styles.receiptPreviewText}>
-                  Receipt uploaded successfully
-                </Text>
-              </View>
-            ) : (
-              <Pressable style={styles.uploadButton} onPress={pickImage}>
-                <View style={styles.uploadButtonContent}>
-                  <Ionicons name="camera-outline" size={24} color="#666666" />
-                  <Text style={styles.uploadButtonText}>
-                    ငွေဖြတ်ပိုင်းပုံ တင်မယ်
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#666666" />
-              </Pressable>
-            )}
-          </View> */}
         </View>
       </ScrollView>
 
@@ -335,53 +194,17 @@ export default function CheckoutStep3() {
         </Pressable>
         <Pressable
           style={styles.payActionButton}
-          onPress={() => {
+          onPress={async () => {
             // Show modal if kpay is selected
-            if (
-              selectedPaymentType === 'kpay' &&
-              selectedPaymentMethod === 'cash-down'
-            ) {
-              setShowKpayModal(true);
-            } else {
-              saveStep3Data();
-              router.push('/checkout-step4');
-            }
+            await saveStep3Data();
+            router.push('/checkout-step4');
           }}
         >
           <Text style={styles.payActionText}>ငွေပေးချေမယ်</Text>
         </Pressable>
       </View>
 
-      {/* KBZPay Payment Modal */}
-      <Modal
-        visible={showKpayModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowKpayModal(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowKpayModal(false)}
-        >
-          <Pressable
-            style={styles.modalContent}
-            onPress={(e) => e.stopPropagation()}
-          >
-            {/* Payment Processing Card */}
-            <View style={styles.paymentProcessingCard}>
-              <Text style={styles.paymentProcessingTitle}>ငွေပေးချေခြင်း</Text>
-              <Text style={styles.paymentProcessingDescription}>
-                Online ငွေပေးချေမှု လုပ်ဆောင်ရန်အတွက် KBZPay App တွင်
-                ဆက်လက်လုပ်ဆောင်ဖို့လိုအပ်ပါတယ်
-              </Text>
-              <View style={styles.loadingDots}>
-                <ActivityIndicator size="small" color="#000000" />
-              </View>
-              <Text style={styles.waitingText}>ခနစောင့်ပေးပါ</Text>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -390,46 +213,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  topBar: {
-    backgroundColor: '#333333',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-  },
-  topBarText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    flex: 1,
-    marginLeft: 16,
-  },
-  progressInfo: {
-    alignItems: 'flex-end',
-  },
-  totalSteps: {
-    fontSize: 12,
-    color: '#666666',
   },
   content: {
     flex: 1,
@@ -448,22 +231,32 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E5E5',
     paddingBottom: 16,
   },
+  sectionTitleContainer: {
+    marginBottom: 16,
+  },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    flex: 1,
+    fontSize: 20,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    lineHeight: 38,
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
-  stepBadge: {
-    backgroundColor: '#E5E5E5',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
+  currentStepBadge: {
+    backgroundColor: colors.background.secondary,
+    paddingHorizontal: 18,
+    height: 42,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 24,
   },
-  stepBadgeText: {
+  currentStepText: {
+    color: colors.text.primary,
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '500',
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   paymentMethodSection: {
     marginBottom: 24,
@@ -474,14 +267,14 @@ const styles = StyleSheet.create({
   subsectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 12,
   },
   paymentOptionsCard: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.secondary,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: colors.border.light,
     padding: 16,
   },
   paymentOption: {
@@ -510,15 +303,6 @@ const styles = StyleSheet.create({
   kpayIcon: {
     width: 32,
     height: 32,
-    backgroundColor: '#007AFF',
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  kpayIconText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
   },
   paymentOptionLeft: {
     flexDirection: 'row',
@@ -528,21 +312,21 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.border.light,
     borderRadius: 4,
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   radioButton: {
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: '#000000',
+    borderColor: colors.primary,
     opacity: 0.2,
     borderRadius: 10,
     marginRight: 12,
@@ -550,174 +334,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioButtonSelected: {
-    borderColor: '#000000',
+    borderColor: colors.primary,
     opacity: 1,
   },
   radioButtonInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#000000',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
   },
   paymentOptionText: {
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
   },
-  paymentReceiptSection: {
-    marginBottom: 24,
-  },
-  receiptDetails: {
-    backgroundColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 16,
-  },
-  receiptRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  receiptLabel: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  receiptValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
-  },
-  receiptRight: {
-    alignItems: 'flex-end',
-  },
-  receiptName: {
-    fontSize: 12,
-    color: '#666666',
-    marginTop: 2,
-  },
-  qrCodeSection: {
-    marginBottom: 24,
-  },
-  qrCodeContainer: {
-    // backgroundColor: '#007AFF',
-    // borderRadius: 12,
-    // padding: 20,
-    alignItems: 'center',
-  },
-  qrCodeInstruction: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 16,
-  },
-  qrCodeWrapper: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  qrCodeImageContainer: {
-    width: 500,
-    height: 500,
-    position: 'relative',
-  },
-  qrCodeImage: {
-    width: 500,
-    height: 500,
-  },
-  embeddedProfile: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -20 }, { translateY: -20 }],
-    width: 40,
-    height: 40,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#007AFF',
-  },
-  profileImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F0F0F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  accountName: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  kbzpayLogo: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  kbzpayLogoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  kbzpayText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  kbzpayIcon: {
-    marginHorizontal: 4,
-  },
-  uploadSection: {
-    marginBottom: 24,
-  },
-  uploadButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  uploadButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  uploadButtonText: {
-    fontSize: 14,
-    color: '#000000',
-    marginLeft: 12,
-  },
-  receiptPreviewContainer: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  receiptPreview: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  receiptPreviewImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-  },
-  receiptPreviewText: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontWeight: '500',
-  },
+
   bottomActions: {
     flexDirection: 'row',
     paddingHorizontal: 20,

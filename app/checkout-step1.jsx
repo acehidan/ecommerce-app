@@ -73,7 +73,7 @@ export default function CheckoutStep1() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const addressTypes = userAddresses.map((address, index) => ({
+  const addressTypes = userAddresses.map((address) => ({
     key: address._id,
     label: address.note,
   }));
@@ -83,9 +83,9 @@ export default function CheckoutStep1() {
       try {
         setLoading(true);
         if (user && isAuthenticated) {
-          const response = await getUserAddresses(user._id);
+          const response = await getUserAddresses();
           if (response.success) {
-            setUserAddresses(response.data.userAddressInfo);
+            setUserAddresses(response.data);
           }
         }
       } catch (err) {
@@ -219,9 +219,6 @@ export default function CheckoutStep1() {
             <Text style={styles.subsectionTitle}>
               ပို့ဆောင်ရမဲ့ နေရပ်လိပ်စာ
             </Text>
-            {/* <View style={styles.deliveryTypeBadge}>
-              <Text style={styles.deliveryTypeText}>ဂိတ်ချနဲ့ ပို့မယ်</Text>
-            </View> */}
           </View>
 
           {/* Address Type Tabs */}
@@ -313,7 +310,6 @@ export default function CheckoutStep1() {
           style={styles.confirmActionButton}
           onPress={async () => {
             await saveStep1Data();
-            console.log('Navigating to checkout-step2');
             router.push('/checkout-step2');
           }}
         >

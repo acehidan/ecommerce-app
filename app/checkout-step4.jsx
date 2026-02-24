@@ -16,6 +16,9 @@ import { useCheckoutStore } from '../store/checkoutStore';
 import { useAuthStore } from '../store/authStore';
 import { getDeliveryZone } from '../services/delivery/getDeliveryZone';
 import { createOrder } from '../services/order/createOrder';
+import colors from '../constants/colors';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import PageHeader from './components/PageHeader';
 
 export default function CheckoutStep4() {
   const router = useRouter();
@@ -25,53 +28,33 @@ export default function CheckoutStep4() {
   const { user } = useAuthStore();
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
-  // Get data from checkout store
   const { contactInfo, addressInfo, orderItems, orderSummary, paymentInfo } =
     checkoutData;
 
+
   // Get selected payment method from checkout store or default to prepayment
-  const selectedPaymentMethod = paymentInfo?.selectedMethod || 'prepayment';
-  console.log('addressInfo', addressInfo);
+  const selectedPaymentMethod = paymentInfo?.selectedMethod;
 
-  // Use store data or fallback to defaults
-  const displayItems =
-    orderItems.length > 0
-      ? orderItems
-      : items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          weight: item.weight || 1.0,
-          price: item.price,
-        }));
-
-  const summary = orderSummary || {
-    subtotal: getTotalPrice(),
-    shippingFee: 6000,
-    overweightCharge: 2000,
-    grandTotal: getTotalPrice() + 6000 + 2000,
-    totalWeight: 3.0,
-  };
+  // console.log("orderSummary", orderSummary);
 
   const handleCreateOrder = async () => {
+    let deliveryZone = addressInfo.deliveryZone;
     if (!user) {
       Alert.alert('Error', 'User not authenticated');
       return;
     }
 
-    if (!contactInfo || !addressInfo || !orderItems.length) {
+    if (!contactInfo || !addressInfo || !orderItems.length || !deliveryZone) {
       Alert.alert('Error', 'Missing required order information');
       return;
     }
 
-    setIsCreatingOrder(true);
+    // setIsCreatingOrder(true);
 
     // Navigate to loading page
-    router.push('/order-processing');
+    // router.push('/order-processing');
 
     try {
-      // Validate required data
-
       if (!orderItems || orderItems.length === 0) {
         throw new Error('No items in cart');
       }
@@ -79,58 +62,10 @@ export default function CheckoutStep4() {
         throw new Error('Address is required');
       }
 
-      // Fetch delivery zone if not already set
-      let deliveryZone = addressInfo.deliveryZone;
-      if (!deliveryZone || deliveryZone.trim() === '') {
-        console.log('Delivery zone not found, fetching from API...');
-        console.log(
-          'City:',
-          addressInfo.city,
-          'Township:',
-          addressInfo.township
-        );
-
-        try {
-          const deliveryZoneResponse = await getDeliveryZone(
-            addressInfo.city,
-            addressInfo.township
-          );
-
-          console.log('Delivery zone response:', deliveryZoneResponse);
-
-          if (
-            deliveryZoneResponse.success &&
-            deliveryZoneResponse.data.deliveryZone
-          ) {
-            deliveryZone = deliveryZoneResponse.data.deliveryZone;
-            // Update addressInfo in store with the fetched delivery zone
-            setAddressInfo({
-              ...addressInfo,
-              deliveryZone,
-            });
-          } else {
-            throw new Error(
-              deliveryZoneResponse.message || 'Failed to fetch delivery zone'
-            );
-          }
-        } catch (error) {
-          console.error('Error fetching delivery zone:', error);
-          throw new Error(
-            'Unable to determine delivery zone. Please check your address and try again.'
-          );
-        }
-      }
-
-      // Map order items to the required format
       const products = orderItems.map((item) => ({
         stockId: item.id.toString(), // Convert number to string
         quantity: item.quantity,
       }));
-
-      console.log('Products:', products);
-      console.log('Delivery Zone:', deliveryZone);
-
-      // Map payment method
 
       const orderData = {
         products,
@@ -152,19 +87,23 @@ export default function CheckoutStep4() {
         throw new Error('Delivery zone is required');
       }
 
-      console.log('Order data:', orderData);
+      console.log(orderData);
 
       const response = await createOrder(orderData);
+      console.log("response", response);
 
-      console.log('Order created successfully:', response);
+      if (response.success) {
+        console.log("Order created successfully");
+
+      }
 
       // Clear cart items and checkout data first
-      clearCart();
-      clearCheckoutData();
-      completeCheckout();
+      // clearCart();
+      // clearCheckoutData();
+      // completeCheckout();
 
       // Navigate to success page (replace the loading page)
-      router.replace('/order-success');
+      // router.replace('/order-success');
     } catch (error) {
       console.error('Error creating order:', error);
 
@@ -210,59 +149,48 @@ export default function CheckoutStep4() {
     }
   };
 
-  const receiptData = paymentInfo?.paymentDetails || {
-    bankName: 'A BANK',
-    transactionAmount: '-50,000.00',
-    transactionDate: '01/01/2023 04:04:04',
-    transactionNo: 'E1234567890+123456',
-    transactionType: 'Transfer',
-    transferTo: 'Daw Hla Hla (123456789)',
-    amount: '50,000.00 Ks',
-    notice: 'Family & Friends',
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} />
-          </Pressable>
-          <Text style={styles.headerTitle}>စစ်ဆေးပါ</Text>
-          <View style={styles.progressInfo}>
-            <Text style={styles.totalSteps}>စုစုပေါင်း အဆင့် ၄ ဆင့်</Text>
-          </View>
-        </View>
-      </View>
+      <PageHeader
+        title="စစ်ဆေးပါ"
+        showBackButton={true}
+        rightContent="စုစုပေါင်း အဆင့် ၄ ဆင့်"
+      />
+
+
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+
+        <View style={styles.purchasedItemsSection}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleContainer}>
+              <Text style={styles.sectionTitle}>အော်ဒါ အကျဉ်းချုပ်</Text>
+            </View>
+            <View style={styles.stepBadge}>
+              <Text style={styles.stepBadgeText}>အဆင့် နံပါတ် ၄</Text>
+            </View>
+          </View>
+        </View>
+
+
         {/* Contact & Address Summary */}
         {(contactInfo || addressInfo) && (
           <View style={styles.contactAddressSection}>
-            <View style={styles.contactAddressSectionTitle}>
-              <View>
-                <Text style={styles.sectionTitle}>အော်ဒါ အကျဉ်းချုပ်</Text>
-              </View>
-              <Text style={styles.currentStep}>အဆင့် နံပါတ် ၄</Text>
-            </View>
+
             {contactInfo && (
-              <View style={styles.contactSection}>
+              <View>
                 <Text style={styles.subsectionTitle}>
                   ဝယ်ယူသူ အချက်အလက်များ
                 </Text>
                 <View style={styles.contactCards}>
                   <View style={styles.contactCard}>
                     <View style={styles.contactCardHeader}>
-                      <Ionicons
-                        name="person-outline"
-                        size={24}
-                        color="#666666"
-                      />
+                      <MaterialCommunityIcons name="account-circle-outline" size={17} color="black" />
                       <Text style={styles.contactLabel}>နာမည်</Text>
                     </View>
                     <Text style={styles.contactValue}>
-                      {contactInfo.name || 'Guest User'}
+                      {user?.userName || 'Guest User'}
                     </Text>
                   </View>
                   <View style={styles.contactCard}>
@@ -279,58 +207,17 @@ export default function CheckoutStep4() {
             )}
 
             {addressInfo && (
-              <View style={styles.deliverySection}>
-                <View style={styles.deliveryHeader}>
-                  <Text style={styles.subsectionTitle}>
-                    ပို့ဆောင်ရမဲ့ နေရပ်လိပ်စာ
-                  </Text>
-                  <View style={styles.deliveryTypeBadge}>
-                    <Text style={styles.deliveryTypeText}>
-                      {addressInfo.deliveryType}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.locationCards}>
-                  <View style={styles.locationCard}>
-                    <View style={styles.contactCardHeader}>
-                      <Ionicons
-                        name="business-outline"
-                        size={24}
-                        color="#666666"
-                      />
-                      <Text style={styles.locationLabel}>မြို့</Text>
-                    </View>
-                    <Text style={styles.locationValue}>
-                      {addressInfo.city || 'Not provided'}
-                    </Text>
-                  </View>
-                  <View style={styles.locationCard}>
-                    <View style={styles.contactCardHeader}>
-                      <Ionicons name="home-outline" size={24} color="#666666" />
-                      <Text style={styles.locationLabel}>မြို့နယ်</Text>
-                    </View>
-                    <Text style={styles.locationValue}>
-                      {addressInfo.township || 'Not provided'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.exactAddressCard}>
-                  <View style={styles.contactCardHeader}>
-                    <Ionicons
-                      name="location-outline"
-                      size={24}
-                      color="#666666"
-                    />
-                    <Text style={styles.exactAddressLabel}>
-                      ပို့ဆောင်ရန် လိပ်စာ အတိအကျ
-                    </Text>
-                  </View>
-                  <Text style={styles.exactAddressValue}>
-                    {addressInfo.fullAddress || 'No address provided'}
+              <View style={styles.exactAddressCard}>
+                <View style={styles.contactCardHeader}>
+                  <Ionicons name="location-outline" size={17} color="black" />
+                  <Text style={styles.contactLabel}>
+                    ပို့ဆောင်ရန် လိပ်စာ အတိအကျ
                   </Text>
                 </View>
+
+                <Text style={styles.contactValue}>
+                  {addressInfo.fullAddress || 'No address provided'}
+                </Text>
               </View>
             )}
           </View>
@@ -341,49 +228,20 @@ export default function CheckoutStep4() {
           <Text style={styles.sectionTitle}>ဝယ်ယူထားသော ပစ္စည်းများ</Text>
 
           <View style={styles.itemsList}>
-            {displayItems.map((item, index) => (
+            {orderItems.map((item) => (
               <View key={item.id} style={styles.itemRow}>
                 <Text style={styles.itemQuantity}>{item.quantity} ခု</Text>
                 <View style={styles.itemDetails}>
                   <Text style={styles.itemName}>{item.name}</Text>
                   <Text style={styles.itemWeight}>
-                    {item.weight.toFixed(1)} KG
+                    {item?.weight} KG
                   </Text>
                 </View>
                 <Text style={styles.itemPrice}>
-                  MMK {item.price.toLocaleString()}
+                  MMK {(item.price * item.quantity)?.toLocaleString()}
                 </Text>
               </View>
             ))}
-          </View>
-        </View>
-
-        {/* Payment Method Section */}
-        <View style={styles.paymentSection}>
-          <Text style={styles.sectionTitle}>ငွေပေးချေမှု</Text>
-
-          <View style={styles.paymentMethodDisplay}>
-            <View style={styles.paymentMethodCard}>
-              {selectedPaymentMethod === 'prepayment' ? (
-                <>
-                  <View style={styles.paymentOptionIcon}>
-                    <Ionicons name="card-outline" size={24} color="#666666" />
-                  </View>
-                  <Text style={styles.paymentMethodLabel}>ငွေကြိုရှင်း</Text>
-                </>
-              ) : (
-                <>
-                  <View style={styles.paymentOptionIcon}>
-                    <Ionicons name="home-outline" size={24} color="#666666" />
-                  </View>
-                  <Text style={styles.paymentMethodLabel}>
-                    {selectedPaymentMethod === 'cash-on-delivery'
-                      ? 'အိမ်အရောက်ငွေချေ'
-                      : 'ငွေကြိုရှင်း'}
-                  </Text>
-                </>
-              )}
-            </View>
           </View>
         </View>
 
@@ -391,115 +249,97 @@ export default function CheckoutStep4() {
         <View style={styles.orderSummarySection}>
           <Text style={styles.sectionTitle}>အော်ဒါ အကျဉ်းချုပ်</Text>
 
-          <View style={styles.summaryDetails}>
+          <View style={styles.summaryContainer}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>စုစုပေါင်း</Text>
               <Text style={styles.summaryValue}>
-                MMK {summary.subtotal.toLocaleString()}
+                MMK {orderSummary?.subtotal?.toLocaleString()}
               </Text>
             </View>
 
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>ပို့ဆောင်ခ</Text>
               <Text style={styles.summaryValue}>
-                MMK {summary.shippingFee.toLocaleString()}
+                MMK {orderSummary?.shippingFee?.toLocaleString()}
               </Text>
             </View>
 
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>အပိုဝန်ဆောင်ခ</Text>
-              <Text style={styles.summaryValue}>
-                MMK {summary.overweightCharge.toLocaleString()}
-              </Text>
-            </View>
+            {orderSummary.totalWeight > 2 && (
+              <View style={styles.summaryRow}>
+                <View style={styles.overweightRow}>
+                  <Text style={styles.summaryLabel}>ဝန်ပိုကြေး</Text>
+                  <Text style={styles.weightText}>
+                    {orderSummary?.totalWeight?.toFixed(2)} KG
+                  </Text>
+                </View>
+                <Text style={styles.summaryValue}>
+                  MMK {orderSummary?.overweightCharge?.toLocaleString()}
+                </Text>
+              </View>
+            )}
 
             <View style={[styles.summaryRow, styles.grandTotalRow]}>
               <Text style={styles.grandTotalLabel}>စုစုပေါင်း</Text>
               <Text style={styles.grandTotalValue}>
-                MMK {summary.grandTotal.toLocaleString()}
+                MMK {orderSummary?.grandTotal?.toLocaleString()}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Payment Receipt Section */}
-        {/* <View style={styles.receiptSection}>
-          <Text style={styles.sectionTitle}>ငွေဖြတ်ပိုင်း</Text>
-
-          <View style={styles.receiptContainer}>
-            {paymentInfo?.receiptImage ? (
-              // Show uploaded receipt image
-              <View style={styles.uploadedReceiptContainer}>
-                <Image
-                  source={{ uri: paymentInfo.receiptImage.uri }}
-                  style={styles.uploadedReceiptImage}
-                  resizeMode="contain"
-                />
-                <Text style={styles.uploadedReceiptText}>Uploaded Receipt</Text>
-              </View>
-            ) : (
-              // Show simulated receipt if no image uploaded
-              <View style={styles.receiptImage}>
-                <View style={styles.receiptHeader}>
-                  <Text style={styles.bankName}>{receiptData.bankName}</Text>
-                  <Text style={styles.transactionAmount}>
-                    {receiptData.transactionAmount}
-                  </Text>
-                </View>
-
-                <View style={styles.receiptContent}>
-                  <View style={styles.receiptRow}>
-                    <Text style={styles.receiptLabel}>Transaction Date:</Text>
-                    <Text style={styles.receiptValue}>
-                      {receiptData.transactionDate}
-                    </Text>
-                  </View>
-
-                  <View style={styles.receiptRow}>
-                    <Text style={styles.receiptLabel}>Transaction No:</Text>
-                    <Text style={styles.receiptValue}>
-                      {receiptData.transactionNo}
-                    </Text>
-                  </View>
-
-                  <View style={styles.receiptRow}>
-                    <Text style={styles.receiptLabel}>Transaction Type:</Text>
-                    <Text style={styles.receiptValue}>
-                      {receiptData.transactionType}
-                    </Text>
-                  </View>
-
-                  <View style={styles.receiptRow}>
-                    <Text style={styles.receiptLabel}>Transfer To:</Text>
-                    <Text style={styles.receiptValue}>
-                      {receiptData.transferTo}
-                    </Text>
-                  </View>
-
-                  <View style={styles.receiptRow}>
-                    <Text style={styles.receiptLabel}>Amount:</Text>
-                    <Text style={styles.receiptValue}>
-                      {receiptData.amount}
-                    </Text>
-                  </View>
-
-                  <View style={styles.receiptRow}>
-                    <Text style={styles.receiptLabel}>Notice:</Text>
-                    <Text style={styles.receiptValue}>
-                      {receiptData.notice}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.receiptFooter}>
-                  <Text style={styles.thankYouText}>
-                    Thank you for using KBZPay!
-                  </Text>
-                </View>
-              </View>
-            )}
+        {/* Payment Method Section */}
+        <View style={styles.paymentSection}>
+          <View style={styles.paymentHeader}>
+            <Text style={styles.sectionTitle}>ငွေပေးချေမှု</Text>
+            <Pressable
+              style={styles.changeButton}
+              onPress={() => router.push('/checkout-step3')}
+            >
+              <Text style={styles.changeButtonText}>ပြောင်းလဲရန်</Text>
+            </Pressable>
           </View>
-        </View> */}
+
+          <View style={styles.paymentMethodDisplay}>
+            {/* Payment Method Card */}
+            <View style={styles.paymentMethodCard}>
+              <View style={styles.paymentCardLeft}>
+                <View>
+                  <MaterialCommunityIcons name="currency-usd" size={20} color={colors.text.primary} />
+                </View>
+                <Text style={styles.paymentMethodLabel}>ငွေပေးချေမှု</Text>
+              </View>
+              <Text style={styles.paymentMethodValue}>
+                {selectedPaymentMethod === 'cash-on-delivery'
+                  ? 'အိမ်အရောက်ငွေချေ'
+                  : 'ငွေကြိုရှင်း'}
+              </Text>
+            </View>
+
+            {/* Payment Type Card */}
+            <View style={styles.paymentMethodCard}>
+              <View style={styles.paymentCardLeft}>
+                <Ionicons name="wallet-outline" size={20} color={colors.text.primary} />
+                <Text style={styles.paymentMethodLabel}>ငွေပေးချေမှု နည်းလမ်း</Text>
+              </View>
+              <View style={styles.paymentCardRight}>
+                {paymentInfo?.paymentType === 'cash' && (
+                  <MaterialCommunityIcons name="currency-usd" size={16} color={colors.text.primary} />
+                )}
+                <Text style={styles.paymentMethodValue}>
+                  {selectedPaymentMethod === 'cash-on-delivery' ? 'ငွေသား' : (
+                    <View style={styles.kpayIconContainer}>
+                      <Image
+                        source={require('../assets/images/kpay.png')}
+                        style={styles.kpayIcon}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
       </ScrollView>
 
       {/* Bottom Action Buttons */}
@@ -532,46 +372,30 @@ export default function CheckoutStep4() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
-  header: {
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  headerContent: {
+  sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  backButton: {
-    padding: 4,
-    color: '#000000',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    flex: 1,
-    marginLeft: 8,
-  },
-  progressInfo: {
-    alignItems: 'flex-end',
-  },
-  totalSteps: {
-    fontSize: 12,
-    color: '#000000',
-    marginBottom: 2,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+    paddingBottom: 16,
   },
   currentStep: {
     fontSize: 12,
-    color: '#000000',
-    fontWeight: '500',
-    backgroundColor: '#E6E6E6',
+    color: colors.button.primary,
+    fontWeight: '900',
+    backgroundColor: colors.background.secondary,
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderRadius: 24,
+    boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.1)',
+    elevation: 1,
+    shadowColor: 'rgba(0, 0, 0, 0.1)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   contactAddressSectionTitle: {
     flexDirection: 'row',
@@ -584,17 +408,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   contactAddressSection: {
-    marginTop: 24,
-    marginBottom: 24,
-  },
-  contactSection: {
     marginBottom: 24,
   },
   subsectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 12,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
+  },
+  contactCards: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  contactCard: {
+    backgroundColor: colors.background.secondary,
+    width: 163,
+    height: 106,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    paddingLeft: 26,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border.light,
   },
   contactCardHeader: {
     flexDirection: 'row',
@@ -602,29 +442,19 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  contactCards: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  contactCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
   contactLabel: {
     fontSize: 14,
-    color: '#666666',
-    marginTop: 8,
-    marginBottom: 4,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    color: colors.text.primary,
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.2,
+
   },
   contactValue: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
+    fontWeight: 'bold',
+    color: colors.text.primary,
   },
   deliverySection: {
     marginBottom: 24,
@@ -637,15 +467,13 @@ const styles = StyleSheet.create({
   },
   deliveryTypeBadge: {
     backgroundColor: '#E5E5E5',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
   },
   deliveryTypeText: {
     fontSize: 12,
-    color: '#000000',
+    color: colors.text.primary,
     fontWeight: '500',
   },
   addressTabs: {
@@ -654,21 +482,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addressTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    width: 49,
+    height: 42,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.border.light,
     borderRadius: 20,
     backgroundColor: '#E5E5E5',
   },
   addressTabActive: {
-    backgroundColor: '#333333',
+    backgroundColor: colors.background.secondary,
   },
   addressTabText: {
     fontSize: 14,
-    color: '#000000',
+    color: colors.text.primary,
     fontWeight: '500',
   },
   addressTabTextActive: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
   },
   locationCards: {
     flexDirection: 'row',
@@ -678,8 +510,6 @@ const styles = StyleSheet.create({
   locationCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -697,12 +527,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   exactAddressCard: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    marginTop: 20,
+    height: 127,
+    flexDirection: 'column',
+    paddingLeft: 20,
+    justifyContent: 'center',
+    backgroundColor: colors.background.secondary,
+    borderWidth: 2,
+    borderColor: colors.border.light,
+    borderRadius: 20,
+
   },
   exactAddressLabel: {
     fontSize: 14,
@@ -719,50 +553,106 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   paymentSection: {
-    marginBottom: 24,
+    marginVertical: 24,
+  },
+  paymentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  changeButton: {
+    paddingHorizontal: 16,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  changeButtonText: {
+    fontSize: 14,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    color: colors.text.primary,
   },
   paymentMethodDisplay: {
-    marginTop: 12,
+    gap: 12,
   },
   paymentMethodCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: colors.background.secondary,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-    padding: 16,
+    borderColor: colors.border.light,
+    paddingHorizontal: 20,
+    height: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  paymentCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
+  paymentOptionIconSquare: {
+    width: 32,
+    height: 32,
+    borderWidth: 1,
+    borderColor: colors.text.primary,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   paymentMethodLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
+    fontFamily: 'NotoSansMyanmar-Regular',
+    color: colors.text.primary,
+  },
+  kpayIconContainer: {
+    marginRight: 12,
+  },
+  kpayIcon: {
+    width: 32,
+    height: 32,
+  },
+  paymentMethodValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
+  },
+  paymentCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   purchasedItemsSection: {
     marginTop: 24,
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 20,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    lineHeight: 38,
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   itemsList: {
     borderRadius: 12,
-    padding: 16,
+    paddingVertical: 12,
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: colors.background.secondary,
   },
   itemQuantity: {
     fontSize: 14,
-    color: '#666666',
-    width: 50,
+    color: colors.text.primary,
+    width: "10%"
   },
   itemDetails: {
     flex: 1,
@@ -770,43 +660,61 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
-    marginBottom: 4,
+    color: colors.text.primary,
+
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   itemWeight: {
     fontSize: 12,
-    color: '#666666',
+    fontWeight: '500',
+    color: colors.text.tertiary,
+
   },
   itemPrice: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
   },
   orderSummarySection: {
-    marginBottom: 24,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    padding: 16,
-  },
-  summaryDetails: {
-    borderRadius: 12,
+    marginBottom: 16,
+    backgroundColor: colors.background.secondary,
+    borderRadius: 20,
     paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  summaryContainer: {
+    marginTop: 12,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.text.tertiary,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   summaryValue: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  overweightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  weightText: {
+    fontSize: 12,
+    color: colors.text.tertiary,
+    marginLeft: 8,
   },
   grandTotalRow: {
     borderBottomWidth: 0,
@@ -818,114 +726,16 @@ const styles = StyleSheet.create({
   grandTotalLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   grandTotalValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000000',
-  },
-  receiptSection: {
-    marginBottom: 32,
-  },
-  receiptContainer: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  uploadedReceiptContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 300,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  uploadedReceiptImage: {
-    width: '100%',
-    height: 300,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  uploadedReceiptText: {
-    fontSize: 14,
-    color: '#4CAF50',
-    fontWeight: '500',
-  },
-  receiptImage: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 20,
-    width: '100%',
-    maxWidth: 300,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  receiptHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  bankName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FF4444',
-  },
-  receiptContent: {
-    marginBottom: 16,
-  },
-  receiptRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  receiptLabel: {
-    fontSize: 12,
-    color: '#666666',
-    flex: 1,
-  },
-  receiptValue: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#000000',
-    flex: 1,
-    textAlign: 'right',
-  },
-  receiptFooter: {
-    alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-  },
-  thankYouText: {
-    fontSize: 12,
-    color: '#007AFF',
-    fontWeight: '500',
+    color: colors.text.primary,
   },
   bottomActions: {
     flexDirection: 'row',
@@ -938,23 +748,23 @@ const styles = StyleSheet.create({
   },
   backActionButton: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 30,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: colors.border.light,
   },
   backActionText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000000',
+    fontWeight: '700',
+    color: colors.text.primary,
   },
   continueActionButton: {
     flex: 1,
-    backgroundColor: '#333333',
+    backgroundColor: colors.button.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 30,
     alignItems: 'center',
   },
   continueActionButtonDisabled: {
@@ -963,7 +773,7 @@ const styles = StyleSheet.create({
   },
   continueActionText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

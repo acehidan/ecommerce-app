@@ -36,20 +36,8 @@ export default function Address() {
     try {
       setLoading(true);
       setError(null);
-
-      const userProfile = await getUserProfile();
-      // console.log('userProfile', userProfile.user._id);
-      if (!userProfile?.user) {
-        throw new Error('User not found');
-      }
-
-      if (!userProfile.user._id) {
-        throw new Error('User ID not found');
-      }
-
-      const response = await getUserAddresses(userProfile.user._id);
-      console.log('response', response);
-      setAddresses(response.data.userAddressInfo);
+      const response = await getUserAddresses();
+      setAddresses(response.data);
     } catch (err) {
       console.error('Error fetching addresses:', err);
       setError('Failed to load addresses');
