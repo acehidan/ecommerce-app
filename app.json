@@ -42,8 +42,9 @@
     },
     "android": {
       "package": "com.komin.diy",
-      "versionCode": 7,
-      "softwareKeyboardLayoutMode": "pan"
+      "versionCode": 8,
+      "softwareKeyboardLayoutMode": "pan",
+      "launchMode": "singleTask"
     },
     "owner": "acehidan"
   }

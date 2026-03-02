@@ -15,6 +15,8 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { getOrderHistory, Order } from '../services/order/getOrderHistory';
 import { useAuthStore } from '../store/authStore';
+import colors from '../constants/colors';
+import PageHeader from './components/PageHeader';
 
 export default function OrderHistory() {
   const { user, token } = useAuthStore();
@@ -182,10 +184,7 @@ export default function OrderHistory() {
   };
 
   const handleOrderDetails = (orderId) => {
-    Alert.alert(
-      'အော်ဒါ အသေးစိတ်',
-      `အော်ဒါ #${orderId} ရဲ့ အသေးစိတ် အချက်အလက်များ`
-    );
+    router.push(`/order-detail/${orderId}`);
   };
 
   const formatDate = (dateString) => {
@@ -270,12 +269,7 @@ export default function OrderHistory() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
         {/* Header */}
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>အော်ဒါ အနှစ်ချုပ်</Text>
-        </View>
+        <PageHeader title="အော်ဒါ အနှစ်ချုပ်" showBackButton={true} />
 
         {/* Order Summary Cards */}
         <View style={styles.summaryContainer}>
@@ -295,7 +289,7 @@ export default function OrderHistory() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryCardHeader}>
               <View style={styles.summaryIcon}>
-                <Ionicons name="receipt-outline" size={18} color="#000000" />
+                <Ionicons name="cash-outline" size={18} color="#000000" />
               </View>
               <Text style={styles.summaryLabel}>ငွေစုစုပေါင်း</Text>
             </View>
@@ -313,10 +307,10 @@ export default function OrderHistory() {
         {/* Placed Orders Section */}
         <View style={styles.placedOrdersHeader}>
           <Text style={styles.placedOrdersTitle}>မှာယူထားသော အော်ဒါများ</Text>
-          <Pressable style={styles.dateFilterButton} onPress={handleDateFilter}>
+          {/* <Pressable style={styles.dateFilterButton} onPress={handleDateFilter}>
             <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
             <Text style={styles.dateFilterButtonText}>ရက်ရွေးမယ်</Text>
-          </Pressable>
+          </Pressable> */}
         </View>
 
         {/* Date Filter Info */}
@@ -326,14 +320,14 @@ export default function OrderHistory() {
               {selectedFilter === 'today'
                 ? 'ယနေ့'
                 : selectedFilter === 'week'
-                ? 'ပြီးခဲ့သော ၇ ရက်'
-                : selectedFilter === 'month'
-                ? 'ပြီးခဲ့သော ၁ လ'
-                : startDate || endDate
-                ? `${formatDateForDisplay(startDate)} - ${formatDateForDisplay(
-                    endDate
-                  )}`
-                : 'အားလုံး'}
+                  ? 'ပြီးခဲ့သော ၇ ရက်'
+                  : selectedFilter === 'month'
+                    ? 'ပြီးခဲ့သော ၁ လ'
+                    : startDate || endDate
+                      ? `${formatDateForDisplay(startDate)} - ${formatDateForDisplay(
+                        endDate
+                      )}`
+                      : 'အားလုံး'}
             </Text>
             <Pressable onPress={handleClearFilter}>
               <Ionicons name="close-circle" size={20} color="#666666" />
@@ -360,9 +354,9 @@ export default function OrderHistory() {
             <View style={styles.emptyContainer}>
               <Ionicons name="bag-outline" size={48} color="#CCCCCC" />
               <Text style={styles.emptyText}>အော်ဒါ မရှိပါ</Text>
-              <Text style={styles.emptySubText}>
+              {/* <Text style={styles.emptySubText}>
                 သင်မှာယူထားသော အော်ဒါများ ဤနေရာတွင် ပေါ်လာမည်
-              </Text>
+              </Text> */}
             </View>
           ) : (
             orders.map((order) => (
@@ -381,9 +375,9 @@ export default function OrderHistory() {
                         <Text style={styles.orderDate}>
                           {formatDate(order.createdAt)} မှ အော်ဒါ
                         </Text>
-                        <Text style={styles.orderStatus}>
+                        {/* <Text style={styles.orderStatus}>
                           {formatStatus(order.status)}
-                        </Text>
+                        </Text> */}
                       </View>
                     </View>
                     <Text style={styles.orderAmount}>
@@ -439,7 +433,7 @@ export default function OrderHistory() {
                   style={[
                     styles.quickFilterButton,
                     selectedFilter === 'today' &&
-                      styles.quickFilterButtonActive,
+                    styles.quickFilterButtonActive,
                   ]}
                   onPress={() => handleQuickFilter('today')}
                 >
@@ -447,7 +441,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'today' &&
-                        styles.quickFilterButtonTextActive,
+                      styles.quickFilterButtonTextActive,
                     ]}
                   >
                     ယနေ့
@@ -464,7 +458,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'week' &&
-                        styles.quickFilterButtonTextActive,
+                      styles.quickFilterButtonTextActive,
                     ]}
                   >
                     ပြီးခဲ့သော ၇ ရက်
@@ -474,7 +468,7 @@ export default function OrderHistory() {
                   style={[
                     styles.quickFilterButton,
                     selectedFilter === 'month' &&
-                      styles.quickFilterButtonActive,
+                    styles.quickFilterButtonActive,
                   ]}
                   onPress={() => handleQuickFilter('month')}
                 >
@@ -482,7 +476,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'month' &&
-                        styles.quickFilterButtonTextActive,
+                      styles.quickFilterButtonTextActive,
                     ]}
                   >
                     ပြီးခဲ့သော ၁ လ
@@ -499,7 +493,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'all' &&
-                        styles.quickFilterButtonTextActive,
+                      styles.quickFilterButtonTextActive,
                     ]}
                   >
                     အားလုံး
@@ -554,7 +548,7 @@ export default function OrderHistory() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.primary,
   },
   content: {
     flex: 1,
@@ -565,7 +559,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   backButton: {
     padding: 8,
@@ -658,7 +652,12 @@ const styles = StyleSheet.create({
   placedOrdersTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
+
   },
   dateFilterButton: {
     backgroundColor: '#000000',
@@ -691,7 +690,8 @@ const styles = StyleSheet.create({
   },
   orderList: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingVertical: 20,
+    backgroundColor: colors.background.secondary,
   },
   orderCard: {
     backgroundColor: '#FFFFFF',
@@ -732,6 +732,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#000000',
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   orderStatus: {
     fontSize: 12,
@@ -747,14 +751,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   reorderButton: {
-    backgroundColor: '#FFFFFF',
+    flex: 1,
+    backgroundColor: colors.background.primary,
     borderWidth: 1,
     borderColor: '#E5E5E5',
+    justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    height: 42,
     borderRadius: 50,
-    flex: 1,
-    marginRight: 8,
   },
   reorderButtonText: {
     fontSize: 12,
@@ -765,7 +769,8 @@ const styles = StyleSheet.create({
   detailsButton: {
     backgroundColor: '#000000',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    height: 42,
+    justifyContent: 'center',
     borderRadius: 50,
     flex: 1,
   },

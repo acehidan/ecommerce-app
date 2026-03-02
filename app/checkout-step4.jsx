@@ -7,23 +7,22 @@ import {
   ScrollView,
   Image,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCartStore } from '../store/cartStore';
 import { useCheckoutStore } from '../store/checkoutStore';
 import { useAuthStore } from '../store/authStore';
-import { getDeliveryZone } from '../services/delivery/getDeliveryZone';
 import { createOrder } from '../services/order/createOrder';
 import colors from '../constants/colors';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import PageHeader from './components/PageHeader';
+import * as WebBrowser from 'expo-web-browser';
 
 export default function CheckoutStep4() {
   const router = useRouter();
-  const { items, getTotalPrice, clearCart } = useCartStore();
-  const { checkoutData, completeCheckout, clearCheckoutData, setAddressInfo } =
+  const { checkoutData } =
     useCheckoutStore();
   const { user } = useAuthStore();
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
@@ -38,6 +37,7 @@ export default function CheckoutStep4() {
   // console.log("orderSummary", orderSummary);
 
   const handleCreateOrder = async () => {
+    setIsCreatingOrder(true);
     let deliveryZone = addressInfo.deliveryZone;
     if (!user) {
       Alert.alert('Error', 'User not authenticated');
@@ -90,20 +90,39 @@ export default function CheckoutStep4() {
       console.log(orderData);
 
       const response = await createOrder(orderData);
-      console.log("response", response);
 
       if (response.success) {
+        console.log("response.data", response.data);
+        // Save order response to store for use in result pages
+        useCheckoutStore.getState().setOrderResponse(response.data);
+
         console.log("Order created successfully");
 
+        // Handle KPAY payment redirection
+        const kpayData = response.data?.kpay;
+        if (kpayData && kpayData.result === 'SUCCESS') {
+
+          const { appid, merch_code, nonce_str, prepay_id, timestamp, sign } =
+            kpayData;
+          const redirectUrl = `https://komindiystore.com/kpay-redirect?appid=${appid}&merch_code=${merch_code}&nonce_str=${nonce_str}&prepay_id=${prepay_id}&timestamp=${timestamp}&sign=${sign}`;
+          console.log("redirectUrl", redirectUrl);
+          try {
+            await WebBrowser.openBrowserAsync(redirectUrl);
+            console.log("redirectUrl", redirectUrl);
+          } catch (err) {
+            console.error('Failed to open KPAY redirect URL:', err);
+            Alert.alert('Error', 'Could not open KPAY payment page.');
+          }
+        }
+
+        // Clear cart items and checkout data
+        // clearCart();
+        // clearCheckoutData();
+        // completeCheckout();
+
+        // Navigate to success page
+        // router.replace('/order-success');
       }
-
-      // Clear cart items and checkout data first
-      // clearCart();
-      // clearCheckoutData();
-      // completeCheckout();
-
-      // Navigate to success page (replace the loading page)
-      // router.replace('/order-success');
     } catch (error) {
       console.error('Error creating order:', error);
 
@@ -749,9 +768,10 @@ const styles = StyleSheet.create({
   backActionButton: {
     flex: 1,
     backgroundColor: colors.background.primary,
-    paddingVertical: 16,
-    borderRadius: 30,
+    height: 58,
+    borderRadius: 50,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border.light,
   },
@@ -763,9 +783,10 @@ const styles = StyleSheet.create({
   continueActionButton: {
     flex: 1,
     backgroundColor: colors.button.primary,
-    paddingVertical: 16,
-    borderRadius: 30,
+    height: 58,
+    borderRadius: 50,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   continueActionButtonDisabled: {
     backgroundColor: '#666666',

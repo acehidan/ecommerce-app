@@ -1,21 +1,47 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, BackHandler } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation, Stack } from 'expo-router';
 import { useCheckoutStore } from '../store/checkoutStore';
+import { useCartStore } from '../store/cartStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import colors from '../constants/colors';
 
 export default function OrderSuccess() {
   const router = useRouter();
-  const { checkoutData } = useCheckoutStore();
+  const navigation = useNavigation();
+  const { checkoutData, clearCheckoutData, completeCheckout, } = useCheckoutStore();
   const { orderResponse } = checkoutData;
+  const { clearCart } = useCartStore();
+
+  useEffect(() => {
+    // Prevent hardware back button on Android
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
+
+    // Prevent back navigation via gestures or header buttons
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // If the action is a back action, prevent it
+      if (e.data.action.type === 'POP' || e.data.action.type === 'GO_BACK') {
+        e.preventDefault();
+      }
+    });
+
+    console.log(checkoutData);
+    // Clear cart items and checkout data
+    clearCart();
+    clearCheckoutData();
+    completeCheckout();
+
+    return () => {
+      backHandler.remove();
+      unsubscribe();
+    };
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Order Confirm Screen</Text>
-      </View>
+      <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
+
 
       {/* Main Content */}
       <View style={styles.content}>
@@ -140,10 +166,14 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 14,
-    color: '#666666',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 8,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    // textShadowColor: colors.text.primary,
+    // textShadowOffset: { width: 0.2, height: 0.1 },
+    // textShadowRadius: 0.5,
+
   },
   orderDetailsContainer: {
     backgroundColor: '#F8F8F8',
@@ -171,13 +201,14 @@ const styles = StyleSheet.create({
   },
   orderDetailsButton: {
     // flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 24,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    borderColor: colors.border.light,
+    borderRadius: 50,
+    height: 58,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   orderDetailsButtonText: {
     fontSize: 12,
@@ -186,11 +217,11 @@ const styles = StyleSheet.create({
   },
   continueShoppingButton: {
     flex: 1,
-    backgroundColor: '#333333',
-    borderRadius: 24,
-    paddingVertical: 16,
-
+    backgroundColor: colors.button.primary,
+    borderRadius: 50,
+    height: 58,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   continueShoppingButtonText: {
     fontSize: 12,

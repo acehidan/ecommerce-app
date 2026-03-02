@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 50,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E5E5',
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#333333',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 50,
     alignItems: 'center',
   },
   payActionText: {

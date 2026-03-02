@@ -141,6 +141,14 @@ The payment gateway should append the relevant parameters to this URL based on t
 
 ## Troubleshooting
 
+### App Restarts on Deep Link (Android)
+If the app restarts instead of just navigating to the deep link when it's already open, ensure `launchMode` is set to `singleTask` in `app.json`:
+```json
+"android": {
+  "launchMode": "singleTask"
+}
+```
+
 ### Deep Link Not Working
 1. Ensure the app is installed (deep links don't work without the app)
 2. Check that the scheme `komin-diy` is correctly configured in `app.json`

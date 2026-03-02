@@ -1,95 +1,147 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, BackHandler } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import colors from '../constants/colors';
+import { useCheckoutStore } from '../store/checkoutStore';
 
+/**
+ * Payment Result Screen
+ * Handles deep links from payment gateways (e.g., komin-diy://payment_result)
+ */
 export default function PaymentResult() {
   const router = useRouter();
-  const { status, transaction_id, amount, message } = useLocalSearchParams();
+  const { status, message } = useLocalSearchParams();
+  const { checkoutData } = useCheckoutStore();
+  console.log("checkoutData", checkoutData)
+  const { orderResponse } = checkoutData;
+  console.log("order-response", orderResponse)
+
+  // Use values from store as requested (since the deep link is only the base URL)
+  const displayOrderId = orderResponse?.orderId;
+  const displayAmount = orderResponse?.totalAmount;
+  const displayStatus = status || 'success';
 
   useEffect(() => {
-    // Log the received parameters for debugging
-    console.log('Payment result received:', {
-      status,
-      transaction_id,
-      amount,
-      message
+    // Prevent hardware back button on Android to ensure user uses our navigation
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleNavigateHome();
+      return true;
     });
 
-    // Auto-redirect after 3 seconds if no user interaction
-    const timer = setTimeout(() => {
-      router.replace('/(tabs)/index');
-    }, 3000);
+    // Log for debugging
+    console.log('--- Deep Link Received ---');
+    console.log('Status:', displayStatus);
+    console.log('Order ID:', displayOrderId);
+    console.log('Amount:', displayAmount);
+    console.log('Message:', message);
 
-    return () => clearTimeout(timer);
-  }, [router]);
+    return () => backHandler.remove();
+  }, []);
 
-  const getPaymentStatus = () => {
-    if (status === 'success') {
-      return {
-        color: '#4CAF50',
-        title: 'Payment Successful!',
-        icon: '✅'
-      };
-    } else if (status === 'failed') {
-      return {
-        color: '#F44336',
-        title: 'Payment Failed',
-        icon: '❌'
-      };
-    } else if (status === 'pending') {
-      return {
-        color: '#FF9800',
-        title: 'Payment Pending',
-        icon: '⏳'
-      };
-    } else {
-      return {
-        color: '#2196F3',
-        title: 'Payment Status',
-        icon: 'ℹ️'
-      };
+  const handleNavigateHome = () => {
+    // Replace to prevent going back to this screen
+    router.replace('/(tabs)');
+  };
+
+  const getStatusConfig = () => {
+    switch (displayStatus) {
+      case 'success':
+        return {
+          icon: 'checkmark-circle',
+          color: colors.success.main,
+          title: 'ငွေပေးချေမှု အောင်မြင်ပါသည်',
+          subtitle: 'သင်၏ အော်ဒါကို အတည်ပြုပြီးပါပြီ။',
+          bgLight: colors.success.light,
+        };
+      case 'failed':
+        return {
+          icon: 'close-circle',
+          color: colors.error.main,
+          title: 'ငွေပေးချေမှု မအောင်မြင်ပါ',
+          subtitle: message || 'တစ်ခုခု မှားယွင်းနေပါသည်။ ထပ်မံကြိုးစားကြည့်ပါ။',
+          bgLight: colors.error.light,
+        };
+      case 'pending':
+        return {
+          icon: 'time',
+          color: colors.warning.main,
+          title: 'ငွေပေးချေမှု စောင့်ဆိုင်းနေဆဲဖြစ်သည်',
+          subtitle: 'သင်၏ ငွေပေးချေမှုကို စစ်ဆေးနေပါသည်။',
+          bgLight: colors.warning.light,
+        };
+      default:
+        return {
+          icon: 'information-circle',
+          color: colors.info.main,
+          title: 'ငွေပေးချေမှု အခြေအနေ',
+          subtitle: 'ငွေပေးချေမှု အချက်အလက်များကို ပြန်လည်စစ်ဆေးနေပါသည်။',
+          bgLight: colors.info.light,
+        };
     }
   };
 
-  const paymentStatus = getPaymentStatus();
+  const config = getStatusConfig();
 
   return (
     <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
+
       <View style={styles.content}>
-        <Text style={styles.icon}>{paymentStatus.icon}</Text>
-        <Text style={[styles.title, { color: paymentStatus.color }]}>
-          {paymentStatus.title}
-        </Text>
-        
-        {transaction_id && (
-          <Text style={styles.detail}>
-            Transaction ID: {transaction_id}
-          </Text>
-        )}
-        
-        {amount && (
-          <Text style={styles.detail}>
-            Amount: {amount}
-          </Text>
-        )}
-        
-        {message && (
-          <Text style={styles.message}>{message}</Text>
-        )}
-        
-        <View style={styles.buttonContainer}>
-          <Text 
-            style={styles.button}
-            onPress={() => router.replace('/(tabs)/index')}
-          >
-            Back to Home
-          </Text>
+        {/* Status Icon */}
+        <View style={[styles.iconContainer, { backgroundColor: config.bgLight }]}>
+          <Ionicons name={config.icon} size={80} color={config.color} />
         </View>
-        
-        <Text style={styles.autoRedirect}>
-          Auto-redirecting in 3 seconds...
-        </Text>
+
+        {/* Status Text */}
+        <Text style={[styles.title, { color: config.color }]}>{config.title}</Text>
+        <Text style={styles.subtitle}>{config.subtitle}</Text>
+
+        {/* Transaction Details Card */}
+        {(displayOrderId || displayAmount) && (
+          <View style={styles.detailsCard}>
+            {displayOrderId && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Order ID</Text>
+                <Text style={styles.detailValue}>{displayOrderId}</Text>
+              </View>
+            )}
+            {displayAmount && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>ပမာဏ</Text>
+                <Text style={styles.detailValue}>
+                  {parseFloat(displayAmount.toString()).toLocaleString()} MMK
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* Action Buttons */}
+      <View style={styles.footer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.primaryButton,
+            { opacity: pressed ? 0.8 : 1 }
+          ]}
+          onPress={handleNavigateHome}
+        >
+          <Text style={styles.primaryButtonText}>ပင်မစာမျက်နှာသို့ သွားမည်</Text>
+        </Pressable>
+
+        {displayStatus === 'failed' && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              { opacity: pressed ? 0.8 : 1 }
+            ]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.secondaryButtonText}>ထပ်မံကြိုးစားမည်</Text>
+          </Pressable>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -98,53 +150,91 @@ export default function PaymentResult() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
-  icon: {
-    fontSize: 60,
-    marginBottom: 20,
+  iconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
     textAlign: 'center',
+    marginBottom: 12,
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
-  detail: {
+  subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 10,
+    color: '#666666',
     textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
-  message: {
+  detailsCard: {
+    width: '100%',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  detailLabel: {
     fontSize: 14,
-    color: '#888',
-    marginBottom: 30,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    color: '#888888',
   },
-  buttonContainer: {
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    color: 'white',
-    padding: 15,
-    borderRadius: 8,
-    fontSize: 16,
+  detailValue: {
+    fontSize: 14,
     fontWeight: '600',
-    textAlign: 'center',
-    minWidth: 200,
+    color: '#333333',
   },
-  autoRedirect: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
+  footer: {
+    padding: 24,
+    gap: 12,
+  },
+  primaryButton: {
+    backgroundColor: colors.primary,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'NotoSansMyanmar-Regular',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  secondaryButtonText: {
+    color: '#666666',
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
 });
