@@ -38,7 +38,7 @@ export default function CheckoutStep4() {
   // console.log("orderSummary", orderSummary);
 
   const handleCreateOrder = async () => {
-    setIsCreatingOrder(true);
+    // setIsCreatingOrder(true);
     let deliveryZone = addressInfo.deliveryZone;
     if (!user) {
       Alert.alert('Error', 'User not authenticated');
@@ -50,7 +50,7 @@ export default function CheckoutStep4() {
       return;
     }
 
-    // setIsCreatingOrder(true);
+    setIsCreatingOrder(true);
 
     // Navigate to loading page
     // router.push('/order-processing');
@@ -74,6 +74,17 @@ export default function CheckoutStep4() {
         deliveryZone: deliveryZone,
         platform: 'ecommerce',
         paymentMethod: paymentInfo.selectedMethod,
+        delivery: {
+          totalWeight: orderSummary.totalWeight,
+          calculatedDeliveryFee: orderSummary.totalWeight > 2 ? orderSummary.overweightCharge + orderSummary.shippingFee : orderSummary.shippingFee,
+          baseDeliveryFee: orderSummary.shippingFee,
+          additionalWeightCharge: orderSummary.overweightCharge,
+        },
+        subtotal: orderSummary.totalWeight > 2 ? orderSummary.grandTotal - (orderSummary.shippingFee + orderSummary.overweightCharge) : orderSummary.grandTotal - orderSummary.shippingFee,
+        tax: 0,
+        discount: 0,
+        finalAmount: orderSummary.grandTotal,
+        paidAmount: orderSummary.grandTotal,
       };
 
       // Additional validation for API requirements
@@ -90,7 +101,8 @@ export default function CheckoutStep4() {
 
       console.log(orderData);
 
-      const response = await createOrder(orderData);
+      // const response = await createOrder(orderData);
+      console.log("response", response);
 
       if (response.success) {
         // Save order response to store for use in result pages

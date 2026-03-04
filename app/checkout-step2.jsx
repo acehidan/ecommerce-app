@@ -31,8 +31,8 @@ export default function CheckoutStep2() {
 
     // TODO: Implement delivery data logic
   };
-
-  console.log("items", items);
+  console.log("deliveryData", deliveryData);
+  // console.log("items", items);
 
   useEffect(() => {
     if (deliveryZone) {
@@ -49,9 +49,9 @@ export default function CheckoutStep2() {
   // Calculate shipping fee (example: MMK 3,000)
   const shippingFee = deliveryData?.shippingFee || 0;
 
-  // Calculate overweight charge (example: MMK 2,000 for weights over 3KG)
+  // Calculate overweight charge (example: MMK 500 per incremental KG over 2KG)
   const overweightCharge =
-    totalWeight > 2 ? deliveryData?.overweightCharge : 0;
+    totalWeight > 2 ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0) : 0;
 
   // Calculate grand total
   const grandTotal = getTotalPrice() + shippingFee + overweightCharge;
@@ -71,15 +71,15 @@ export default function CheckoutStep2() {
     // Save order summary
     setOrderSummary({
       subtotal: getTotalPrice(),
-      shippingFee: deliveryData?.deliveryFee?.toLocaleString() || '0',
+      shippingFee: deliveryData?.deliveryFee || 0,
       overweightCharge: totalWeight > 2 ?
-        deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2) || 0
+        Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0)
         : 0,
       grandTotal:
         getTotalPrice() +
         deliveryData?.deliveryFee +
         (totalWeight > 2
-          ? deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2)
+          ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0)
           : 0),
       totalWeight,
     });
@@ -155,7 +155,7 @@ export default function CheckoutStep2() {
                 <Text style={styles.summaryValue}>
                   MMK{' '}
                   {(
-                    deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2) || 0
+                    totalWeight > 2 ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0) : 0
                   ).toLocaleString()}
                 </Text>
               </View>
@@ -169,7 +169,7 @@ export default function CheckoutStep2() {
                   getTotalPrice() +
                   deliveryData?.deliveryFee +
                   (totalWeight > 2
-                    ? deliveryData?.additionalWeightCharge * 2 * (totalWeight - 2)
+                    ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0)
                     : 0)
                 ).toLocaleString()}
               </Text>

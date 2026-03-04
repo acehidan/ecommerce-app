@@ -77,7 +77,7 @@ export default function OrderSuccess() {
               Status: {orderResponse.status}
             </Text>
             <Text style={styles.orderDetailsSubtitle}>
-              Total: MMK {orderResponse.totalAmount.toLocaleString()}
+              Total: MMK {orderResponse.totalAmount}
             </Text>
           </View>
         )}
