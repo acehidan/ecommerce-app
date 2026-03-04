@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, Pressable, BackHandler, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import colors from '../constants/colors';
 import { useCheckoutStore } from '../store/checkoutStore';
+import { getOrderDetail } from '../services/order/getOrderDetail';
+import { useState } from 'react';
 
 /**
  * Payment Result Screen
@@ -12,16 +14,65 @@ import { useCheckoutStore } from '../store/checkoutStore';
  */
 export default function PaymentResult() {
   const router = useRouter();
-  const { status, message } = useLocalSearchParams();
+  // const { status, message } = useLocalSearchParams();
   const { checkoutData } = useCheckoutStore();
-  console.log("checkoutData", checkoutData)
   const { orderResponse } = checkoutData;
-  console.log("order-response", orderResponse)
+
+  const [loading, setLoading] = useState(true);
+  const [currentStatus, setCurrentStatus] = useState('pending');
+  const [currentMessage, setCurrentMessage] = useState('');
+
+  const checkStatus = async (retryCount = 0) => {
+    try {
+      if (retryCount === 0) setLoading(true);
+
+      const response = await getOrderDetail(displayOrderId);
+
+      if (response.success) {
+        const orderStatus = response.data.status;
+        console.log(`Actual Order Status (Attempt ${retryCount + 1}):`, orderStatus);
+
+        if (orderStatus === 'confirm' || orderStatus === 'confirmed') {
+          // If confirmed, navigate to order success page
+          router.replace('/order-success');
+          return;
+        }
+
+        // Otherwise update display status
+        setCurrentStatus(orderStatus);
+
+        // If it's still pending and we haven't reached max retries, poll again
+        if (orderStatus === 'pending') {
+          if (retryCount < 20) {
+            setTimeout(() => checkStatus(retryCount + 1), 3000);
+            return;
+          } else {
+            setCurrentStatus('failed');
+            setCurrentMessage('ငွေပေးချေမှု အတည်ပြုချက် မရရှိသေးပါ။ ခဏစောင့်ဆိုင်းပြီး အော်ဒါမှတ်တမ်းတွင် ပြန်လည်စစ်ဆေးပေးပါ။');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error checking order status:', err);
+      // Only show error on final fail or critical error
+      if (retryCount >= 20) {
+        console.log("fail")
+        setCurrentStatus('failed');
+        setCurrentMessage(err.message || 'Error checking payment status');
+      } else {
+        setTimeout(() => checkStatus(retryCount + 1), 3000);
+        return;
+      }
+    } finally {
+      // Small delay before setting loading to false if we are not polling
+      setLoading(false);
+      console.log("loading false")
+    }
+  };
 
   // Use values from store as requested (since the deep link is only the base URL)
   const displayOrderId = orderResponse?.orderId;
   const displayAmount = orderResponse?.totalAmount;
-  const displayStatus = status || 'success';
 
   useEffect(() => {
     // Prevent hardware back button on Android to ensure user uses our navigation
@@ -32,13 +83,18 @@ export default function PaymentResult() {
 
     // Log for debugging
     console.log('--- Deep Link Received ---');
-    console.log('Status:', displayStatus);
     console.log('Order ID:', displayOrderId);
-    console.log('Amount:', displayAmount);
-    console.log('Message:', message);
+
+    if (displayOrderId) {
+      checkStatus();
+    } else {
+      setLoading(false);
+    }
 
     return () => backHandler.remove();
-  }, []);
+  }, [displayOrderId]);
+
+
 
   const handleNavigateHome = () => {
     // Replace to prevent going back to this screen
@@ -46,21 +102,16 @@ export default function PaymentResult() {
   };
 
   const getStatusConfig = () => {
-    switch (displayStatus) {
-      case 'success':
-        return {
-          icon: 'checkmark-circle',
-          color: colors.success.main,
-          title: 'ငွေပေးချေမှု အောင်မြင်ပါသည်',
-          subtitle: 'သင်၏ အော်ဒါကို အတည်ပြုပြီးပါပြီ။',
-          bgLight: colors.success.light,
-        };
+    switch (currentStatus) {
+      case 'confirm':
+      case 'confirmed':
       case 'failed':
+      case 'cancelled':
         return {
           icon: 'close-circle',
           color: colors.error.main,
           title: 'ငွေပေးချေမှု မအောင်မြင်ပါ',
-          subtitle: message || 'တစ်ခုခု မှားယွင်းနေပါသည်။ ထပ်မံကြိုးစားကြည့်ပါ။',
+          subtitle: currentMessage || 'တစ်ခုခု မှားယွင်းနေပါသည်။ ထပ်မံကြိုးစားကြည့်ပါ။',
           bgLight: colors.error.light,
         };
       case 'pending':
@@ -91,7 +142,11 @@ export default function PaymentResult() {
       <View style={styles.content}>
         {/* Status Icon */}
         <View style={[styles.iconContainer, { backgroundColor: config.bgLight }]}>
-          <Ionicons name={config.icon} size={80} color={config.color} />
+          {loading ? (
+            <ActivityIndicator size="large" color={config.color} />
+          ) : (
+            <Ionicons name={config.icon} size={80} color={config.color} />
+          )}
         </View>
 
         {/* Status Text */}
@@ -131,7 +186,7 @@ export default function PaymentResult() {
           <Text style={styles.primaryButtonText}>ပင်မစာမျက်နှာသို့ သွားမည်</Text>
         </Pressable>
 
-        {displayStatus === 'failed' && (
+        {(currentStatus === 'failed' || currentStatus === 'cancelled') && (
           <Pressable
             style={({ pressed }) => [
               styles.secondaryButton,

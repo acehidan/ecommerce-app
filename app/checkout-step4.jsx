@@ -19,6 +19,7 @@ import colors from '../constants/colors';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import PageHeader from './components/PageHeader';
 import * as WebBrowser from 'expo-web-browser';
+import OrderLoadingModal from './components/OrderLoadingModal';
 
 export default function CheckoutStep4() {
   const router = useRouter();
@@ -92,27 +93,31 @@ export default function CheckoutStep4() {
       const response = await createOrder(orderData);
 
       if (response.success) {
-        console.log("response.data", response.data);
         // Save order response to store for use in result pages
         useCheckoutStore.getState().setOrderResponse(response.data);
-
-        console.log("Order created successfully");
-
         // Handle KPAY payment redirection
         const kpayData = response.data?.kpay;
         if (kpayData && kpayData.result === 'SUCCESS') {
-
+          console.log("kpayData", kpayData);
           const { appid, merch_code, nonce_str, prepay_id, timestamp, sign } =
             kpayData;
           const redirectUrl = `https://komindiystore.com/kpay-redirect?appid=${appid}&merch_code=${merch_code}&nonce_str=${nonce_str}&prepay_id=${prepay_id}&timestamp=${timestamp}&sign=${sign}`;
-          console.log("redirectUrl", redirectUrl);
           try {
-            await WebBrowser.openBrowserAsync(redirectUrl);
             console.log("redirectUrl", redirectUrl);
+            await WebBrowser.openBrowserAsync(redirectUrl);
+            setTimeout(() => {
+              setIsCreatingOrder(false);
+              router.replace('/payment_result');
+            }, 2000);
+
           } catch (err) {
             console.error('Failed to open KPAY redirect URL:', err);
             Alert.alert('Error', 'Could not open KPAY payment page.');
           }
+        } else {
+          setIsCreatingOrder(false);
+          // Navigate to success page
+          router.replace('/order-success');
         }
 
         // Clear cart items and checkout data
@@ -124,6 +129,7 @@ export default function CheckoutStep4() {
         // router.replace('/order-success');
       }
     } catch (error) {
+      setIsCreatingOrder(false);
       console.error('Error creating order:', error);
 
       let errorMessage = 'Failed to create order. Please try again.';
@@ -163,8 +169,6 @@ export default function CheckoutStep4() {
           },
         },
       ]);
-    } finally {
-      setIsCreatingOrder(false);
     }
   };
 
@@ -283,7 +287,7 @@ export default function CheckoutStep4() {
               </Text>
             </View>
 
-            {orderSummary.totalWeight > 2 && (
+            {orderSummary?.totalWeight > 2 && (
               <View style={styles.summaryRow}>
                 <View style={styles.overweightRow}>
                   <Text style={styles.summaryLabel}>ဝန်ပိုကြေး</Text>
@@ -384,6 +388,7 @@ export default function CheckoutStep4() {
           )}
         </Pressable>
       </View>
+      <OrderLoadingModal visible={isCreatingOrder} />
     </SafeAreaView>
   );
 }
@@ -471,6 +476,7 @@ const styles = StyleSheet.create({
 
   },
   contactValue: {
+    width: 120,
     fontSize: 14,
     fontWeight: 'bold',
     color: colors.text.primary,

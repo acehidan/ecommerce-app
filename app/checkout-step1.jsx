@@ -443,6 +443,7 @@ const styles = StyleSheet.create({
 
   },
   contactValue: {
+    width: 120,
     fontSize: 14,
     fontWeight: 'bold',
     color: colors.text.primary,
@@ -473,7 +474,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addressTab: {
-    width: 49,
+    paddingHorizontal: 12,
     height: 42,
     justifyContent: 'center',
     alignItems: 'center',
@@ -481,9 +482,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border.light,
     borderRadius: 20,
     backgroundColor: '#E5E5E5',
+    opacity: 0.3,
   },
   addressTabActive: {
     backgroundColor: colors.background.secondary,
+    borderColor: colors.border.light,
+    opacity: 1,
   },
   addressTabText: {
     fontSize: 14,

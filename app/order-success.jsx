@@ -16,27 +16,27 @@ export default function OrderSuccess() {
 
   useEffect(() => {
     // Prevent hardware back button on Android
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
+    // const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
 
     // Prevent back navigation via gestures or header buttons
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      // If the action is a back action, prevent it
-      if (e.data.action.type === 'POP' || e.data.action.type === 'GO_BACK') {
-        e.preventDefault();
-      }
-    });
+    // const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+    //   // If the action is a back action, prevent it
+    //   if (e.data.action.type === 'POP' || e.data.action.type === 'GO_BACK') {
+    //     e.preventDefault();
+    //   }
+    // });
 
-    console.log(checkoutData);
+    // console.log(checkoutData);
     // Clear cart items and checkout data
     clearCart();
     clearCheckoutData();
     completeCheckout();
 
-    return () => {
-      backHandler.remove();
-      unsubscribe();
-    };
-  }, [navigation]);
+    // return () => {
+    //   // backHandler.remove();
+    //   // unsubscribe();
+    // };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
