@@ -4,7 +4,6 @@ import {
     Text,
     StyleSheet,
     ScrollView,
-    ImageBackground,
     ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -18,7 +17,6 @@ export default function OrderDetail() {
     const { id } = useLocalSearchParams();
     const [loading, setLoading] = useState(true);
     const [orderData, setOrderData] = useState(null);
-    const [activeTab, setActiveTab] = useState('payment');
     const [error, setError] = useState(null);
 
     // Fetch order detail from API

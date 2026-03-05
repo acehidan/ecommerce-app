@@ -7,7 +7,6 @@ import {
   ScrollView,
   Image,
   Alert,
-  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +19,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import PageHeader from './components/PageHeader';
 import * as WebBrowser from 'expo-web-browser';
 import OrderLoadingModal from './components/OrderLoadingModal';
+import Toast from 'react-native-toast-message';
 
 export default function CheckoutStep4() {
   const router = useRouter();
@@ -83,6 +83,8 @@ export default function CheckoutStep4() {
         paidAmount: orderSummary.grandTotal,
       };
 
+      console.log("orderData", orderData);
+
       // Additional validation for API requirements
 
       if (!orderData.products || orderData.products.length === 0) {
@@ -109,11 +111,6 @@ export default function CheckoutStep4() {
           try {
             console.log("redirectUrl", redirectUrl);
             await WebBrowser.openBrowserAsync(redirectUrl);
-            setTimeout(() => {
-              setIsCreatingOrder(false);
-              router.replace('/payment_result');
-            }, 500);
-
           } catch (err) {
             console.error('Failed to open KPAY redirect URL:', err);
             Alert.alert('Error', 'Could not open KPAY payment page.');
@@ -126,45 +123,11 @@ export default function CheckoutStep4() {
       }
     } catch (error) {
       setIsCreatingOrder(false);
-      console.error('Error creating order:', error);
-
-      let errorMessage = 'Failed to create order. Please try again.';
-
-      // Handle validation errors
-      if (error.message) {
-        errorMessage = error.message;
-      }
-      // Handle specific API error responses
-      else if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-
-        if (error.response.status === 400) {
-          errorMessage = 'Invalid order data. Please check your information.';
-          if (error.response.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.response.data?.error) {
-            errorMessage = error.response.data.error;
-          }
-        } else if (error.response.status === 401) {
-          errorMessage = 'Authentication required. Please login again.';
-        } else if (error.response.status === 500) {
-          errorMessage = 'Server error. Please try again later.';
-        }
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-        errorMessage = 'Network error. Please check your connection.';
-      }
-
-      Alert.alert('Error', errorMessage, [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Navigate back to step 4 on error
-            router.replace('/checkout-step4');
-          },
-        },
-      ]);
+      Toast.show({
+        type: 'info',
+        text1: 'Info',
+        text2: error.response.data.message,
+      });
     }
   };
 
@@ -673,7 +636,7 @@ const styles = StyleSheet.create({
   itemQuantity: {
     fontSize: 14,
     color: colors.text.primary,
-    width: "10%"
+    width: "8%"
   },
   itemDetails: {
     flex: 1,

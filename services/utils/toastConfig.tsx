@@ -1,80 +1,87 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
+
+const ToastBase = ({ icon, color, text1, text2, borderColor }) => (
+  <View style={[styles.toastContainer, { borderLeftColor: borderColor }]}>
+    <View style={styles.iconWrapper}>
+      <Ionicons name={icon} size={24} color={color} />
+    </View>
+    <View style={styles.contentWrapper}>
+      {text1 && <Text style={styles.titleText}>{text1}</Text>}
+      {text2 && <Text style={styles.messageText}>{text2}</Text>}
+    </View>
+  </View>
+);
 
 export const toastConfig = {
   success: ({ text1, text2 }) => (
-    <View style={styles.successToast}>
-      <View style={styles.toastIconContainer}>
-        <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-      </View>
-      <View style={styles.toastTextContainer}>
-        {/* <Text style={styles.toastTitle}>{text1}</Text> */}
-        {text2 && <Text style={styles.toastMessage}>{text2}</Text>}
-      </View>
-    </View>
+    <ToastBase
+      icon="checkmark-circle"
+      color="#10B981"
+      borderColor="#10B981"
+      text1={text1}
+      text2={text2}
+    />
   ),
   error: ({ text1, text2 }) => (
-    <View style={styles.errorToast}>
-      <View style={styles.toastIconContainer}>
-        <Ionicons name="close-circle" size={24} color="#F44336" />
-      </View>
-      <View style={styles.toastTextContainer}>
-        <Text style={styles.toastTitle}>{text1}</Text>
-        {text2 && <Text style={styles.toastMessage}>{text2}</Text>}
-      </View>
-    </View>
+    <ToastBase
+      icon="close-circle"
+      color="#EF4444"
+      borderColor="#EF4444"
+      text1={text1}
+      text2={text2}
+    />
+  ),
+  info: ({ text1, text2 }) => (
+    <ToastBase
+      icon="information-circle"
+      color="#3B82F6"
+      borderColor="#3B82F6"
+      text1={text1}
+      text2={text2}
+    />
   ),
 };
 
 const styles = StyleSheet.create({
-  successToast: {
+  toastContainer: {
+    width: width - 32,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F5E8',
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
-    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     paddingVertical: 12,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  errorToast: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFEBEE',
-    borderLeftWidth: 4,
-    borderLeftColor: '#F44336',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    borderRadius: 8,
+    borderLeftWidth: 6,
+    // Shadow for iOS
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 12,
+    // Elevation for Android
+    elevation: 6,
   },
-  toastIconContainer: {
+  iconWrapper: {
     marginRight: 12,
   },
-  toastTextContainer: {
+  contentWrapper: {
     flex: 1,
+    justifyContent: 'center',
   },
-  toastTitle: {
+  titleText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
+    fontWeight: '700',
+    color: '#1F2937',
+    fontFamily: 'NotoSansMyanmar-Regular',
     marginBottom: 2,
   },
-  toastMessage: {
+  messageText: {
     fontSize: 14,
-    color: '#666666',
-    lineHeight: 18,
+    color: '#4B5563',
+    fontFamily: 'NotoSansMyanmar-Regular',
+    lineHeight: 20,
   },
 });

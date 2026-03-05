@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -27,9 +28,6 @@ export default function Search() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
 
@@ -56,7 +54,11 @@ export default function Search() {
 
   const handleSearch = async () => {
     if (!itemName.trim() && !selectedCategory) {
-      Alert.alert('Please enter a search query');
+      Toast.show({
+        type: 'error',
+        text1: 'ရှာဖွေမှု အမှား',
+        text2: 'ရှာဖွေလိုသည့် အမည် သို့မဟုတ် အမျိုးအစားကို ရွေးချယ်ပါ',
+      });
       return;
     }
 
@@ -72,12 +74,6 @@ export default function Search() {
     });
   };
 
-  const clearSearch = () => {
-    setItemName('');
-    setSelectedCategory('');
-    setSearchResults([]);
-    setHasSearched(false);
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,6 +99,14 @@ export default function Search() {
               onChangeText={setItemName}
               placeholderTextColor="#999999"
             />
+            {itemName ? (
+              <TouchableOpacity
+                onPress={() => setItemName('')}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close-circle" size={18} color={colors.text.icons} />
+              </TouchableOpacity>
+            ) : null}
           </View>
         </View>
 
@@ -112,23 +116,48 @@ export default function Search() {
             <MaterialIcons name="category" size={20} color={colors.text.icons} />
             <Text style={styles.fieldLabel}>ပစ္စည်းအမျိုးအစား</Text>
           </View>
-          <Pressable
-            style={styles.inputContainer}
-            onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
-          >
-            <Text
-              style={
-                selectedCategory ? styles.selectedText : styles.placeholderText
-              }
+          <View style={styles.inputContainer}>
+            <Pressable
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginTop: 10 }}
+              onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
             >
-              {selectedCategory || 'ရှာလိုတဲ့ ပစ္စည်းအမျိုးအစားကို ရွေးချယ်ပါ'}
-            </Text>
-            <Ionicons name="chevron-down" size={20} color={colors.text.icons} />
-          </Pressable>
+              <Text
+                style={[
+                  selectedCategory ? styles.selectedText : styles.placeholderText,
+                  { flex: 1 }
+                ]}
+              >
+                {selectedCategory || 'ရှာလိုတဲ့ ပစ္စည်းအမျိုးအစားကို ရွေးချယ်ပါ'}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {selectedCategory ? (
+                  <TouchableOpacity
+                    onPress={() => setSelectedCategory('')}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    style={{ marginRight: 8 }}
+                  >
+                    <Ionicons name="close-circle" size={20} color={colors.text.icons} />
+                  </TouchableOpacity>
+                ) : null}
+                <Ionicons name="chevron-down" size={20} color={colors.text.icons} />
+              </View>
+            </Pressable>
+          </View>
 
           {showCategoryDropdown && (
             <View style={styles.dropdownContainer}>
               <ScrollView style={styles.dropdownScroll}>
+                <Pressable
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setSelectedCategory('');
+                    setShowCategoryDropdown(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownItemText, { color: colors.text.muted }]}>
+                    အမျိုးအစား အားလုံး (All Categories)
+                  </Text>
+                </Pressable>
                 {categories.map((category) => (
                   <Pressable
                     key={category.id}
@@ -152,16 +181,11 @@ export default function Search() {
         <TouchableOpacity
           style={[
             styles.searchButton,
-            isSearching && styles.searchButtonDisabled,
+
           ]}
           onPress={handleSearch}
-          disabled={isSearching}
         >
-          {isSearching ? (
-            <Text style={styles.searchButtonText}>ရှာဖွေနေသည်...</Text>
-          ) : (
-            <Text style={styles.searchButtonText}>ပစ္စည်းရှာမယ်</Text>
-          )}
+          <Text style={styles.searchButtonText}>ပစ္စည်းရှာမယ်</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -204,6 +228,7 @@ const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 24,
     borderRadius: 12,
+    height: 120,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border.light,
@@ -263,6 +288,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dropdownContainer: {
+
     backgroundColor: colors.background.primary,
     borderRadius: 12,
     borderWidth: 1,

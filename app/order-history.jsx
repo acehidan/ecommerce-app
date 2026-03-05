@@ -14,12 +14,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { getOrderHistory, Order } from '../services/order/getOrderHistory';
+import { getOrderDetail } from '../services/order/getOrderDetail';
+import handleGetProductById from '../services/products/getProductById';
 import { useAuthStore } from '../store/authStore';
+import { useCartStore } from '../store/cartStore';
 import colors from '../constants/colors';
 import PageHeader from './components/PageHeader';
+import Toast from 'react-native-toast-message';
 
 export default function OrderHistory() {
   const { user, token } = useAuthStore();
+  const { addItem } = useCartStore();
   const [orders, setOrders] = useState([]);
   const [allOrders, setAllOrders] = useState([]); // Store all orders for filtering
   const [loading, setLoading] = useState(true);
@@ -179,8 +184,93 @@ export default function OrderHistory() {
     );
   };
 
-  const handleReorder = (orderId) => {
-    Alert.alert('အော်ဒါ ပြန်မှာမယ်', `အော်ဒါ #${orderId} ကို ပြန်မှာမယ်`);
+  const handleReorder = async (orderId) => {
+    try {
+      console.log('Starting reorder for orderId:', orderId);
+      Toast.show({
+        type: 'info',
+        text1: 'လုပ်ဆောင်နေပါသည်',
+        text2: 'ပစ္စည်းများကို လှည်းထဲသို့ ထည့်နေပါသည်...',
+        autoHide: false,
+      });
+
+      const orderResponse = await getOrderDetail(orderId);
+      console.log('Order Details Response:', orderResponse);
+
+      if (!orderResponse.success || !orderResponse.data) {
+        throw new Error(orderResponse.message || 'Failed to fetch order details');
+      }
+
+      const products = orderResponse.data.products;
+      console.log('Products to reorder:', products);
+
+      let addedCount = 0;
+
+      // Add each product to cart
+      for (const item of products) {
+        try {
+          console.log(`Fetching details for stockId: ${item.productCode}`);
+          // Fetch full product details to get current price and images
+          const productResponse = await handleGetProductById(item.productCode);
+
+          if (productResponse.success && productResponse.data) {
+            // Check structured data based on ProductDetail usage: result.data.data.data
+            const productData = productResponse.data.data?.data || productResponse.data.data;
+            console.log(`Product data for ${item.productCode}:`, productData);
+
+            if (productData) {
+              const cartItem = {
+                id: productData._id,
+                productCode: productData.productCode || productData._id,
+                name: productData.name,
+                price: productData.retailUnitPrice,
+                image: productData.images?.[0]?.url || 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg',
+                retailUnitPrice: productData.retailUnitPrice,
+                wholeSale: productData.wholeSale || [],
+                unitWeight: productData.unitWeight || 0,
+              };
+
+              const qty = Number(item.quantity) || 1;
+              console.log('Adding to cart:', cartItem, 'Quantity:', qty);
+
+              addItem(cartItem, qty);
+              addedCount++;
+            }
+          } else {
+            console.warn(`Could not fetch details for product ${item.stockId}`);
+          }
+        } catch (itemErr) {
+          console.error(`Error adding item ${item.stockId} to cart:`, itemErr);
+        }
+      }
+
+      Toast.hide();
+
+      if (addedCount > 0) {
+        Toast.show({
+          type: 'success',
+          text1: 'အောင်မြင်ပါသည်',
+          text2: `${addedCount} မျိုးကို လှည်းထဲသို့ ထည့်ပြီးပါပြီ`,
+        });
+
+        console.log('Reorder complete, added', addedCount, 'items. Navigating to cart...');
+
+        // Use a small timeout to ensure state propagation in some React Native environments
+        setTimeout(() => {
+          router.push('/(tabs)/cart');
+        }, 100);
+      } else {
+        throw new Error('No products could be added to the cart.');
+      }
+    } catch (err) {
+      console.error('Reorder error:', err);
+      Toast.hide();
+      Toast.show({
+        type: 'error',
+        text1: 'အမှားဖြစ်သွားပါသည်',
+        text2: err.message || 'ပြန်လည်မှာယူရန် အဆင်မပြေပါ',
+      });
+    }
   };
 
   const handleOrderDetails = (orderId) => {
@@ -295,7 +385,7 @@ export default function OrderHistory() {
             </View>
             <View style={styles.summaryCardContent}>
               <Text style={styles.summaryValue}>
-                MMK {totalAmount.toLocaleString()}
+                MMK {totalAmount?.toLocaleString()}
               </Text>
             </View>
           </View>
@@ -380,9 +470,7 @@ export default function OrderHistory() {
                         </Text> */}
                       </View>
                     </View>
-                    <Text style={styles.orderAmount}>
-                      MMK {order.totalAmount.toLocaleString()}
-                    </Text>
+
                   </View>
                   <View style={styles.orderActions}>
                     <Pressable
@@ -689,6 +777,7 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   orderList: {
+    minHeight: 500,
     paddingHorizontal: 20,
     paddingVertical: 20,
     backgroundColor: colors.background.secondary,
@@ -749,6 +838,7 @@ const styles = StyleSheet.create({
   },
   orderActions: {
     flexDirection: 'row',
+    gap: 10,
   },
   reorderButton: {
     flex: 1,

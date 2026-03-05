@@ -89,7 +89,7 @@ export default function OrderSuccess() {
           style={styles.orderDetailsButton}
           onPress={() => {
             // Navigate to order details page
-            console.log('Navigate to order details');
+            router.push('/order-history');
           }}
         >
           <Text style={styles.orderDetailsButtonText}>အော်ဒါအသေးစိတ်</Text>

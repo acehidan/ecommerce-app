@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   itemQuantity: {
     fontSize: 14,
     color: '#666666',
-    width: 50,
+    width: "8%"
   },
   itemDetails: {
     flex: 1,
