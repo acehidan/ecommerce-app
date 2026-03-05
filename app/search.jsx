@@ -125,6 +125,9 @@ export default function Search() {
             ? item.images[0].url
             : 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg'
         }
+        isDiscounted={item.isDiscounted}
+        discountPercentage={item.discountPercentage}
+        tags={item.tags}
         onPress={handleProductPress}
       />
     </View>

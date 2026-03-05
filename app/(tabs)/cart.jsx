@@ -19,19 +19,12 @@ import PageHeader from '../components/PageHeader';
 export default function Cart() {
   const router = useRouter();
   const { items, updateQuantity, getTotalPrice } = useCartStore();
-  const { isAuthenticated, user } = useAuthStore();
+  console.log('items', items);
+  const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
   // Check if user needs to authenticate (no user object means guest or not authenticated)
   const needsAuth = !user;
-
-  // Debug log
-  console.log('Cart - Auth state:', {
-    isAuthenticated,
-    hasUser: !!user,
-    needsAuth,
-  });
-
   // Show auth modal for users who need to authenticate
   if (needsAuth) {
     return (

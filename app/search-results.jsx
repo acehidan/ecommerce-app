@@ -1,10 +1,10 @@
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   ActivityIndicator,
 } from 'react-native';
+// import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -73,6 +73,9 @@ export default function SearchResults() {
             ? item.images[0].url
             : 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg'
         }
+        isDiscounted={item.isDiscounted}
+        discountPercentage={item.discountPercentage}
+        tags={item.tags}
         onPress={() => handleProductPress(item.productCode)}
       />
     </View>

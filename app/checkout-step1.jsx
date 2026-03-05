@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    paddingLeft: 26,
+    paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: colors.border.light,
@@ -443,7 +443,6 @@ const styles = StyleSheet.create({
 
   },
   contactValue: {
-    width: 120,
     fontSize: 14,
     fontWeight: 'bold',
     color: colors.text.primary,
@@ -525,7 +524,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     height: 127,
     flexDirection: 'column',
-    paddingLeft: 20,
+    paddingHorizontal: 20,
     justifyContent: 'center',
     backgroundColor: colors.background.secondary,
     borderWidth: 2,

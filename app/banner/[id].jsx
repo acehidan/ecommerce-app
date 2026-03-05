@@ -64,6 +64,9 @@ export default function BannerProducts() {
             stockQuantity: item.stockQuantity,
             description: item.description,
             category: item.category,
+            isDiscounted: item.isDiscounted,
+            discountPercentage: item.discountPercentage,
+            tags: item.tags,
           }));
 
           setProducts(transformedProducts);
@@ -121,6 +124,9 @@ export default function BannerProducts() {
         name={item.name}
         price={item.price}
         image={item.image}
+        isDiscounted={item.isDiscounted}
+        discountPercentage={item.discountPercentage}
+        tags={item.tags}
         onPress={() => handleProductPress(item.productCode)}
       />
     </View>

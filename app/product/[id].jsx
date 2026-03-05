@@ -44,6 +44,7 @@ export default function ProductDetail() {
         setLoading(true);
         const result = await handleGetProductById(id);
         if (result.success) {
+          console.log('product', result.data.data.data);
           setProduct(result.data.data.data);
           // console.log('product', result.data.data.data);
         } else {
@@ -67,36 +68,6 @@ export default function ProductDetail() {
     }
   }, [items, id]);
 
-  // Calculate unit price based on quantity and wholesale tiers
-  const getUnitPrice = (qty) => {
-    if (!product || qty === 0) return 0;
-
-    // If quantity is 1, use retail price
-    if (qty === 1) {
-      return product.retailUnitPrice;
-    }
-
-    // Check if wholesale tiers exist
-    if (product.wholeSale && product.wholeSale.length > 0) {
-      // Sort wholesale tiers by quantity (descending) to find the best match
-      const sortedWholesale = [...product.wholeSale].sort(
-        (a, b) => b.wholeSaleQuantity - a.wholeSaleQuantity,
-      );
-
-      // Find the highest wholesale tier that the quantity qualifies for
-      const matchingTier = sortedWholesale.find(
-        (tier) => qty >= tier.wholeSaleQuantity,
-      );
-
-      // If quantity qualifies for wholesale, use wholesale price
-      if (matchingTier) {
-        return matchingTier.wholeSaleUnitPrice;
-      }
-    }
-
-    // Default to retail price if no wholesale tier matches
-    return product.retailUnitPrice;
-  };
 
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
@@ -118,11 +89,11 @@ export default function ProductDetail() {
             id: product._id,
             productCode: product.productCode,
             name: product.name,
-            price: product.retailUnitPrice, // Will be recalculated in store
             image: product.images?.[0]?.url || '',
-            retailUnitPrice: product.retailUnitPrice,
+            retailUnitPrice: product.isDiscounted ? product.retailUnitPrice - (product.retailUnitPrice * (product.discountPercentage / 100)) : product.retailUnitPrice,
             wholeSale: product.wholeSale || [],
             unitWeight: product.unitWeight || 0,
+
           },
           selectedQuantity,
         );
@@ -219,6 +190,24 @@ export default function ProductDetail() {
               ? product.images.map((_, index) => renderImageIndicator(index))
               : renderImageIndicator(0)}
           </View>
+
+          {/* Discount Badge */}
+          {product.isDiscounted && product.discountPercentage > 0 && (
+            <View style={styles.discountBadge}>
+              <Text style={styles.discountText}>-{product.discountPercentage}%</Text>
+            </View>
+          )}
+
+          {/* Tags */}
+          {product.tags && product.tags.length > 0 && (
+            <View style={styles.tagsContainer}>
+              {product.tags.slice(0, 2).map((tag, index) => (
+                <View key={index} style={styles.tagBadge}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         <View style={styles.descriptionContainer}>
@@ -237,10 +226,10 @@ export default function ProductDetail() {
             <Text style={styles.specValue}>{product.productCode}</Text>
           </View> */}
 
-          <View style={styles.specsItem}>
+          {/* <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>လက်ကျန် အရေအတွက်</Text>
             <Text style={styles.specValue}>{product.stockQuantity}</Text>
-          </View>
+          </View> */}
 
           <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>အလေးချိန်</Text>
@@ -251,7 +240,20 @@ export default function ProductDetail() {
 
           <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>ဈေးနှုန်း</Text>
-            <Text style={styles.specValue}>MMK {product?.retailUnitPrice}</Text>
+            <View style={styles.priceContainer}>
+              {product.isDiscounted && product.discountPercentage > 0 ? (
+                <>
+                  <Text style={styles.specValueDiscounted}>
+                    MMK {(product.retailUnitPrice - (product.retailUnitPrice * (product.discountPercentage / 100))).toLocaleString()}
+                  </Text>
+                  <Text style={styles.specValueOriginal}>
+                    MMK {product?.retailUnitPrice?.toLocaleString()}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.specValue}>MMK {product?.retailUnitPrice?.toLocaleString()}</Text>
+              )}
+            </View>
           </View>
         </View>
 
@@ -555,5 +557,53 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginTop: 16,
     fontWeight: '600',
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: colors.error || '#FF3B30',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  discountText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  tagsContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tagBadge: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  tagText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+  },
+  priceContainer: {
+    alignItems: 'flex-end',
+  },
+  specValueDiscounted: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  specValueOriginal: {
+    fontSize: 12,
+    color: colors.text.muted,
+    textDecorationLine: 'line-through',
+    marginTop: 2,
   },
 });

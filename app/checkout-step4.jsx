@@ -35,10 +35,9 @@ export default function CheckoutStep4() {
   // Get selected payment method from checkout store or default to prepayment
   const selectedPaymentMethod = paymentInfo?.selectedMethod;
 
-  // console.log("orderSummary", orderSummary);
+
 
   const handleCreateOrder = async () => {
-    // setIsCreatingOrder(true);
     let deliveryZone = addressInfo.deliveryZone;
     if (!user) {
       Alert.alert('Error', 'User not authenticated');
@@ -51,9 +50,6 @@ export default function CheckoutStep4() {
     }
 
     setIsCreatingOrder(true);
-
-    // Navigate to loading page
-    // router.push('/order-processing');
 
     try {
       if (!orderItems || orderItems.length === 0) {
@@ -99,10 +95,7 @@ export default function CheckoutStep4() {
         throw new Error('Delivery zone is required');
       }
 
-      console.log(orderData);
-
-      // const response = await createOrder(orderData);
-      console.log("response", response);
+      const response = await createOrder(orderData);
 
       if (response.success) {
         // Save order response to store for use in result pages
@@ -110,7 +103,6 @@ export default function CheckoutStep4() {
         // Handle KPAY payment redirection
         const kpayData = response.data?.kpay;
         if (kpayData && kpayData.result === 'SUCCESS') {
-          console.log("kpayData", kpayData);
           const { appid, merch_code, nonce_str, prepay_id, timestamp, sign } =
             kpayData;
           const redirectUrl = `https://komindiystore.com/kpay-redirect?appid=${appid}&merch_code=${merch_code}&nonce_str=${nonce_str}&prepay_id=${prepay_id}&timestamp=${timestamp}&sign=${sign}`;
@@ -120,7 +112,7 @@ export default function CheckoutStep4() {
             setTimeout(() => {
               setIsCreatingOrder(false);
               router.replace('/payment_result');
-            }, 2000);
+            }, 500);
 
           } catch (err) {
             console.error('Failed to open KPAY redirect URL:', err);
@@ -131,14 +123,6 @@ export default function CheckoutStep4() {
           // Navigate to success page
           router.replace('/order-success');
         }
-
-        // Clear cart items and checkout data
-        // clearCart();
-        // clearCheckoutData();
-        // completeCheckout();
-
-        // Navigate to success page
-        // router.replace('/order-success');
       }
     } catch (error) {
       setIsCreatingOrder(false);

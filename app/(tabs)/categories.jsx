@@ -17,6 +17,7 @@ import SearchBar from '../components/SearchBar';
 import handleGetAllCategory from '../../services/products/getAllCategory';
 import colors from '../../constants/colors';
 import LoadingState from '../components/LoadingState';
+// import { FlashList } from '@shopify/flash-list';
 
 /**
  * Sub-component for individual category items

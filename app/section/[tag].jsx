@@ -17,18 +17,10 @@ import ProductCard from '../components/ProductCard';
 import PageHeader from '../components/PageHeader';
 import SearchBar from '../components/SearchBar';
 import LoadingState from '../components/LoadingState';
-import handleGetByCategory from '../../services/products/getByCategory';
+import handleGetByTag from '../../services/products/getByTag';
+import getSectionTitle from '../../utils/getSectionTitle';
 import colors from '../../constants/colors';
 
-const CATEGORY_TITLES = {
-  capacitor: 'Capacitor များ',
-  'diy-decoration-kits': 'D.I.Y အလှဆင် Kits များ',
-  electronics: 'Electronics',
-};
-
-/**
- * Sub-component for empty search results
- */
 const EmptyState = React.memo(() => (
   <View style={styles.emptyContainer}>
     <Ionicons name="search-outline" size={64} color={colors.text.muted} />
@@ -58,16 +50,16 @@ export default function Collection() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { category } = useLocalSearchParams();
-  const title = `${category} များ` || 'Collection';
+  const { tag } = useLocalSearchParams();
+  const title = getSectionTitle(tag) || 'Collection';
 
-  const fetchProductsByCategory = useCallback(async () => {
-    if (!category) return;
+  const fetchProductsBytag = useCallback(async () => {
+    if (!tag) return;
 
     try {
       setIsLoading(true);
       setError(null);
-      const response = await handleGetByCategory(category);
+      const response = await handleGetByTag(tag);
 
       if (response.success) {
         const transformedProducts = (response.data?.data?.data || []).map((item) => ({
@@ -78,7 +70,7 @@ export default function Collection() {
           productCode: item.productCode,
           stockQuantity: item.stockQuantity,
           description: item.description,
-          category: item.category,
+          tag: item.tag,
           isDiscounted: item.isDiscounted,
           discountPercentage: item.discountPercentage,
           tags: item.tags,
@@ -92,11 +84,11 @@ export default function Collection() {
     } finally {
       setIsLoading(false);
     }
-  }, [category]);
+  }, [tag]);
 
   useEffect(() => {
-    fetchProductsByCategory();
-  }, [fetchProductsByCategory]);
+    fetchProductsBytag();
+  }, [fetchProductsBytag]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -141,7 +133,7 @@ export default function Collection() {
         <ErrorState
           headerHeight={headerHeight}
           error={error}
-          onRetry={fetchProductsByCategory}
+          onRetry={fetchProductsBytag}
         />
       ) : (
         <View style={{ paddingTop: headerHeight, flex: 1 }}>

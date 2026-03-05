@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import colors from '../constants/colors';
 import { useCheckoutStore } from '../store/checkoutStore';
 import { getOrderDetail } from '../services/order/getOrderDetail';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 /**
  * Payment Result Screen
@@ -22,7 +22,11 @@ export default function PaymentResult() {
   const [currentStatus, setCurrentStatus] = useState('pending');
   const [currentMessage, setCurrentMessage] = useState('');
 
+  const isNavigating = useRef(false);
+  const hasFetched = useRef(false);
+
   const checkStatus = async (retryCount = 0) => {
+    if (isNavigating.current) return;
     try {
       if (retryCount === 0) setLoading(true);
 
@@ -33,6 +37,7 @@ export default function PaymentResult() {
         console.log(`Actual Order Status (Attempt ${retryCount + 1}):`, orderStatus);
 
         if (orderStatus === 'confirm' || orderStatus === 'confirmed') {
+          isNavigating.current = true;
           // If confirmed, navigate to order success page
           router.replace('/order-success');
           return;
@@ -64,9 +69,11 @@ export default function PaymentResult() {
         return;
       }
     } finally {
-      // Small delay before setting loading to false if we are not polling
-      setLoading(false);
-      console.log("loading false")
+      if (!isNavigating.current) {
+        // Small delay before setting loading to false if we are not polling
+        setLoading(false);
+        console.log("loading false");
+      }
     }
   };
 
@@ -86,13 +93,16 @@ export default function PaymentResult() {
     console.log('Order ID:', displayOrderId);
 
     if (displayOrderId) {
-      checkStatus();
+      if (!hasFetched.current) {
+        hasFetched.current = true;
+        checkStatus();
+      }
     } else {
       setLoading(false);
     }
 
     return () => backHandler.remove();
-  }, [displayOrderId]);
+  }, []);
 
 
 
@@ -103,8 +113,6 @@ export default function PaymentResult() {
 
   const getStatusConfig = () => {
     switch (currentStatus) {
-      case 'confirm':
-      case 'confirmed':
       case 'failed':
       case 'cancelled':
         return {

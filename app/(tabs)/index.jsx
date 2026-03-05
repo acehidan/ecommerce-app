@@ -13,12 +13,17 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import PageHeader from '../components/PageHeader';
 import SearchBar from '../components/SearchBar';
 import PromotionalBanner from '../components/PromotionalBanner';
 import CategoriesSection from '../components/CategoriesSection';
-import NewArrivals from '../components/NewArrivals';
+import ProductSection from '../components/ProductSection';
+import handleGetTags from '../../services/products/getTags';
+import handleGetProductsByTag from '../../services/products/getProductsByTag';
+import handleGetDiscountedProducts from '../../services/products/getDiscountedProducts';
 import colors from '../../constants/colors';
+import getSectionTitle from '../../utils/getSectionTitle';
 
 // --- Constants ---
 const NAVBAR_HEIGHT = 80;
@@ -29,6 +34,15 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Fetch Tags
+  const { data: tagsData, isLoading: isLoadingTags, refetch: refetchTags } = useQuery({
+    queryKey: ['product-tags'],
+    queryFn: handleGetTags,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const tags = tagsData?.data || [];
 
   // Use a ref to track how many components are currently loading
   const loadingCountRef = useRef(0);
@@ -70,6 +84,7 @@ export default function Home() {
 
     // Trigger a refresh across all components
     setRefreshTrigger((prev) => prev + 1);
+    refetchTags();
 
     // Safety timeout: stop the spinner after 10 seconds
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -77,7 +92,7 @@ export default function Home() {
       setRefreshing(false);
       console.warn('Refresh timed out');
     }, 10000);
-  }, []);
+  }, [refetchTags]);
 
   const bottomPadding = TABBAR_FIXED_HEIGHT + insets.bottom + 16;
 
@@ -133,11 +148,28 @@ export default function Home() {
           onLoadingChange={handleLoadingChange}
         />
 
-        {/* New Products - reports loading state to sync with refreshControl */}
-        <NewArrivals
+        {/* Discounted Products Section */}
+        <ProductSection
+          title={getSectionTitle('discount')}
+          queryKey={['products-discounted']}
+          fetchDataFn={handleGetDiscountedProducts}
+          onSeeAllPress={() => router.push(`/section/discount`)}
           refreshTrigger={refreshTrigger}
           onLoadingChange={handleLoadingChange}
         />
+
+        {/* Dynamic Product Sections based on Tags */}
+        {tags?.map((tag) => (
+          <ProductSection
+            key={tag}
+            title={getSectionTitle(tag)}
+            queryKey={['products-by-tag', tag]}
+            fetchDataFn={() => handleGetProductsByTag(tag)}
+            onSeeAllPress={() => router.push(`/section/${tag}`)}
+            refreshTrigger={refreshTrigger}
+            onLoadingChange={handleLoadingChange}
+          />
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
