@@ -190,7 +190,7 @@ export default function OrderHistory() {
       Toast.show({
         type: 'info',
         text1: 'လုပ်ဆောင်နေပါသည်',
-        text2: 'ပစ္စည်းများကို လှည်းထဲသို့ ထည့်နေပါသည်...',
+        text2: 'ပစ္စည်းများကို cart ထဲသို့ ထည့်နေပါသည်...',
         autoHide: false,
       });
 
@@ -250,7 +250,7 @@ export default function OrderHistory() {
         Toast.show({
           type: 'success',
           text1: 'အောင်မြင်ပါသည်',
-          text2: `${addedCount} မျိုးကို လှည်းထဲသို့ ထည့်ပြီးပါပြီ`,
+          text2: `${addedCount} မျိုးကို cart ထဲသို့ ထည့်ပြီးပါပြီ`,
         });
 
         console.log('Reorder complete, added', addedCount, 'items. Navigating to cart...');

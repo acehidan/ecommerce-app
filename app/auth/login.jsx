@@ -91,9 +91,9 @@ export default function LoginScreen() {
     }
   };
 
-  const handleForgotPasswordPress = () => {
-    router.push('/auth/forgot-password');
-  };
+  // const handleForgotPasswordPress = () => {
+  //   router.push('/auth/forgot-password');
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -152,6 +152,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="09xxxxxxxx"
+                  placeholderTextColor="#666"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
                   keyboardType="phone-pad"
@@ -175,6 +176,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="873614@"
+                  placeholderTextColor="#666"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -303,6 +305,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#333',
+    paddingVertical: 10,
   },
   inputLabel: {
     fontSize: 14,

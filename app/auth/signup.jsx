@@ -160,6 +160,7 @@ export default function SignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="အကောင့်နာမည် ရိုက်ထည့်ပါ"
+                  placeholderTextColor="#666"
                   value={name}
                   onChangeText={setName}
                 />
@@ -182,6 +183,7 @@ export default function SignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="09 783742004"
+                  placeholderTextColor="#666"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
                   keyboardType="phone-pad"
@@ -205,6 +207,7 @@ export default function SignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="873614@"
+                  placeholderTextColor="#666"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}

@@ -221,10 +221,10 @@ export default function ProductDetail() {
             <Text style={styles.specValue}>{product.category}</Text>
           </View>
 
-          {/* <View style={styles.specsItem}>
-            <Text style={styles.specsTitle}>ပစ္စည်းကုဒ်</Text>
-            <Text style={styles.specValue}>{product.productCode}</Text>
-          </View> */}
+          <View style={styles.specsItem}>
+            <Text style={styles.specsTitle}>သိုလှောင်မှု</Text>
+            <Text style={styles.specValue}>{product.onSale ? "ပစ္စည်းရှိ" : "Store in"}</Text>
+          </View>
 
           {/* <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>လက်ကျန် အရေအတွက်</Text>
@@ -279,17 +279,20 @@ export default function ProductDetail() {
       <View style={styles.bottomBar}>
         <View style={styles.quantitySelector}>
           <Pressable
-            style={styles.quantityButton}
+            style={[styles.quantityButton, (quantity === 0) && styles.quantityButtonDisabled]}
             onPress={() => handleQuantityChange(-1)}
+            disabled={quantity === 0}
           >
-            <Ionicons name="remove" size={20} color="#000000" />
+            <Ionicons name="remove" size={20} color={quantity === 0 ? "#CCCCCC" : "#000000"} />
           </Pressable>
           <Text style={styles.quantityText}>{quantity} ခု</Text>
           <Pressable
-            style={styles.quantityButton}
+            style={[styles.quantityButton, (product.onSale === false || quantity === product.stockQuantity) && styles.quantityButtonDisabled]}
             onPress={() => handleQuantityChange(1)}
+            disabled={product.onSale === false || quantity === product.stockQuantity}
+
           >
-            <Ionicons name="add" size={20} color="#000000" />
+            <Ionicons name="add" size={20} color={(product.onSale === false || quantity === product.stockQuantity) ? "#CCCCCC" : "#000000"} />
           </Pressable>
         </View>
         <Pressable
@@ -480,7 +483,7 @@ const styles = StyleSheet.create({
   quantityButton: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 50,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -489,6 +492,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  quantityButtonDisabled: {
+    backgroundColor: '#F5F5F5',
+    elevation: 0,
+    shadowOpacity: 0,
+    borderColor: '#EFEFEF',
+    borderWidth: 1,
   },
   quantityText: {
     fontSize: 16,

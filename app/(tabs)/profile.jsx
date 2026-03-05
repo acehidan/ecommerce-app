@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Alert,
 } from 'react-native';
 import {
   SafeAreaView,
@@ -17,11 +16,14 @@ import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import PageHeader from '../components/PageHeader';
 import AuthRequiredModal from '../components/AuthRequiredModal';
+import LogoutConfirmModal from '../components/LogoutConfirmModal';
+import { useState } from 'react';
 
 export default function Profile() {
   const wishlistItems = useWishlistStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
   const { isAuthenticated, user, logout } = useAuthStore();
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
   // Check if user needs to authenticate (no user object means guest or not authenticated)
@@ -35,26 +37,18 @@ export default function Profile() {
   });
 
   const handleLogout = () => {
-    Alert.alert('အကောင့်မှထွက်မယ်', 'သင်အကောင့်မှထွက်ရန်သေချာပါသလား?', [
-      {
-        text: 'မထွက်ပါ',
-        style: 'cancel',
-      },
-      {
-        text: 'ထွက်မယ်',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await logout();
-            clearCart();
-            router.replace('/auth/login');
-          } catch (error) {
-            console.error('Logout error:', error);
-            Alert.alert('အမှား', 'အကောင့်မှထွက်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်');
-          }
-        },
-      },
-    ]);
+    setIsLogoutModalVisible(true);
+  };
+
+  const confirmLogout = () => {
+    try {
+      setIsLogoutModalVisible(false);
+      logout();
+      clearCart();
+      router.replace('/auth/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   if (needsAuth) {
@@ -182,6 +176,11 @@ export default function Profile() {
           </Pressable>
         </View>
       </ScrollView>
+      <LogoutConfirmModal
+        visible={isLogoutModalVisible}
+        onClose={() => setIsLogoutModalVisible(false)}
+        onConfirm={confirmLogout}
+      />
     </SafeAreaView>
   );
 }
