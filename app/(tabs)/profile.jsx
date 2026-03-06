@@ -143,7 +143,7 @@ export default function Profile() {
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666666" />
           </Pressable>
-          {/* 
+
           <Pressable
             style={styles.menuItem}
             onPress={() => router.push('/chat')}
@@ -162,7 +162,7 @@ export default function Profile() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666666" />
-          </Pressable> */}
+          </Pressable>
 
           <Pressable style={styles.logoutButton} onPress={handleLogout}>
             <View style={styles.logoutContainer}>
