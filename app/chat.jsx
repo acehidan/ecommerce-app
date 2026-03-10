@@ -21,8 +21,8 @@ import { io } from 'socket.io-client';
 import { getMessages, sendMessage } from '../services/chat/messages';
 import { useAuthStore } from '../store/authStore';
 
-const socket = io.connect("https://api.komindiystore.com", {
-  transports: ["websocket"],
+const socket = io.connect('https://api.komindiystore.com', {
+  transports: ['websocket'],
   secure: true,
 });
 
@@ -33,6 +33,11 @@ export default function Chat() {
   const [conversationId, setConversationId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
+
   const scrollViewRef = useRef(null);
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
@@ -59,7 +64,6 @@ export default function Chat() {
       socket.off('connect_error');
     };
   }, []);
-
 
   // ── Join room & start listening for messages ───────────────────────────
   const joinAndListen = (convId) => {
@@ -103,25 +107,56 @@ export default function Chat() {
     loadMessages();
   }, []);
 
-  const loadMessages = async () => {
+  const loadMessages = async (pageNum = 1) => {
+    console.log('loadMessages called for page:', pageNum);
     try {
-      setLoading(true);
-      const response = await getMessages();
-      if (response.success) {
-        const loadedMessages = response.data.messages.reverse();
-        setMessages(loadedMessages);
+      if (pageNum === 1) setLoading(true);
+      else setFetchingMore(true);
 
-        // If messages exist, extract the conversationId
-        // (the useEffect on conversationId will handle join & listen)
-        if (loadedMessages.length > 0 && response.data.conversationId) {
-          setConversationId(response.data.conversationId);
+      const response = await getMessages(pageNum, 20);
+      if (response.success) {
+        console.log(`Page ${pageNum} loaded:`, response.data);
+        const newMessages = response.data.messages.reverse();
+
+        if (newMessages.length === 0) {
+          setHasMore(false);
+        } else {
+          setMessages((prev) => {
+            if (pageNum === 1) return newMessages;
+            // Filter out any duplicates that might have come in via socket
+            const filteredNew = newMessages.filter(
+              (nm) => !prev.some((pm) => pm._id === nm._id)
+            );
+            return [...filteredNew, ...prev];
+          });
+          setPage(pageNum);
+        }
+
+        if (pageNum === 1 && response.data.conversation?._id) {
+          setConversationId(response.data.conversation._id);
+          joinAndListen(response.data.conversation._id);
         }
       }
     } catch (error) {
       console.error('Error loading messages:', error);
-      Alert.alert('Error', 'Failed to load messages');
+      if (pageNum === 1) Alert.alert('Error', 'Failed to load messages');
     } finally {
       setLoading(false);
+      setFetchingMore(false);
+    }
+  };
+
+  const loadMoreMessages = () => {
+    if (!fetchingMore && hasMore) {
+      loadMessages(page + 1);
+    }
+  };
+
+  const handleScroll = (event) => {
+    const { y } = event.nativeEvent.contentOffset;
+    // When y is near 0, user is at the top
+    if (y < 50 && hasMore && !fetchingMore && !loading) {
+      loadMoreMessages();
     }
   };
 
@@ -135,17 +170,16 @@ export default function Chat() {
 
     try {
       // Optimistically add the message to local state
-      const optimisticMessage = {
-        _id: Date.now().toString(),
-        message: text,
-        senderModel: 'User',
-        senderId: {
-          _id: user?._id,
-          userName: user?.userName || 'You',
-        },
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, optimisticMessage]);
+      // const optimisticMessage = {
+      //   _id: Date.now().toString(),
+      //   message: text,
+      //   senderModel: 'User',
+      //   senderId: {
+      //     _id: user?._id,
+      //     userName: user?.userName || 'You',
+      //   },
+      //   createdAt: new Date().toISOString(),
+      // };
 
       // Always send via HTTP POST
       const response = await sendMessage(text);
@@ -178,7 +212,6 @@ export default function Chat() {
     });
   };
 
-
   const isUserMessage = (message) => {
     return message.senderModel === 'User';
   };
@@ -192,18 +225,35 @@ export default function Chat() {
 
   useEffect(() => {
     if (conversationId) {
-      console.log("conversationId", conversationId)
+      console.log('conversationId', conversationId);
       joinAndListen(conversationId);
     }
   }, [conversationId]);
+
+  // Auto-scroll logic helper
+  const scrollToBottom = useCallback(() => {
+    if (scrollViewRef.current && page === 1) {
+      // Small timeout to ensure the new message is fully rendered
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [page]);
+
+  // Auto-scroll whenever messages change (only for first page or new messages)
+  useEffect(() => {
+    if (messages.length > 0 && page === 1) {
+      scrollToBottom();
+    }
+  }, [messages, page, scrollToBottom]);
 
   // ── UI ─────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -225,10 +275,29 @@ export default function Chat() {
           ref={scrollViewRef}
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
-          onContentSizeChange={() =>
-            scrollViewRef.current?.scrollToEnd({ animated: true })
-          }
+          onContentSizeChange={(w, h) => {
+            // If we are loading more messages, we want to maintain scroll position
+            if (fetchingMore) {
+              const heightDiff = h - contentHeight;
+              scrollViewRef.current?.scrollTo({ y: heightDiff, animated: false });
+            } else if (page === 1) {
+              scrollToBottom();
+            }
+            setContentHeight(h);
+          }}
+          onLayout={scrollToBottom}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
+          {fetchingMore && (
+            <ActivityIndicator
+              size="small"
+              color="#3B82F6"
+              style={{ marginVertical: 10 }}
+            />
+          )}
           {loading ? (
             <View style={styles.centerContainer}>
               <ActivityIndicator size="large" color="#3B82F6" />
@@ -236,11 +305,7 @@ export default function Chat() {
             </View>
           ) : messages.length === 0 ? (
             <View style={styles.centerContainer}>
-              <Ionicons
-                name="chatbubbles-outline"
-                size={64}
-                color="#D1D5DB"
-              />
+              <Ionicons name="chatbubbles-outline" size={64} color="#D1D5DB" />
               <Text style={styles.emptyTitle}>Start a Conversation</Text>
               <Text style={styles.emptyText}>
                 Send a message to connect with our support team.
@@ -307,7 +372,12 @@ export default function Chat() {
         </ScrollView>
 
         {/* Input Area */}
-        <View style={[styles.inputContainer, { paddingBottom: insets.bottom || 12 }]}>
+        <View
+          style={[
+            styles.inputContainer,
+            { paddingBottom: insets.bottom || 12 },
+          ]}
+        >
           <View style={styles.inputRow}>
             <TextInput
               value={input}

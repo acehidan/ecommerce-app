@@ -1,10 +1,8 @@
 import api from '../api';
 
-export const getMessages = async (conversationId?: string) => {
+export const getMessages = async (page = 1, limit = 20) => {
   try {
-    const url = conversationId
-      ? `/api/v1/messages?conversationId=${conversationId}`
-      : '/api/v1/messages';
+    const url = `/api/v1/messages?page=${page}&limit=${limit}`;
     const response = await api.get(url);
     return response.data;
   } catch (error) {
