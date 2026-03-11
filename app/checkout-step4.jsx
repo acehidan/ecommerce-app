@@ -76,7 +76,7 @@ export default function CheckoutStep4() {
           baseDeliveryFee: orderSummary.shippingFee,
           additionalWeightCharge: orderSummary.overweightCharge,
         },
-        subtotal: orderSummary.totalWeight > 2 ? orderSummary.grandTotal - (orderSummary.shippingFee + orderSummary.overweightCharge) : orderSummary.grandTotal - orderSummary.shippingFee,
+        subTotal: orderSummary.totalWeight > 2 ? orderSummary.grandTotal - (orderSummary.shippingFee + orderSummary.overweightCharge) : orderSummary.grandTotal - orderSummary.shippingFee,
         tax: 0,
         discount: 0,
         finalAmount: orderSummary.grandTotal,

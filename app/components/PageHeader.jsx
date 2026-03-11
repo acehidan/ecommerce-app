@@ -49,16 +49,20 @@ export default function PageHeader({
         <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
       </Pressable>}
       <Text style={[styles.headerTitle, titleStyle]}>{title}</Text>
-      <View style={[styles.rightContent, rightContentStyle]}>
-        {typeof rightContent === 'string' ||
-          typeof rightContent === 'number' ? (
-          <Text style={styles.rightText}>{rightContent}</Text>
-        ) : rightContent ? (
-          rightContent
-        ) : (
-          <View style={styles.placeholder} />
-        )}
-      </View>
+      {
+        rightContent && (
+          <View style={[styles.rightContent, rightContentStyle]}>
+            {typeof rightContent === 'string' ||
+              typeof rightContent === 'number' ? (
+              <Text style={styles.rightText}>{rightContent}</Text>
+            ) : rightContent ? (
+              rightContent
+            ) : (
+              <View style={styles.placeholder} />
+            )}
+          </View>
+        )
+      }
     </View>
   );
 }
@@ -91,6 +95,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     flex: 1,
     marginLeft: 10,
+    width: '100%',
     fontFamily: 'NotoSansMyanmar-Regular',
     // Simulate boldness since Regular font weight doesn't support bold
     textShadowColor: colors.text.primary,

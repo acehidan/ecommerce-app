@@ -68,6 +68,8 @@ export default function SearchResults() {
         id={item._id}
         name={item.name}
         price={item.retailUnitPrice}
+        isDiscounted={item.isDiscounted}
+        discountPercentage={item.discountPercentage}
         image={
           item.images && item.images.length > 0
             ? item.images[0].url

@@ -37,6 +37,8 @@ export default function Chat() {
   const [hasMore, setHasMore] = useState(true);
   const [fetchingMore, setFetchingMore] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
+  const initialLoadComplete = useRef(false);
 
   const scrollViewRef = useRef(null);
   const insets = useSafeAreaInsets();
@@ -155,7 +157,8 @@ export default function Chat() {
   const handleScroll = (event) => {
     const { y } = event.nativeEvent.contentOffset;
     // When y is near 0, user is at the top
-    if (y < 50 && hasMore && !fetchingMore && !loading) {
+    // Only trigger if initial load is complete to avoid loading page 2 immediately
+    if (y < 50 && hasMore && !fetchingMore && !loading && initialLoadComplete.current) {
       loadMoreMessages();
     }
   };
@@ -231,19 +234,26 @@ export default function Chat() {
   }, [conversationId]);
 
   // Auto-scroll logic helper
-  const scrollToBottom = useCallback(() => {
-    if (scrollViewRef.current && page === 1) {
-      // Small timeout to ensure the new message is fully rendered
+  const scrollToBottom = useCallback((animated = true) => {
+    if (scrollViewRef.current) {
+      // Use setImmediate or a small timeout to ensure content is rendered
       setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
+        scrollViewRef.current?.scrollToEnd({ animated });
       }, 100);
     }
-  }, [page]);
+  }, []);
 
   // Auto-scroll whenever messages change (only for first page or new messages)
   useEffect(() => {
     if (messages.length > 0 && page === 1) {
       scrollToBottom();
+      // Mark initial load as complete after the first scroll to bottom
+      if (!initialLoadComplete.current) {
+        setTimeout(() => {
+          initialLoadComplete.current = true;
+          console.log('Initial load complete');
+        }, 500);
+      }
     }
   }, [messages, page, scrollToBottom]);
 
@@ -334,37 +344,51 @@ export default function Chat() {
                 )}
 
                 <View style={styles.messageBubbleWrapper}>
-                  <View
-                    style={[
-                      styles.messageBubble,
-                      isUserMessage(message)
-                        ? styles.userBubble
-                        : styles.adminBubble,
-                    ]}
+                  <Pressable
+                    onPress={() =>
+                      setSelectedMessageId((prev) =>
+                        prev === (message._id || index)
+                          ? null
+                          : message._id || index
+                      )
+                    }
                   >
-                    <Text
+                    <View
                       style={[
-                        styles.messageText,
+                        styles.messageBubble,
                         isUserMessage(message)
-                          ? styles.userMessageText
-                          : styles.adminMessageText,
+                          ? styles.userBubble
+                          : styles.adminBubble,
                       ]}
                     >
-                      {message.message}
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.messageInfo,
-                      isUserMessage(message)
-                        ? styles.userMessageInfo
-                        : styles.adminMessageInfo,
-                    ]}
-                  >
-                    <Text style={styles.messageInfoText}>
-                      {getSenderName(message)} • {formatTime(message.createdAt)}
-                    </Text>
-                  </View>
+                      <Text
+                        style={[
+                          styles.messageText,
+                          isUserMessage(message)
+                            ? styles.userMessageText
+                            : styles.adminMessageText,
+                        ]}
+                      >
+                        {message.message}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  {selectedMessageId === (message._id || index) && (
+                    <View
+                      style={[
+                        styles.messageInfo,
+                        isUserMessage(message)
+                          ? styles.userMessageInfo
+                          : styles.adminMessageInfo,
+                      ]}
+                    >
+                      <Text style={styles.messageInfoText}>
+                        {getSenderName(message)} •{' '}
+                        {formatTime(message.createdAt)}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
             ))

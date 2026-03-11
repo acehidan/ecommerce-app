@@ -495,10 +495,6 @@ const styles = StyleSheet.create({
   },
   quantityButtonDisabled: {
     backgroundColor: '#F5F5F5',
-    elevation: 0,
-    shadowOpacity: 0,
-    borderColor: '#EFEFEF',
-    borderWidth: 1,
   },
   quantityText: {
     fontSize: 16,

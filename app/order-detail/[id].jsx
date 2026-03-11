@@ -87,11 +87,14 @@ export default function OrderDetail() {
         });
     };
 
-    // Calculate subtotal
-    const subtotal = orderData.products.reduce(
+    // Calculate subtotal from products (original calculation)
+    const productSubtotal = orderData.products.reduce(
         (sum, product) => sum + product.unitPrice * product.quantity,
         0,
     );
+
+    // Use subTotal from API if available, otherwise use calculated productSubtotal
+    const subtotal = orderData.subTotal !== null ? orderData.subTotal : productSubtotal;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -198,13 +201,21 @@ export default function OrderDetail() {
                             </View>
                         )}
 
+                        {orderData.discount > 0 && (
+                            <View style={styles.summaryRow}>
+                                <Text style={styles.summaryLabel}>လျှော့စျေး</Text>
+                                <Text style={[styles.summaryValue, { color: '#FF0000' }]}>
+                                    - MMK {orderData.discount.toLocaleString()}
+                                </Text>
+                            </View>
+                        )}
+
                         <View style={[styles.summaryRow, styles.totalRow]}>
                             <Text style={styles.totalLabel}>စုစုပေါင်း</Text>
                             <Text style={styles.totalValue}>
                                 MMK{' '}
                                 {(
-                                    orderData.totalAmount +
-                                    orderData.delivery.calculatedDeliveryFee
+                                    orderData.finalAmount
                                 ).toLocaleString()}
                             </Text>
                         </View>
