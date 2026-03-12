@@ -14,6 +14,7 @@ import {
   PanResponder,
   TouchableOpacity,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
 import {
   useAudioRecorder,
@@ -208,7 +209,13 @@ export default function Chat() {
       }
     } catch (error) {
       console.error('Error loading messages:', error);
-      if (pageNum === 1) Alert.alert('Error', 'Failed to load messages');
+      if (pageNum === 1) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to load messages',
+        });
+      }
     } finally {
       setLoading(false);
       setFetchingMore(false);
@@ -245,11 +252,19 @@ export default function Chat() {
           setConversationId(response.data.conversation._id);
         }
       } else {
-        Alert.alert('Error', 'Failed to send message');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to send message',
+        });
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      Alert.alert('Error', 'Failed to send message');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to send message',
+      });
     } finally {
       setSending(false);
     }
@@ -258,7 +273,11 @@ export default function Chat() {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+      Toast.show({
+        type: 'error',
+        text1: 'Permission Denied',
+        text2: 'Sorry, we need camera roll permissions to make this work!',
+      });
       return;
     }
 
@@ -292,6 +311,7 @@ export default function Chat() {
       });
 
       const response = await sendMessage(formData);
+      console.log("res", response);
 
       if (response.success) {
         console.log('Image sent successfully');
@@ -299,11 +319,19 @@ export default function Chat() {
           setConversationId(response.data.conversation._id);
         }
       } else {
-        Alert.alert('Error', 'Failed to send image');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to send image',
+        });
       }
     } catch (error) {
-      console.error('Error sending image:', error);
-      Alert.alert('Error', 'Failed to send image');
+      console.error('Error sending image:', error.response);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response.data.message,
+      });
     } finally {
       setSending(false);
     }
@@ -351,7 +379,11 @@ export default function Chat() {
     try {
       const status = await AudioModule.requestRecordingPermissionsAsync();
       if (!status.granted) {
-        Alert.alert('Permission Denied', 'Microphone access is required for voice messages.');
+        Toast.show({
+          type: 'error',
+          text1: 'Permission Denied',
+          text2: 'Microphone access is required for voice messages.',
+        });
         return;
       }
 
@@ -429,7 +461,11 @@ export default function Chat() {
       }
     } catch (error) {
       console.error('Error sending audio:', error);
-      Alert.alert('Error', 'Failed to send voice message');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to send voice message',
+      });
     } finally {
       setSending(false);
     }
@@ -717,10 +753,10 @@ export default function Chat() {
 
           <View style={styles.actionButtons}>
             {recorderState.isRecording || input.trim() === '' ? (
-              <RNAnimated.View 
+              <RNAnimated.View
                 {...panResponder.panHandlers}
                 style={[
-                  styles.sendButton, 
+                  styles.sendButton,
                   styles.micButton,
                   { transform: [{ scale: scaleAnim }] }
                 ]}
