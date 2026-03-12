@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   TextInput,
-  Pressable,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -11,8 +10,19 @@ import {
   StyleSheet,
   ActivityIndicator,
   Image,
+  Animated as RNAnimated,
+  PanResponder,
+  TouchableOpacity,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import {
+  useAudioRecorder,
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
+  useAudioRecorderState
+} from 'expo-audio';
+import VoiceMessagePlayer from './components/VoiceMessagePlayer';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -28,6 +38,48 @@ const socket = io.connect('https://api.komindiystore.com', {
   secure: true,
 });
 
+const SoundWave = () => {
+  const animValues = useRef([
+    new RNAnimated.Value(1),
+    new RNAnimated.Value(1),
+    new RNAnimated.Value(1),
+    new RNAnimated.Value(1),
+    new RNAnimated.Value(1),
+  ]).current;
+
+  useEffect(() => {
+    const animations = animValues.map((anim, i) =>
+      RNAnimated.loop(
+        RNAnimated.sequence([
+          RNAnimated.timing(anim, {
+            toValue: 1.5 + Math.random() * 2,
+            duration: 300 + Math.random() * 200,
+            useNativeDriver: true,
+          }),
+          RNAnimated.timing(anim, {
+            toValue: 1,
+            duration: 300 + Math.random() * 200,
+            useNativeDriver: true,
+          }),
+        ])
+      )
+    );
+    animations.forEach((a) => a.start());
+    return () => animations.forEach((a) => a.stop());
+  }, []);
+
+  return (
+    <View style={styles.soundWaveContainer}>
+      {animValues.map((anim, i) => (
+        <RNAnimated.View
+          key={i}
+          style={[styles.soundWaveBar, { transform: [{ scaleY: anim }] }]}
+        />
+      ))}
+    </View>
+  );
+};
+
 export default function Chat() {
   // ── State ──────────────────────────────────────────────────────────────
   const [messages, setMessages] = useState([]);
@@ -41,6 +93,15 @@ export default function Chat() {
   const [contentHeight, setContentHeight] = useState(0);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const initialLoadComplete = useRef(false);
+
+  // ── Voice Recording Setup (expo-audio) ────────────────────────────────
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder, 100);
+
+  const slideAnim = useRef(new RNAnimated.Value(0)).current;
+  const dxAnim = useRef(new RNAnimated.Value(0)).current;
+  const scaleAnim = useRef(new RNAnimated.Value(1)).current;
+  const isCancelled = useRef(false);
 
   const scrollViewRef = useRef(null);
   const insets = useSafeAreaInsets();
@@ -67,6 +128,10 @@ export default function Chat() {
       socket.off('disconnect');
       socket.off('connect_error');
     };
+  }, []);
+
+  useEffect(() => {
+    AudioModule.requestRecordingPermissionsAsync();
   }, []);
 
   // ── Join room & start listening for messages ───────────────────────────
@@ -281,19 +346,163 @@ export default function Chat() {
     }
   }, []);
 
-  // Auto-scroll whenever messages change (only for first page or new messages)
-  useEffect(() => {
-    if (messages.length > 0 && page === 1) {
-      scrollToBottom();
-      // Mark initial load as complete after the first scroll to bottom
-      if (!initialLoadComplete.current) {
-        setTimeout(() => {
-          initialLoadComplete.current = true;
-          console.log('Initial load complete');
-        }, 500);
+  // ── Voice Recording Handlers ──────────────────────────────────────────
+  const startRecording = async () => {
+    try {
+      const status = await AudioModule.requestRecordingPermissionsAsync();
+      if (!status.granted) {
+        Alert.alert('Permission Denied', 'Microphone access is required for voice messages.');
+        return;
       }
+
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
+
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+      isCancelled.current = false;
+      slideAnim.setValue(0);
+      dxAnim.setValue(0);
+
+      // Start pulsing animation
+      RNAnimated.loop(
+        RNAnimated.sequence([
+          RNAnimated.timing(scaleAnim, {
+            toValue: 1.2,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          RNAnimated.timing(scaleAnim, {
+            toValue: 1.1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } catch (err) {
+      console.error('Failed to start recording', err);
     }
-  }, [messages, page, scrollToBottom]);
+  };
+
+  const stopRecording = async (shouldSend = true) => {
+    try {
+      scaleAnim.stopAnimation(() => {
+        RNAnimated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 3,
+          useNativeDriver: true,
+        }).start();
+      });
+
+      const uri = audioRecorder.uri;
+      await audioRecorder.stop();
+
+      if (shouldSend && !isCancelled.current && uri) {
+        await handleSendAudio(uri);
+      }
+    } catch (err) {
+      console.error('Failed to stop recording', err);
+    }
+  };
+
+  const handleSendAudio = async (uri) => {
+    if (sending) return;
+    setSending(true);
+
+    try {
+      const formData = new FormData();
+      const filename = uri.split('/').pop();
+
+      formData.append('message', {
+        uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+        name: filename || 'voice_message.m4a',
+        type: 'audio/m4a',
+      });
+
+      const response = await sendMessage(formData);
+      if (response.success) {
+        if (!conversationId && response.data.conversation?._id) {
+          setConversationId(response.data.conversation._id);
+        }
+      }
+    } catch (error) {
+      console.error('Error sending audio:', error);
+      Alert.alert('Error', 'Failed to send voice message');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleMicPressIn = () => {
+    startRecording();
+  };
+
+  const isRecordingRef = useRef(false);
+  useEffect(() => {
+    isRecordingRef.current = recorderState.isRecording;
+  }, [recorderState.isRecording]);
+
+  const startRecordingRef = useRef(startRecording);
+  const stopRecordingRef = useRef(stopRecording);
+  useEffect(() => {
+    startRecordingRef.current = startRecording;
+    stopRecordingRef.current = stopRecording;
+  });
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
+        onPanResponderGrant: () => {
+          startRecordingRef.current();
+        },
+        onPanResponderMove: (evt, gestureState) => {
+          if (gestureState.dx < 0) {
+            dxAnim.setValue(gestureState.dx);
+          }
+          if (gestureState.dx < -80) {
+            if (!isCancelled.current) {
+              isCancelled.current = true;
+              RNAnimated.timing(slideAnim, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: true,
+              }).start();
+            }
+          }
+        },
+        onPanResponderRelease: (evt, gestureState) => {
+          if (isRecordingRef.current) {
+            if (gestureState.dx < -80) {
+              stopRecordingRef.current(false);
+            } else {
+              stopRecordingRef.current(true);
+            }
+          }
+          RNAnimated.spring(dxAnim, {
+            toValue: 0,
+            tension: 40,
+            friction: 7,
+            useNativeDriver: true,
+          }).start();
+        },
+        onPanResponderTerminate: () => {
+          if (isRecordingRef.current) {
+            stopRecordingRef.current(false);
+          }
+          RNAnimated.spring(dxAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        },
+      }),
+    []
+  );
 
   // ── UI ─────────────────────────────────────────────────────────────────
   return (
@@ -305,9 +514,9 @@ export default function Chat() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#000" />
-          </Pressable>
+          </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle}>Customer Support</Text>
             <View style={styles.statusRow}>
@@ -382,7 +591,7 @@ export default function Chat() {
                 )}
 
                 <View style={styles.messageBubbleWrapper}>
-                  <Pressable
+                  <TouchableOpacity
                     onPress={() =>
                       setSelectedMessageId((prev) =>
                         prev === (message._id || index)
@@ -397,6 +606,7 @@ export default function Chat() {
                         isUserMessage(message)
                           ? styles.userBubble
                           : styles.adminBubble,
+                        message.messageType === 'image' && styles.imageBubble
                       ]}
                     >
                       {message.messageType === 'image' ? (
@@ -404,6 +614,12 @@ export default function Chat() {
                           source={{ uri: message.message }}
                           style={styles.chatImage}
                           resizeMode="cover"
+                        />
+                      ) : message.messageType === 'voice' ? (
+                        <VoiceMessagePlayer
+                          uri={message.message}
+                          duration={message.duration}
+                          isUser={isUserMessage(message)}
                         />
                       ) : (
                         <Text
@@ -418,7 +634,7 @@ export default function Chat() {
                         </Text>
                       )}
                     </View>
-                  </Pressable>
+                  </TouchableOpacity>
 
                   {selectedMessageId === (message._id || index) && (
                     <View
@@ -448,44 +664,91 @@ export default function Chat() {
             { paddingBottom: insets.bottom || 12 },
           ]}
         >
-          <View style={styles.inputRow}>
-            <Pressable
-              onPress={handlePickImage}
-              disabled={sending}
-              style={styles.attachButton}
-            >
-              <Ionicons name="image-outline" size={24} color="#6B7280" />
-            </Pressable>
-            <TextInput
-              value={input}
-              onChangeText={setInput}
-              placeholder="Type a message..."
-              placeholderTextColor="#9CA3AF"
-              style={styles.textInput}
-              multiline
-              maxLength={500}
-              editable={!sending}
-            />
-            <Pressable
-              onPress={handleSendMessage}
-              disabled={!input.trim() || sending}
+          {recorderState.isRecording ? (
+            <RNAnimated.View
               style={[
-                styles.sendButton,
-                input.trim() && !sending
-                  ? styles.sendButtonActive
-                  : styles.sendButtonDisabled,
+                styles.recordingContainer,
+                { transform: [{ translateX: dxAnim }] }
               ]}
             >
-              {sending ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Ionicons
-                  name="send"
-                  size={20}
-                  color={input.trim() && !sending ? '#fff' : '#999'}
-                />
-              )}
-            </Pressable>
+              <View style={styles.recordingInfo}>
+                <Ionicons name="mic" size={20} color="#EF4444" />
+                <Text style={styles.recordingDuration}>
+                  {Math.floor(recorderState.durationMillis / 60000)}:
+                  {((recorderState.durationMillis % 60000) / 1000).toFixed(0).padStart(2, '0')}
+                </Text>
+                <SoundWave />
+              </View>
+              <RNAnimated.Text
+                style={[
+                  styles.slideCancelText,
+                  {
+                    opacity: slideAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 0],
+                    })
+                  }
+                ]}
+              >
+                Release to send • Slide to cancel
+              </RNAnimated.Text>
+            </RNAnimated.View>
+          ) : (
+            <View style={styles.inputRow}>
+              <TouchableOpacity
+                onPress={handlePickImage}
+                disabled={sending}
+                style={styles.attachButton}
+              >
+                <Ionicons name="image-outline" size={24} color="#6B7280" />
+              </TouchableOpacity>
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Type a message..."
+                placeholderTextColor="#9CA3AF"
+                style={styles.textInput}
+                multiline
+                maxLength={500}
+                editable={!sending}
+              />
+            </View>
+          )}
+
+          <View style={styles.actionButtons}>
+            {recorderState.isRecording || input.trim() === '' ? (
+              <RNAnimated.View 
+                {...panResponder.panHandlers}
+                style={[
+                  styles.sendButton, 
+                  styles.micButton,
+                  { transform: [{ scale: scaleAnim }] }
+                ]}
+              >
+                <Ionicons name="mic" size={24} color="#fff" />
+              </RNAnimated.View>
+            ) : (
+              <TouchableOpacity
+                onPress={handleSendMessage}
+                disabled={!input.trim() || sending}
+                style={[
+                  styles.sendButton,
+                  input.trim() && !sending
+                    ? styles.sendButtonActive
+                    : styles.sendButtonDisabled,
+                ]}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons
+                    name="send"
+                    size={20}
+                    color={input.trim() && !sending ? '#fff' : '#999'}
+                  />
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -622,6 +885,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  imageBubble: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderWidth: 0,
+  },
   messageText: {
     fontSize: 15,
     lineHeight: 21,
@@ -653,11 +922,42 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5',
     backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
   },
   inputRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
+  },
+  recordingContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 48,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+  },
+  recordingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  recordingDuration: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
+  },
+  slideCancelText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  actionButtons: {
+    marginBottom: 2,
   },
   attachButton: {
     width: 44,
@@ -667,6 +967,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#F3F4F6',
     marginBottom: 2,
+  },
+  micButton: {
+    backgroundColor: '#EF4444',
   },
   textInput: {
     flex: 1,
@@ -692,5 +995,18 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: '#E5E7EB',
+  },
+  soundWaveContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: 8,
+    height: 20,
+  },
+  soundWaveBar: {
+    width: 2,
+    height: 10,
+    backgroundColor: '#EF4444',
+    borderRadius: 1,
   },
 });
