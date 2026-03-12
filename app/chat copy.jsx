@@ -10,9 +10,9 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
-  Image,
+  Image
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -27,6 +27,9 @@ const socket = io.connect('https://api.komindiystore.com', {
   transports: ['websocket'],
   secure: true,
 });
+
+const blurhash =
+  '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
 export default function Chat() {
   // ── State ──────────────────────────────────────────────────────────────
@@ -174,8 +177,26 @@ export default function Chat() {
     setSending(true);
 
     try {
+      // Optimistically add the message to local state
+      // const optimisticMessage = {
+      //   _id: Date.now().toString(),
+      //   message: text,
+      //   senderModel: 'User',
+      //   senderId: {
+      //     _id: user?._id,
+      //     userName: user?.userName || 'You',
+      //   },
+      //   createdAt: new Date().toISOString(),
+      // };
+
+      // Always send via HTTP POST
       const response = await sendMessage(text);
+
       if (response.success) {
+        console.log('Message sent:', response.data);
+
+        // If we don't have a conversationId yet, get it from response
+        // (the useEffect on conversationId will handle join & listen)
         if (!conversationId && response.data.conversation?._id) {
           setConversationId(response.data.conversation._id);
         }
@@ -188,61 +209,7 @@ export default function Chat() {
     } finally {
       setSending(false);
     }
-  }, [input, sending, conversationId]);
-
-  const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: false,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      const asset = result.assets[0];
-      await handleSendImage(asset);
-    }
-  };
-
-  const handleSendImage = async (asset) => {
-    if (sending) return;
-    setSending(true);
-
-    try {
-      const formData = new FormData();
-
-      const filename = asset.uri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename || '');
-      const type = match ? `image/${match[1]}` : `image`;
-
-      formData.append('message', {
-        uri: asset.uri,
-        name: filename,
-        type: type,
-      });
-
-      const response = await sendMessage(formData);
-
-      if (response.success) {
-        console.log('Image sent successfully');
-        if (!conversationId && response.data.conversation?._id) {
-          setConversationId(response.data.conversation._id);
-        }
-      } else {
-        Alert.alert('Error', 'Failed to send image');
-      }
-    } catch (error) {
-      console.error('Error sending image:', error);
-      Alert.alert('Error', 'Failed to send image');
-    } finally {
-      setSending(false);
-    }
-  };
+  }, [input, sending, conversationId, user]);
 
   // ── Helper Functions ───────────────────────────────────────────────────
   const formatTime = (dateString) => {
@@ -394,17 +361,28 @@ export default function Chat() {
                     <View
                       style={[
                         styles.messageBubble,
-                        isUserMessage(message)
-                          ? styles.userBubble
-                          : styles.adminBubble,
+                        message.messageType === 'image'
+                          ? styles.imageBubble
+                          : (isUserMessage(message) ? styles.userBubble : styles.adminBubble),
                       ]}
                     >
-                      {message.messageType === 'image' ? (
+                      {console.log(message)}
+                      <View style={styles.imageWrapper}>
+                        {console.log(message.message)}
                         <Image
                           source={{ uri: message.message }}
-                          style={styles.chatImage}
-                          resizeMode="cover"
+                          style={styles.image}
+                          contentFit="cover"
+                          transition={1000}
                         />
+                      </View>
+                      {/* {message.messageType === 'image' ? (
+                        <View style={styles.imageWrapper}>
+                          <Image
+                            source={{ uri: "https://media.istockphoto.com/id/1973365581/vector/sample-ink-rubber-stamp.jpg?s=612x612&w=0&k=20&c=_m6hNbFtLdulg3LK5LRjJiH6boCb_gcxPvRLytIz0Ws=" }}
+                            style={styles.image}
+                          />
+                        </View>
                       ) : (
                         <Text
                           style={[
@@ -416,7 +394,7 @@ export default function Chat() {
                         >
                           {message.message}
                         </Text>
-                      )}
+                      )} */}
                     </View>
                   </Pressable>
 
@@ -432,6 +410,7 @@ export default function Chat() {
                       <Text style={styles.messageInfoText}>
                         {getSenderName(message)} •{' '}
                         {formatTime(message.createdAt)}
+                        {message.messageType === 'image' && `\nURL: ${message.message.substring(0, 30)}...`}
                       </Text>
                     </View>
                   )}
@@ -449,13 +428,6 @@ export default function Chat() {
           ]}
         >
           <View style={styles.inputRow}>
-            <Pressable
-              onPress={handlePickImage}
-              disabled={sending}
-              style={styles.attachButton}
-            >
-              <Ionicons name="image-outline" size={24} color="#6B7280" />
-            </Pressable>
             <TextInput
               value={input}
               onChangeText={setInput}
@@ -607,10 +579,23 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
   },
-  chatImage: {
-    width: 250,
-    height: 250,
+  imageBubble: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  imageWrapper: {
+    backgroundColor: 'red',
     borderRadius: 12,
+    overflow: 'hidden',
+  },
+  chatImage: {
+    width: 240,
+    height: 180,
+    // backgroundColor: '#E5E7EB', // Visible grey placeholder
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
   },
   userBubble: {
     backgroundColor: '#3B82F6',
@@ -657,16 +642,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 8,
-  },
-  attachButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
-    marginBottom: 2,
+    gap: 10,
   },
   textInput: {
     flex: 1,
