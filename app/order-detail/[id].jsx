@@ -88,13 +88,28 @@ export default function OrderDetail() {
     };
 
     // Calculate subtotal from products (original calculation)
-    const productSubtotal = orderData.products.reduce(
+    const originalSubtotal = orderData.products.reduce(
         (sum, product) => sum + product.unitPrice * product.quantity,
         0,
     );
 
-    // Use subTotal from API if available, otherwise use calculated productSubtotal
-    const subtotal = orderData.subTotal !== null ? orderData.subTotal : productSubtotal;
+    // Calculate discounted subtotal for products
+    const discountedProductsSubtotal = (orderData.subTotal != null) ? orderData.subTotal : orderData.products.reduce(
+        (sum, product) => {
+            const price = product.isDiscounted
+                ? product.unitPrice * (1 - (product.discountPercentage || 0) / 100)
+                : product.unitPrice;
+            return sum + (price * product.quantity);
+        },
+        0,
+    );
+
+    // Total discount = (Original price - Discounted price) + Order-level discount
+    const totalDiscount = (originalSubtotal - discountedProductsSubtotal) + (orderData.discount || 0);
+
+    const getDiscountedPrice = (price, percentage) => {
+        return price * (1 - (percentage || 0) / 100);
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -154,10 +169,30 @@ export default function OrderDetail() {
                                 </View>
                                 <View style={styles.itemDetails}>
                                     <Text style={styles.itemName}>{product.name}</Text>
+                                    {product.isDiscounted && (
+                                        <View style={styles.discountBadge}>
+                                            <Text style={styles.discountBadgeText}>
+                                                -{product.discountPercentage}%
+                                            </Text>
+                                        </View>
+                                    )}
                                 </View>
-                                <Text style={styles.itemPrice}>
-                                    MMK {(product.unitPrice * product.quantity).toLocaleString()}
-                                </Text>
+                                <View style={styles.priceContainer}>
+                                    {product.isDiscounted ? (
+                                        <>
+                                            <Text style={styles.originalPrice}>
+                                                MMK {(product.unitPrice * product.quantity).toLocaleString()}
+                                            </Text>
+                                            <Text style={styles.itemPrice}>
+                                                MMK {(getDiscountedPrice(product.unitPrice, product.discountPercentage) * product.quantity).toLocaleString()}
+                                            </Text>
+                                        </>
+                                    ) : (
+                                        <Text style={styles.itemPrice}>
+                                            MMK {(product.unitPrice * product.quantity).toLocaleString()}
+                                        </Text>
+                                    )}
+                                </View>
                             </View>
                         ))}
                     </View>
@@ -171,7 +206,7 @@ export default function OrderDetail() {
                         <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabel}>စုစုပေါင်း</Text>
                             <Text style={styles.summaryValue}>
-                                MMK {subtotal.toLocaleString()}
+                                MMK {orderData.subTotal.toLocaleString()}
                             </Text>
                         </View>
 
@@ -201,14 +236,14 @@ export default function OrderDetail() {
                             </View>
                         )}
 
-                        {orderData.discount > 0 && (
+                        {/* {totalDiscount > 0 && (
                             <View style={styles.summaryRow}>
                                 <Text style={styles.summaryLabel}>လျှော့စျေး</Text>
-                                <Text style={[styles.summaryValue, { color: '#FF0000' }]}>
-                                    - MMK {orderData.discount.toLocaleString()}
+                                <Text style={[styles.summaryValue, { color: colors.error.main }]}>
+                                    - MMK {totalDiscount.toLocaleString()}
                                 </Text>
                             </View>
-                        )}
+                        )} */}
 
                         <View style={[styles.summaryRow, styles.totalRow]}>
                             <Text style={styles.totalLabel}>စုစုပေါင်း</Text>
@@ -382,8 +417,30 @@ const styles = StyleSheet.create({
     },
     itemPrice: {
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: 'bold',
         color: '#000000',
+    },
+    priceContainer: {
+        alignItems: 'flex-end',
+    },
+    originalPrice: {
+        fontSize: 12,
+        color: '#999999',
+        textDecorationLine: 'line-through',
+        marginBottom: 2,
+    },
+    discountBadge: {
+        backgroundColor: colors.error.light,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+        marginTop: 4,
+    },
+    discountBadgeText: {
+        color: colors.error.main,
+        fontSize: 10,
+        fontWeight: 'bold',
     },
     summaryContainer: {
         marginTop: 16,
