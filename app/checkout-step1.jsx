@@ -20,6 +20,7 @@ import PageHeader from './components/PageHeader';
 import colors from '../constants/colors';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import DeliveryZoneErrorModal from './components/DeliveryZoneErrorModal';
 
 const SkeletonItem = ({ style }) => {
   const animatedValue = new Animated.Value(0);
@@ -72,6 +73,8 @@ export default function CheckoutStep1() {
   const [userAddresses, setUserAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const addressTypes = userAddresses.map((address) => ({
     key: address._id,
@@ -133,11 +136,19 @@ export default function CheckoutStep1() {
           currentAddress.city,
           currentAddress.township
         );
-        if (deliveryZoneResponse.success) {
+        console.log("deliveryZoneResponse", deliveryZoneResponse);
+        if (deliveryZoneResponse.success && deliveryZoneResponse.data.deliveryZone) {
           deliveryZone = deliveryZoneResponse.data.deliveryZone;
+        } else {
+          setModalMessage(deliveryZoneResponse.message);
+          setShowErrorModal(true);
+          return false;
         }
       } catch (error) {
         console.error('Error fetching delivery zone:', error);
+        setModalMessage('ပို့ဆောင်ရေး အချက်အလက်များကို ရယူရာတွင် အမှားအယွင်းရှိနေပါသည်။');
+        setShowErrorModal(true);
+        return false;
       }
 
       // Save address info with delivery zone
@@ -150,7 +161,9 @@ export default function CheckoutStep1() {
         deliveryType: 'ဂိတ်ချနဲ့ ပို့မယ်',
         deliveryZone,
       });
+      return true;
     }
+    return false;
   };
 
   return (
@@ -309,13 +322,20 @@ export default function CheckoutStep1() {
         <Pressable
           style={styles.confirmActionButton}
           onPress={async () => {
-            await saveStep1Data();
-            router.push('/checkout-step2');
+            const success = await saveStep1Data();
+            if (success) {
+              router.push('/checkout-step2');
+            }
           }}
         >
           <Text style={styles.confirmActionText}>မှန်ကန်ပါတယ်</Text>
         </Pressable>
       </View>
+      <DeliveryZoneErrorModal
+        visible={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        message={modalMessage}
+      />
     </SafeAreaView>
   );
 }

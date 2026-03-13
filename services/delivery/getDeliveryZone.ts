@@ -19,6 +19,7 @@ export const getDeliveryZone = async (
         township,
       },
     });
+    console.log("Delivery matcher API response status:", response.data.status || response.data.success);
 
     console.log('Delivery zone API response:', JSON.stringify(response.data, null, 2));
 
@@ -30,10 +31,21 @@ export const getDeliveryZone = async (
       response.data?._id ||
       '';
 
-    console.log('Extracted delivery zone:', deliveryZone);
+    // Handle inconsistent backend response (some use 'status', some use 'success')
+    const isSuccessful =
+      response.data.status === 'success' ||
+      response.data.success === true ||
+      (response.data.status === undefined && response.data.success === undefined && deliveryZone);
 
-    if (!deliveryZone) {
-      console.warn('No delivery zone found in response:', response.data);
+    if (!deliveryZone || !isSuccessful) {
+      console.warn('No delivery zone found or API failed:', response.data);
+      return {
+        success: false,
+        message: response.data.message || 'ပို့ဆောင်ရေး နယ်မြေ ရှာမတွေ့ပါ။',
+        data: {
+          deliveryZone: '',
+        },
+      };
     }
 
     return {

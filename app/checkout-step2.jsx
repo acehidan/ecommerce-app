@@ -13,10 +13,13 @@ import colors from '../constants/colors';
 import PageHeader from './components/PageHeader';
 import { useEffect, useState } from 'react';
 import getDeliveries from '../services/delivery/getDeliveries';
+import DeliveryZoneErrorModal from './components/DeliveryZoneErrorModal';
 
 export default function CheckoutStep2() {
   const router = useRouter();
   const [deliveryData, setDeliveryData] = useState(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const { items, getTotalPrice } = useCartStore();
   const { setOrderItems, setOrderSummary, checkoutData } = useCheckoutStore();
@@ -24,12 +27,21 @@ export default function CheckoutStep2() {
 
   const getDelidata = async () => {
     const response = await getDeliveries();
-    const deliveryData = response.data.find(
-      (delivery) => delivery._id === deliveryZone,
-    );
-    setDeliveryData(deliveryData);
-
-    // TODO: Implement delivery data logic
+    console.log("response", response);
+    if (response.status === 'success') {
+      const deliveryData = response.data.find(
+        (delivery) => delivery._id === deliveryZone,
+      );
+      if (deliveryData) {
+        setDeliveryData(deliveryData);
+      } else {
+        setModalMessage('ပို့ဆောင်ရေး နယ်မြေ အချက်အလက်များကို ရှာမတွေ့ပါ။');
+        setShowErrorModal(true);
+      }
+    } else {
+      setModalMessage(response.message);
+      setShowErrorModal(true);
+    }
   };
   console.log("deliveryData", deliveryData);
   // console.log("items", items);
@@ -189,14 +201,26 @@ export default function CheckoutStep2() {
         <Pressable
           style={styles.confirmActionButton}
           onPress={() => {
+            if (!deliveryData) {
+              setModalMessage('ပို့ဆောင်ရေး အချက်အလက်များ မပြည့်စုံသေးပါ။');
+              setShowErrorModal(true);
+              return;
+            }
             saveStep2Data();
-
             router.push('/checkout-step3');
           }}
         >
           <Text style={styles.confirmActionText}>မှန်ကန်ပါတယ်</Text>
         </Pressable>
       </View>
+      <DeliveryZoneErrorModal
+        visible={showErrorModal}
+        onClose={() => {
+          setShowErrorModal(false);
+          router.back();
+        }}
+        message={modalMessage}
+      />
     </SafeAreaView>
   );
 }

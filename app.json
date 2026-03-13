@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "komin-diy",
-    "slug": "rector",
-    "version": "1.0.6",
+    "slug": "komin-diy",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/komin.jpg",
     "splash": {
@@ -43,14 +43,18 @@
         "origin": false
       },
       "eas": {
-        "projectId": "86b225e7-e6c3-4db1-93a5-18bd6d52c0e3"
+        "projectId": "4b840218-4ae4-4a29-93a0-942c63748198"
       }
     },
     "android": {
-      "package": "com.komin.diy",
-      "versionCode": 8,
+      "package": "com.komindiy.store",
+      "versionCode": 2,
       "softwareKeyboardLayoutMode": "pan",
-      "launchMode": "singleTask"
+      "launchMode": "singleTask",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "owner": "acehidan"
   }

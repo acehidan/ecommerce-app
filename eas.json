@@ -1,11 +1,9 @@
 {
+  "cli": {
+    "appVersionSource": "local"
+  },
   "build": {
     "preview": {
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "apk": {
       "android": {
         "buildType": "apk"
       }
@@ -14,6 +12,10 @@
       "developmentClient": true,
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "android": {
+        "autoIncrement": true
+      }
+    }
   }
 }

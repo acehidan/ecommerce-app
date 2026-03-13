@@ -20,13 +20,17 @@ import PageHeader from './components/PageHeader';
 import * as WebBrowser from 'expo-web-browser';
 import OrderLoadingModal from './components/OrderLoadingModal';
 import Toast from 'react-native-toast-message';
+import DeliveryZoneErrorModal from './components/DeliveryZoneErrorModal';
 
 export default function CheckoutStep4() {
   const router = useRouter();
   const { checkoutData } =
     useCheckoutStore();
   const { user } = useAuthStore();
+  const [userAddresses, setUserAddresses] = useState([]);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const { contactInfo, addressInfo, orderItems, orderSummary, paymentInfo } =
     checkoutData;
@@ -45,7 +49,8 @@ export default function CheckoutStep4() {
     }
 
     if (!contactInfo || !addressInfo || !orderItems.length || !deliveryZone) {
-      Alert.alert('Error', 'Missing required order information');
+      setModalMessage('အော်ဒါတင်ရန် လိုအပ်သော အချက်အလက်များ မပြည့်စုံသေးပါ။');
+      setShowErrorModal(true);
       return;
     }
 
@@ -349,6 +354,14 @@ export default function CheckoutStep4() {
         </Pressable>
       </View>
       <OrderLoadingModal visible={isCreatingOrder} />
+      <DeliveryZoneErrorModal
+        visible={showErrorModal}
+        onClose={() => {
+          setShowErrorModal(false);
+          router.push('/checkout-step1');
+        }}
+        message={modalMessage}
+      />
     </SafeAreaView>
   );
 }
