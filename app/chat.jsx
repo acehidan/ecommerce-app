@@ -103,6 +103,9 @@ export default function Chat() {
   const dxAnim = useRef(new RNAnimated.Value(0)).current;
   const scaleAnim = useRef(new RNAnimated.Value(1)).current;
   const isCancelled = useRef(false);
+  const isMicPressed = useRef(false);
+  const isRecordingStarted = useRef(false);
+  const pressTimer = useRef(null);
 
   const scrollViewRef = useRef(null);
   const insets = useSafeAreaInsets();
@@ -111,15 +114,15 @@ export default function Chat() {
   // ── Socket connection listeners (on mount) ─────────────────────────────
   useEffect(() => {
     socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
+      // console.log('Socket connected:', socket.id);
     });
 
     socket.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+      // console.log('Socket disconnected:', reason);
     });
 
     socket.on('connect_error', (err) => {
-      console.error('Socket connection error:', err.message);
+      // console.error('Socket connection error:', err.message);
     });
 
     // Cleanup on unmount
@@ -137,14 +140,14 @@ export default function Chat() {
 
   // ── Join room & start listening for messages ───────────────────────────
   const joinAndListen = (convId) => {
-    console.log('joinAndListen called with:', convId);
+    // console.log('joinAndListen called with:', convId);
 
     // Remove any previous listener to avoid duplicates
     socket.off('chat:message');
 
     // Register the message listener (with duplicate check)
     socket.on('chat:message', (message) => {
-      console.log('Incoming message:', message);
+      // console.log('Incoming message:', message);
       setMessages((prev) => {
         // Skip if message already exists in state (avoid duplicate keys)
         if (prev.some((m) => m._id === message._id)) {
@@ -157,7 +160,7 @@ export default function Chat() {
     // Helper to emit join
     const emitJoin = () => {
       socket.emit('chat:join', convId);
-      console.log('Joined conversation:', convId);
+      // console.log('Joined conversation:', convId);
     };
 
     // If socket is already connected, join immediately
@@ -165,7 +168,7 @@ export default function Chat() {
     if (socket.connected) {
       emitJoin();
     } else {
-      console.log('Socket not connected yet, waiting to join...');
+      // console.log('Socket not connected yet, waiting to join...');
       socket.once('connect', () => {
         emitJoin();
       });
@@ -178,14 +181,14 @@ export default function Chat() {
   }, []);
 
   const loadMessages = async (pageNum = 1) => {
-    console.log('loadMessages called for page:', pageNum);
+    // console.log('loadMessages called for page:', pageNum);
     try {
       if (pageNum === 1) setLoading(true);
       else setFetchingMore(true);
 
       const response = await getMessages(pageNum, 20);
       if (response.success) {
-        console.log(`Page ${pageNum} loaded:`, response.data);
+        // console.log(`Page ${pageNum} loaded:`, response.data);
         const newMessages = response.data.messages.reverse();
 
         if (newMessages.length === 0) {
@@ -208,7 +211,7 @@ export default function Chat() {
         }
       }
     } catch (error) {
-      console.error('Error loading messages:', error);
+      // console.error('Error loading messages:', error);
       if (pageNum === 1) {
         Toast.show({
           type: 'error',
@@ -259,7 +262,7 @@ export default function Chat() {
         });
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      // console.error('Error sending message:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -311,10 +314,10 @@ export default function Chat() {
       });
 
       const response = await sendMessage(formData);
-      console.log("res", response);
+      // console.log("res", response);
 
       if (response.success) {
-        console.log('Image sent successfully');
+        // console.log('Image sent successfully');
         if (!conversationId && response.data.conversation?._id) {
           setConversationId(response.data.conversation._id);
         }
@@ -326,7 +329,7 @@ export default function Chat() {
         });
       }
     } catch (error) {
-      console.error('Error sending image:', error.response);
+      // console.error('Error sending image:', error.response);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -359,7 +362,7 @@ export default function Chat() {
 
   useEffect(() => {
     if (conversationId) {
-      console.log('conversationId', conversationId);
+      // console.log('conversationId', conversationId);
       joinAndListen(conversationId);
     }
   }, [conversationId]);
@@ -392,11 +395,21 @@ export default function Chat() {
         playsInSilentMode: true,
       });
 
-      await audioRecorder.prepareToRecordAsync();
-      audioRecorder.record();
+      // Reset state for new recording
+      isRecordingStarted.current = false;
       isCancelled.current = false;
       slideAnim.setValue(0);
       dxAnim.setValue(0);
+
+      await audioRecorder.prepareToRecordAsync();
+      await audioRecorder.record();
+      isRecordingStarted.current = true;
+
+      // If user released before recording started, stop it now
+      if (!isMicPressed.current) {
+        stopRecording(false);
+        return;
+      }
 
       // Start pulsing animation
       RNAnimated.loop(
@@ -414,11 +427,20 @@ export default function Chat() {
         ])
       ).start();
     } catch (err) {
-      console.error('Failed to start recording', err);
+      // console.error('Failed to start recording', err);
+      isRecordingStarted.current = false;
+      isMicPressed.current = false;
     }
   };
 
   const stopRecording = async (shouldSend = true) => {
+    // If it never started recording, there's nothing to stop
+    if (!isRecordingStarted.current) {
+      return;
+    }
+
+    isRecordingStarted.current = false;
+
     try {
       scaleAnim.stopAnimation(() => {
         RNAnimated.spring(scaleAnim, {
@@ -429,13 +451,26 @@ export default function Chat() {
       });
 
       const uri = audioRecorder.uri;
-      await audioRecorder.stop();
 
-      if (shouldSend && !isCancelled.current && uri) {
+      // Wrapping stop in a try-catch to ignore native "stop failed" errors
+      // which often happen if called too quickly after start.
+      try {
+        await audioRecorder.stop();
+      } catch (stopErr) {
+        // console.warn('Native recording stop error (ignoring):', stopErr.message);
+        // If stop fails, we shouldn't send whatever was captured
+        return;
+      }
+
+      // Simple duration check - avoid sending extremely short accidental taps (e.g. < 500ms)
+      const duration = recorderState.durationMillis;
+      const isTooShort = duration < 500;
+
+      if (shouldSend && !isCancelled.current && uri && !isTooShort) {
         await handleSendAudio(uri);
       }
     } catch (err) {
-      console.error('Failed to stop recording', err);
+      // console.error('Failed to stop recording', err);
     }
   };
 
@@ -460,7 +495,7 @@ export default function Chat() {
         }
       }
     } catch (error) {
-      console.error('Error sending audio:', error);
+      // console.error('Error sending audio:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -470,15 +505,6 @@ export default function Chat() {
       setSending(false);
     }
   };
-
-  const handleMicPressIn = () => {
-    startRecording();
-  };
-
-  const isRecordingRef = useRef(false);
-  useEffect(() => {
-    isRecordingRef.current = recorderState.isRecording;
-  }, [recorderState.isRecording]);
 
   const startRecordingRef = useRef(startRecording);
   const stopRecordingRef = useRef(stopRecording);
@@ -495,7 +521,16 @@ export default function Chat() {
         onMoveShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponderCapture: () => true,
         onPanResponderGrant: () => {
-          startRecordingRef.current();
+          isMicPressed.current = true;
+          // Clear any existing timer
+          if (pressTimer.current) clearTimeout(pressTimer.current);
+
+          // Delay starting the recording by 200ms to avoid accidental taps
+          pressTimer.current = setTimeout(() => {
+            if (isMicPressed.current) {
+              startRecordingRef.current();
+            }
+          }, 200);
         },
         onPanResponderMove: (evt, gestureState) => {
           if (gestureState.dx < 0) {
@@ -513,13 +548,15 @@ export default function Chat() {
           }
         },
         onPanResponderRelease: (evt, gestureState) => {
-          if (isRecordingRef.current) {
-            if (gestureState.dx < -80) {
-              stopRecordingRef.current(false);
-            } else {
-              stopRecordingRef.current(true);
-            }
+          isMicPressed.current = false;
+          if (pressTimer.current) {
+            clearTimeout(pressTimer.current);
+            pressTimer.current = null;
           }
+
+          const shouldSend = gestureState.dx >= -80;
+          stopRecordingRef.current(shouldSend);
+
           RNAnimated.spring(dxAnim, {
             toValue: 0,
             tension: 40,
@@ -528,9 +565,12 @@ export default function Chat() {
           }).start();
         },
         onPanResponderTerminate: () => {
-          if (isRecordingRef.current) {
-            stopRecordingRef.current(false);
+          isMicPressed.current = false;
+          if (pressTimer.current) {
+            clearTimeout(pressTimer.current);
+            pressTimer.current = null;
           }
+          stopRecordingRef.current(false);
           RNAnimated.spring(dxAnim, {
             toValue: 0,
             useNativeDriver: true,
@@ -726,7 +766,7 @@ export default function Chat() {
                   }
                 ]}
               >
-                Release to send • Slide to cancel
+                Slide to cancel
               </RNAnimated.Text>
             </RNAnimated.View>
           ) : (

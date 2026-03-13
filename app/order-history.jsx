@@ -36,17 +36,17 @@ export default function OrderHistory() {
   const [endDate, setEndDate] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const handleBack = () => {
-    router.back();
-  };
+  // const handleBack = () => {
+  //   router.back();
+  // };
 
-  const handleEdit = () => {
-    Alert.alert('ပြင်မယ်', 'ပြင်ဆင်ခြင်း လုပ်ဆောင်မှုများ');
-  };
+  // const handleEdit = () => {
+  //   Alert.alert('ပြင်မယ်', 'ပြင်ဆင်ခြင်း လုပ်ဆောင်မှုများ');
+  // };
 
-  const handleDateFilter = () => {
-    setShowDateFilter(true);
-  };
+  // const handleDateFilter = () => {
+  //   setShowDateFilter(true);
+  // };
 
   const handleQuickFilter = (filterType) => {
     setSelectedFilter(filterType);
@@ -186,7 +186,7 @@ export default function OrderHistory() {
 
   const handleReorder = async (orderId) => {
     try {
-      console.log('Starting reorder for orderId:', orderId);
+      // console.log('Starting reorder for orderId:', orderId);
       Toast.show({
         type: 'info',
         text1: 'လုပ်ဆောင်နေပါသည်',
@@ -195,28 +195,28 @@ export default function OrderHistory() {
       });
 
       const orderResponse = await getOrderDetail(orderId);
-      console.log('Order Details Response:', orderResponse);
+      // console.log('Order Details Response:', orderResponse);
 
       if (!orderResponse.success || !orderResponse.data) {
         throw new Error(orderResponse.message || 'Failed to fetch order details');
       }
 
       const products = orderResponse.data.products;
-      console.log('Products to reorder:', products);
+      // console.log('Products to reorder:', products);
 
       let addedCount = 0;
 
       // Add each product to cart
       for (const item of products) {
         try {
-          console.log(`Fetching details for stockId: ${item.productCode}`);
+          // console.log(`Fetching details for stockId: ${item.productCode}`);
           // Fetch full product details to get current price and images
           const productResponse = await handleGetProductById(item.productCode);
 
           if (productResponse.success && productResponse.data) {
             // Check structured data based on ProductDetail usage: result.data.data.data
             const productData = productResponse.data.data?.data || productResponse.data.data;
-            console.log(`Product data for ${item.productCode}:`, productData);
+            // console.log(`Product data for ${item.productCode}:`, productData);
 
             if (productData) {
               const cartItem = {
@@ -231,7 +231,7 @@ export default function OrderHistory() {
               };
 
               const qty = Number(item.quantity) || 1;
-              console.log('Adding to cart:', cartItem, 'Quantity:', qty);
+              // console.log('Adding to cart:', cartItem, 'Quantity:', qty);
 
               addItem(cartItem, qty);
               addedCount++;
@@ -253,9 +253,6 @@ export default function OrderHistory() {
           text2: `${addedCount} မျိုးကို cart ထဲသို့ ထည့်ပြီးပါပြီ`,
         });
 
-        console.log('Reorder complete, added', addedCount, 'items. Navigating to cart...');
-
-        // Use a small timeout to ensure state propagation in some React Native environments
         setTimeout(() => {
           router.push('/(tabs)/cart');
         }, 100);
@@ -286,16 +283,16 @@ export default function OrderHistory() {
     });
   };
 
-  const formatStatus = (status) => {
-    const statusMap = {
-      pending: 'ဆိုင်းငံ့ထား',
-      processing: 'လုပ်ဆောင်နေဆဲ',
-      shipped: 'ပို့ဆောင်ပြီး',
-      delivered: 'ပို့ဆောင်ပြီး',
-      cancelled: 'ပယ်ဖျက်ပြီး',
-    };
-    return statusMap[status] || status;
-  };
+  // const formatStatus = (status) => {
+  //   const statusMap = {
+  //     pending: 'ဆိုင်းငံ့ထား',
+  //     processing: 'လုပ်ဆောင်နေဆဲ',
+  //     shipped: 'ပို့ဆောင်ပြီး',
+  //     delivered: 'ပို့ဆောင်ပြီး',
+  //     cancelled: 'ပယ်ဖျက်ပြီး',
+  //   };
+  //   return statusMap[status] || status;
+  // };
 
   const fetchOrderHistory = async () => {
     try {
@@ -304,8 +301,11 @@ export default function OrderHistory() {
       const response = await getOrderHistory();
 
       if (response.success) {
-        const orders = response.data.orders || [];
-        const count = response.data.count || orders.length;
+        // console.log("response", response);
+        const filterOrder = response.data.orders.filter((order) => order.status !== 'pending');
+        // console.log("filterOrder", filterOrder);
+        const orders = filterOrder || [];
+        const count = filterOrder.length;
 
         // Store all orders for filtering
         setAllOrders(orders);

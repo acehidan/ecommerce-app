@@ -83,7 +83,7 @@ export default function CheckoutStep4() {
         paidAmount: orderSummary.grandTotal,
       };
 
-      console.log("orderData", orderData);
+      // console.log("orderData", orderData);
 
       // Additional validation for API requirements
 
@@ -110,6 +110,7 @@ export default function CheckoutStep4() {
           const redirectUrl = `https://komindiystore.com/kpay-redirect?appid=${appid}&merch_code=${merch_code}&nonce_str=${nonce_str}&prepay_id=${prepay_id}&timestamp=${timestamp}&sign=${sign}`;
           try {
             console.log("redirectUrl", redirectUrl);
+            setIsCreatingOrder(false);
             await WebBrowser.openBrowserAsync(redirectUrl);
           } catch (err) {
             console.error('Failed to open KPAY redirect URL:', err);
