@@ -12,6 +12,7 @@ export default function Index() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [splashFinished, setSplashFinished] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState(true);
 
   // Initialize auth on mount
   useEffect(() => {
@@ -20,7 +21,8 @@ export default function Index() {
         if (typeof window !== 'undefined') {
           window.frameworkReady?.();
         }
-        await initializeAuth();
+        const isValid = await initializeAuth();
+        setIsTokenValid(isValid);
         setIsInitialized(true);
       } catch (error) {
         console.error('Error initializing auth in index:', error);
@@ -56,6 +58,13 @@ export default function Index() {
 
       hasNavigated.current = true;
 
+      // If token was invalid, redirect to login
+      if (!isTokenValid) {
+        console.log('Token is invalid, redirecting to login');
+        router.replace('/auth/login');
+        return;
+      }
+
       // Navigate based on authentication status
       // Check token directly to be more reliable
       if (token || isAuthenticated) {
@@ -68,7 +77,7 @@ export default function Index() {
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [isInitialized, splashFinished, isAuthenticated, token, pathname]);
+  }, [isInitialized, splashFinished, isAuthenticated, token, pathname, isTokenValid]);
 
   // Show splash screen while initializing or before navigation
   if (showSplash) {

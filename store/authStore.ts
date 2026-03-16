@@ -6,6 +6,7 @@ import {
   clearUserProfile,
   getUserProfile,
 } from '../services/user/userProfile';
+import { validateToken } from '../services/auth/validateToken';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -30,7 +31,7 @@ interface AuthState {
   ) => void;
   logout: () => void;
   continueAsGuest: () => void;
-  initializeAuth: () => Promise<void>;
+  initializeAuth: () => Promise<boolean>;
   updateUsername: (userName: string) => void;
   updatePhoneNumber: (phoneNumber: string, isVerified: boolean) => void;
   setPasswordChangeToken: (token: string | null) => void;
@@ -71,14 +72,28 @@ export const useAuthStore = create<AuthState>()(
         try {
           const profile = await getUserProfile();
           if (profile && profile.token) {
-            set({
-              isAuthenticated: true,
-              user: profile.user,
-              token: profile.token,
-            });
+            const validation = await validateToken();
+            if (validation.valid) {
+              set({
+                isAuthenticated: true,
+                user: profile.user,
+                token: profile.token,
+              });
+              return true;
+            } else {
+              // Token invalid
+              await get().logout();
+              return false;
+            }
+          } else {
+            // No token found, continue as guest
+            get().continueAsGuest();
+            return true;
           }
         } catch (error) {
           console.error('Error initializing auth:', error);
+          get().continueAsGuest();
+          return true;
         }
       },
       updateUsername: (userName: string) => {

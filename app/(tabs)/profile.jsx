@@ -61,12 +61,12 @@ export default function Profile() {
             Please login to view your profile
           </Text>
         </View>
-        <AuthRequiredModal
-          visible={true}
-          onClose={() => {
-            router.back();
-          }}
-        />
+        <Pressable
+          style={styles.loginButton}
+          onPress={() => router.push('/auth/login')}
+        >
+          <Text style={styles.loginButtonText}>Login</Text>
+        </Pressable>
       </SafeAreaView>
     );
   }

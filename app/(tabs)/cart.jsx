@@ -42,12 +42,7 @@ export default function Cart() {
             <Text style={styles.loginButtonText}>Login</Text>
           </Pressable>
         </View>
-        {/* <AuthRequiredModal
-          visible={showModal}
-          onClose={() => {
-            setShowModal(false);
-          }}
-        /> */}
+
       </SafeAreaView>
     );
   }
