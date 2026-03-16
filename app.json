@@ -48,7 +48,7 @@
     },
     "android": {
       "package": "com.komindiy.store",
-      "versionCode": 2,
+      "versionCode": 3,
       "softwareKeyboardLayoutMode": "pan",
       "launchMode": "singleTask",
       "permissions": [

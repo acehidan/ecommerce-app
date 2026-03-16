@@ -1,3 +1,4 @@
+import Toast from 'react-native-toast-message';
 import api from '../api';
 
 export interface VerifyPasswordRequest {
@@ -22,9 +23,22 @@ export const verifyPassword = async (
       phoneNumber,
       oldPassword,
     });
+    if (response.data.success) {
+      Toast.show({
+        type: 'success',
+        text2:
+          response.data.message || 'လျှို့ဝှက်နံပါတ် အတည်ပြုခြင်း အောင်မြင်ပါပြီ',
 
+      });
+    }
     return response.data;
   } catch (error) {
+    Toast.show({
+      type: 'error',
+      text2:
+        error.response.data.message || 'လျှို့ဝှက်နံပါတ် အတည်ပြုခြင်း မအောင်မြင်ပါ',
+
+    });
     throw error;
   }
 };

@@ -1,6 +1,7 @@
 import api from '../api';
 import { updateUserProfile } from './userProfile';
 import { useAuthStore } from '../../store/authStore';
+import Toast from 'react-native-toast-message';
 
 export interface UpdateUsernameRequest {
   userName: string;
@@ -24,7 +25,6 @@ export const updateUsername = async (
     const response = await api.patch('/api/v1/username-change', {
       userName,
     });
-
     // Update local storage and store if API call is successful
     if (response.data.success && response.data.data?.user) {
       await updateUserProfile({
@@ -35,8 +35,19 @@ export const updateUsername = async (
       useAuthStore.getState().updateUsername(response.data.data.user.userName);
     }
 
+    Toast.show({
+      type: 'success',
+      text2:
+        'မိမိအကောင့်  အသေးစိတ် အချက်အလက်များကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ ။',
+
+    });
     return response.data;
   } catch (error) {
+    Toast.show({
+      type: 'info',
+      text2: error.response.data.message || 'နာမည် ပြောင်းလဲမှု မအောင်မြင်ပါ',
+
+    })
     console.error('Error updating username:', error);
     throw error;
   }

@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -53,32 +52,13 @@ export default function UpdateUsername() {
       const response = await updateUsername(username.trim());
 
       if (response.success) {
-        Toast.show({
-          type: 'success',
-          text2:
-            'မိမိအကောင့်  အသေးစိတ် အချက်အလက်များကို အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ ။',
-          position: 'top',
-          visibilityTime: 3000,
-          onHide: () => router.push('/profile'),
-        });
+        router.push('/profile');
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'အမှား',
-          text2: response.message || 'နာမည် ပြောင်းလဲမှု မအောင်မြင်ပါ',
-          position: 'top',
-          visibilityTime: 3000,
-        });
+        ;
       }
     } catch (error) {
       console.error('Error updating username:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'အမှား',
-        text2: 'နာမည် ပြောင်းလဲမှု မအောင်မြင်ပါ။ ပြန်လည် ကြိုးစားကြည့်ပါ။',
-        position: 'top',
-        visibilityTime: 3000,
-      });
+
     } finally {
       setLoading(false);
     }

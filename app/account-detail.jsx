@@ -21,6 +21,7 @@ import {
   // updateUserProfile,
 } from '../services/user/userProfile';
 import { useAuthStore } from '../store/authStore';
+import { verifyPassword } from '../services/user/verifyPassword';
 
 export default function AccountDetail() {
   const [userProfile, setUserProfile] = useState(null);
@@ -30,9 +31,6 @@ export default function AccountDetail() {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
-  const [passwordErrorText, setPasswordErrorText] = useState(
-    'လျှို့ဝှက်နံပါတ်အဟောင်းမှားနေသည်'
-  );
   const { setPasswordChangeToken } = useAuthStore();
 
   useEffect(() => {
@@ -86,21 +84,18 @@ export default function AccountDetail() {
   };
 
   const handleConfirmPassword = async () => {
+
     if (!currentPassword.trim()) {
       setPasswordError(true);
       return;
     }
 
-    setPasswordLoading(true);
-    setPasswordError(false);
-
     try {
-      const phoneNumber = userProfile?.user?.phoneNumber || '09422625883';
+      const phoneNumber = userProfile?.user?.phoneNumber;
       const response = await verifyPassword(
         phoneNumber,
         currentPassword.trim()
       );
-      console.log('response', response.message);
 
       if (response.success && response.data?.token) {
         // Store the token for password change
@@ -117,6 +112,9 @@ export default function AccountDetail() {
     } finally {
       setPasswordLoading(false);
     }
+
+
+
   };
 
   const togglePasswordVisibility = () => {
@@ -127,7 +125,7 @@ export default function AccountDetail() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Pressable style={styles.backButton} onPress={() => router.push('/profile')}>
             <Ionicons name="arrow-back" size={24} color="#000000" />
           </Pressable>
           <Text style={styles.headerTitle}>မိမိအကောင့် အသေးစိတ်</Text>
@@ -143,7 +141,7 @@ export default function AccountDetail() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => router.push('/profile')}>
           <Ionicons name="arrow-back" size={24} color="#000000" />
         </Pressable>
         <Text style={styles.headerTitle}>မိမိအကောင့် အသေးစိတ်</Text>
@@ -256,7 +254,7 @@ export default function AccountDetail() {
                         style={[
                           styles.modalPasswordInputContainer,
                           passwordError &&
-                            styles.modalPasswordInputContainerError,
+                          styles.modalPasswordInputContainerError,
                         ]}
                       >
                         <TextInput

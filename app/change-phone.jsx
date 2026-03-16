@@ -25,11 +25,8 @@ export default function ChangePhone() {
   const handleUpdatePhone = async () => {
     if (!newPhoneNumber.trim()) {
       Toast.show({
-        type: 'error',
-        text1: 'အမှား',
+        type: 'info',
         text2: 'ဖုန်းနံပါတ်အသစ် ထည့်သွင်းပါ',
-        position: 'top',
-        visibilityTime: 3000,
       });
       return;
     }
@@ -38,11 +35,8 @@ export default function ChangePhone() {
     const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(newPhoneNumber.replace(/\s/g, ''))) {
       Toast.show({
-        type: 'error',
-        text1: 'အမှား',
+        type: 'info',
         text2: 'ဖုန်းနံပါတ် မမှန်ကန်ပါ',
-        position: 'top',
-        visibilityTime: 3000,
       });
       return;
     }
@@ -64,18 +58,7 @@ export default function ChangePhone() {
           // Note: isVerified might be false initially until OTP is verified
           updatePhoneInStore(newPhoneNumber.trim(), false);
         }
-
-        Toast.show({
-          type: 'success',
-          text1: 'အောင်မြင်',
-          text2: response.message || 'ဖုန်းနံပါတ် ပြောင်းလဲပြီးပါပြီ',
-          position: 'top',
-          visibilityTime: 2000,
-          onHide: () => {
-            // Navigate back to account detail page
-            router.push('/account-detail');
-          },
-        });
+        router.push('/account-detail');
       } else {
         Toast.show({
           type: 'error',
@@ -158,7 +141,7 @@ export default function ChangePhone() {
             style={[
               styles.getOTPButton,
               loading ||
-                (!newPhoneNumber.trim() && styles.getOTPButtonDisabled),
+              (!newPhoneNumber.trim() && styles.getOTPButtonDisabled),
             ]}
             onPress={handleUpdatePhone}
             disabled={loading}
