@@ -15,9 +15,9 @@ import { useWishlistStore } from '../../store/wishlistStore';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import PageHeader from '../components/PageHeader';
-import AuthRequiredModal from '../components/AuthRequiredModal';
 import LogoutConfirmModal from '../components/LogoutConfirmModal';
 import { useState } from 'react';
+import colors from '../../constants/colors';
 
 export default function Profile() {
   const wishlistItems = useWishlistStore((state) => state.items);
@@ -56,17 +56,18 @@ export default function Profile() {
       <SafeAreaView style={styles.container}>
         <PageHeader title="မိမိအကောင့်" sticky={false} />
         <View style={styles.emptyContainer}>
+
           <Ionicons name="person-outline" size={64} color="#666666" />
           <Text style={styles.emptyText}>
             Please login to view your profile
           </Text>
+          <Pressable
+            style={styles.loginButton}
+            onPress={() => router.push('/auth/login')}
+          >
+            <Text style={styles.loginButtonText}>Login</Text>
+          </Pressable>
         </View>
-        <Pressable
-          style={styles.loginButton}
-          onPress={() => router.push('/auth/login')}
-        >
-          <Text style={styles.loginButtonText}>Login</Text>
-        </Pressable>
       </SafeAreaView>
     );
   }
@@ -249,7 +250,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '70%',
   },
-
+  loginButton: {
+    backgroundColor: colors.button.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 50,
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  loginButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   logoutIcon: {
     width: 48,
     height: 48,

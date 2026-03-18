@@ -60,7 +60,6 @@ export default function Index() {
 
       // If token was invalid, redirect to login
       if (!isTokenValid) {
-        console.log('Token is invalid, redirecting to login');
         router.replace('/auth/login');
         return;
       }
@@ -68,10 +67,8 @@ export default function Index() {
       // Navigate based on authentication status
       // Check token directly to be more reliable
       if (token || isAuthenticated) {
-        console.log('User is authenticated, navigating to tabs');
         router.replace('/(tabs)');
       } else {
-        console.log('User is not authenticated, navigating to onboarding');
         router.replace('/auth/onboarding');
       }
     }, 200);

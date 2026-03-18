@@ -67,12 +67,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       continueAsGuest: () =>
-        set({ isAuthenticated: true, user: null, token: null }),
+        set({ isAuthenticated: false, user: null, token: null }),
       initializeAuth: async () => {
         try {
           const profile = await getUserProfile();
           if (profile && profile.token) {
             const validation = await validateToken();
+            // console.log('validation', validation.valid);
             if (validation.valid) {
               set({
                 isAuthenticated: true,
