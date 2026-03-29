@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Image } from 'react-native';
 
 export default function OrderProcessing() {

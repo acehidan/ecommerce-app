@@ -114,9 +114,11 @@ export default function CheckoutStep4() {
             kpayData;
           const redirectUrl = `https://komindiystore.com/kpay-redirect?appid=${appid}&merch_code=${merch_code}&nonce_str=${nonce_str}&prepay_id=${prepay_id}&timestamp=${timestamp}&sign=${sign}`;
           try {
-            console.log("redirectUrl", redirectUrl);
             setIsCreatingOrder(false);
-            await WebBrowser.openBrowserAsync(redirectUrl);
+            router.replace('/payment_result');
+            setTimeout(() => {
+              WebBrowser.openBrowserAsync(redirectUrl);
+            }, 1000);
           } catch (err) {
             console.error('Failed to open KPAY redirect URL:', err);
             Alert.alert('Error', 'Could not open KPAY payment page.');

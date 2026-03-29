@@ -34,8 +34,6 @@ export default function PaymentResult() {
 
       if (response.success) {
         const orderStatus = response.data.status;
-        console.log(`Actual Order Status (Attempt ${retryCount + 1}):`, orderStatus);
-
         if (orderStatus === 'confirm' || orderStatus === 'confirmed') {
           isNavigating.current = true;
           // If confirmed, navigate to order success page

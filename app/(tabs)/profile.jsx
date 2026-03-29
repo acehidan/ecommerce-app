@@ -20,7 +20,6 @@ import { useState } from 'react';
 import colors from '../../constants/colors';
 
 export default function Profile() {
-  const wishlistItems = useWishlistStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clearCart);
   const { isAuthenticated, user, logout } = useAuthStore();
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);

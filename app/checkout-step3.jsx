@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,15 +15,48 @@ import { useCheckoutStore } from '../store/checkoutStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import PageHeader from './components/PageHeader';
 import colors from '../constants/colors';
+import { useAuthStore } from '../store/authStore';
+import { getUserProfileById } from '../services/user/getUserProfileById';
+import { Alert, ActivityIndicator } from 'react-native';
+
 
 export default function CheckoutStep3() {
   const router = useRouter();
-  const { getTotalPrice } = useCartStore();
-  const { setPaymentMethod, setReceiptImage, setPaymentDetails } =
+  const { setPaymentMethod, setPaymentDetails } =
     useCheckoutStore();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState('cash-on-delivery');
   const [selectedPaymentType, setSelectedPaymentType] = useState('cash'); // 'cash' for COD, 'kpay' for cash-down
+  const [isCheckingUser, setIsCheckingUser] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    const checkBanStatus = async () => {
+      if (!user?._id) return;
+      try {
+        setIsCheckingUser(true);
+        const profileResponse = await getUserProfileById(user._id);
+        if (profileResponse.success) {
+          const banned = profileResponse.data.user.isBanned;
+          setIsBanned(banned);
+          if (banned) {
+            // Force k-pay if banned
+            setSelectedPaymentMethod('k-pay');
+            setSelectedPaymentType('kpay');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user status on mount:', error);
+      } finally {
+        setIsCheckingUser(false);
+      }
+    };
+
+    checkBanStatus();
+  }, [user?._id]);
+
+
 
   const paymentMethods = [
     { key: 'cash-on-delivery', label: 'အိမ်အရောက်ငွေချေ', type: 'radio' },
@@ -35,12 +68,19 @@ export default function CheckoutStep3() {
     if (selectedPaymentMethod === 'cash-on-delivery') {
       return [{ key: 'cash', label: 'ငွေသား', icon: 'cash-outline' }];
     } else if (selectedPaymentMethod === 'k-pay') {
-      return [{ key: 'kpay', label: 'KPAY', icon: 'card-outline' }];
+      return [{ key: 'kpay', label: 'KBZ-PAY', icon: 'card-outline' }];
     }
     return [];
   };
 
   const handlePaymentMethodChange = (methodKey) => {
+    if (isBanned && methodKey === 'cash-on-delivery') {
+      Alert.alert(
+        'အသိပေးချက်',
+        'သင်၏ အကောင့်အား ပိတ်ထားသောကြောင့် "အိမ်အရောက်ငွေချေ" နည်းလမ်းအား အသုံးပြု၍ မရနိုင်ပါ။'
+      );
+      return;
+    }
     setSelectedPaymentMethod(methodKey);
     // Reset payment type when payment method changes
     if (methodKey === 'cash-on-delivery') {
@@ -49,6 +89,7 @@ export default function CheckoutStep3() {
       setSelectedPaymentType('kpay');
     }
   };
+
 
   const saveStep3Data = async () => {
     setPaymentMethod(selectedPaymentMethod);
@@ -95,46 +136,68 @@ export default function CheckoutStep3() {
           <View style={styles.paymentMethodSection}>
             <Text style={styles.subsectionTitle}>ငွေပေးချေမှု</Text>
             <View style={styles.paymentOptionsCard}>
-              {paymentMethods.map((method) => (
-                <Pressable
-                  key={method.key}
-                  style={styles.paymentOption}
-                  onPress={() => handlePaymentMethodChange(method.key)}
-                >
-                  <View style={styles.paymentOptionLeft}>
-                    {method.type === 'checkbox' ? (
-                      <View
-                        style={[
-                          styles.checkbox,
-                          selectedPaymentMethod === method.key &&
-                          styles.checkboxSelected,
-                        ]}
-                      >
-                        {selectedPaymentMethod === method.key && (
-                          <Ionicons
-                            name="checkmark"
-                            size={16}
-                            color="#FFFFFF"
-                          />
-                        )}
-                      </View>
-                    ) : (
-                      <View
-                        style={[
-                          styles.radioButton,
-                          selectedPaymentMethod === method.key &&
-                          styles.radioButtonSelected,
-                        ]}
-                      >
-                        {selectedPaymentMethod === method.key && (
-                          <View style={styles.radioButtonInner} />
-                        )}
-                      </View>
-                    )}
-                    <Text style={styles.paymentOptionText}>{method.label}</Text>
-                  </View>
-                </Pressable>
-              ))}
+              {paymentMethods.map((method) => {
+                const isDisabled = isBanned && method.key === 'cash-on-delivery';
+
+                return (
+                  <Pressable
+                    key={method.key}
+                    style={[
+                      styles.paymentOption,
+                      isDisabled && { opacity: 0.5 }
+                    ]}
+                    onPress={() => handlePaymentMethodChange(method.key)}
+                  >
+                    <View style={styles.paymentOptionLeft}>
+                      {method.type === 'checkbox' ? (
+                        <View
+                          style={[
+                            styles.checkbox,
+                            selectedPaymentMethod === method.key &&
+                            styles.checkboxSelected,
+                          ]}
+                        >
+                          {selectedPaymentMethod === method.key && (
+                            <Ionicons
+                              name="checkmark"
+                              size={16}
+                              color="#FFFFFF"
+                            />
+                          )}
+                        </View>
+                      ) : (
+                        <View
+                          style={[
+                            styles.radioButton,
+                            selectedPaymentMethod === method.key &&
+                            styles.radioButtonSelected,
+                            isDisabled && { borderColor: '#999', opacity: 0.3 }
+                          ]}
+                        >
+                          {selectedPaymentMethod === method.key && (
+                            <View style={styles.radioButtonInner} />
+                          )}
+                        </View>
+                      )}
+                      <Text style={[
+                        styles.paymentOptionText,
+                        isDisabled && { color: '#888' }
+                      ]}>
+                        {method.label}
+                      </Text>
+                      {isDisabled && (
+                        <Ionicons
+                          name="lock-closed"
+                          size={14}
+                          color="#888"
+                          style={{ marginLeft: 8 }}
+                        />
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+
             </View>
           </View>
 
@@ -193,15 +256,38 @@ export default function CheckoutStep3() {
           <Text style={styles.backActionText}>ပြန်သွားမယ်</Text>
         </Pressable>
         <Pressable
-          style={styles.payActionButton}
+          style={[styles.payActionButton, isCheckingUser && { opacity: 0.7 }]}
+          disabled={isCheckingUser}
           onPress={async () => {
-            // Show modal if kpay is selected
-            await saveStep3Data();
-            router.push('/checkout-step4');
+            if (!user?._id) {
+              Alert.alert('Error', 'User information not found.');
+              return;
+            }
+
+            try {
+              setIsCheckingUser(true);
+              const profileResponse = await getUserProfileById(user._id);
+              // Proceed if not banned
+              await saveStep3Data();
+              router.push('/checkout-step4');
+            } catch (error) {
+              console.error('Error checking user profile:', error);
+              // Fallback: proceed even if check fails, or show error?
+              // Let's proceed as a fallback for robustness, or block it.
+              // Blocking is safer for the business. Let's block it but with a friendly message.
+              Alert.alert('Error', 'စနစ် အမှားအယွင်း ဖြစ်ပေါ်နေပါသည်။ ခဏနေမှ ပြန်လည်ကြိုးစားပေးပါ။');
+            } finally {
+              setIsCheckingUser(false);
+            }
           }}
         >
-          <Text style={styles.payActionText}>ငွေပေးချေမယ်</Text>
+          {isCheckingUser ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Text style={styles.payActionText}>ငွေပေးချေမယ်</Text>
+          )}
         </Pressable>
+
       </View>
 
 

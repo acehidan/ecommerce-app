@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "komin-diy",
+    "name": "Komin-DIY",
     "slug": "komin-diy",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,12 +43,12 @@
         "origin": false
       },
       "eas": {
-        "projectId": "4b840218-4ae4-4a29-93a0-942c63748198"
+        "projectId": "25454095-16c6-4214-bb79-5f04582c77a0"
       }
     },
     "android": {
-      "package": "com.komindiy.store",
-      "versionCode": 5,
+      "package": "com.komin.diystore",
+      "versionCode": 1,
       "softwareKeyboardLayoutMode": "pan",
       "launchMode": "singleTask",
       "permissions": [
@@ -56,6 +56,6 @@
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
-    "owner": "acehidan"
+    "owner": "aungaungoogame"
   }
 }

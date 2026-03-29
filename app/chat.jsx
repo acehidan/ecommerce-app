@@ -320,6 +320,7 @@ export default function Chat() {
         // console.log('Image sent successfully');
         if (!conversationId && response.data.conversation?._id) {
           setConversationId(response.data.conversation._id);
+          setMessages(response.data.messages);
         }
       } else {
         Toast.show({
