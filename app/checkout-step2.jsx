@@ -4,6 +4,8 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -20,6 +22,7 @@ export default function CheckoutStep2() {
   const [deliveryData, setDeliveryData] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const { items, getTotalPrice } = useCartStore();
   const { setOrderItems, setOrderSummary, checkoutData } = useCheckoutStore();
@@ -192,26 +195,40 @@ export default function CheckoutStep2() {
 
       {/* Bottom Action Buttons */}
       <View style={styles.bottomActions}>
-        <Pressable
-          style={styles.backActionButton}
-          onPress={() => router.back()}
+        <TouchableOpacity
+          style={[styles.backActionButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating}
+          onPress={() => {
+            if (isNavigating) return;
+            setIsNavigating(true);
+            router.back();
+            setTimeout(() => setIsNavigating(false), 1000);
+          }}
         >
           <Text style={styles.backActionText}>ပြန်သွားမယ်</Text>
-        </Pressable>
-        <Pressable
-          style={styles.confirmActionButton}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.confirmActionButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating}
           onPress={() => {
+            if (isNavigating) return;
             if (!deliveryData) {
               setModalMessage('ပို့ဆောင်ရေး အချက်အလက်များ မပြည့်စုံသေးပါ။');
               setShowErrorModal(true);
               return;
             }
+            setIsNavigating(true);
             saveStep2Data();
             router.push('/checkout-step3');
+            setTimeout(() => setIsNavigating(false), 1000);
           }}
         >
-          <Text style={styles.confirmActionText}>မှန်ကန်ပါတယ်</Text>
-        </Pressable>
+          {isNavigating ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.confirmActionText}>မှန်ကန်ပါတယ်</Text>
+          )}
+        </TouchableOpacity>
       </View>
       <DeliveryZoneErrorModal
         visible={showErrorModal}

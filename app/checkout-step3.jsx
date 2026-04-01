@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +30,7 @@ export default function CheckoutStep3() {
   const [selectedPaymentType, setSelectedPaymentType] = useState('cash'); // 'cash' for COD, 'kpay' for cash-down
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -249,16 +251,23 @@ export default function CheckoutStep3() {
 
       {/* Bottom Action Buttons */}
       <View style={styles.bottomActions}>
-        <Pressable
-          style={styles.backActionButton}
-          onPress={() => router.back()}
+        <TouchableOpacity
+          style={[styles.backActionButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating || isCheckingUser}
+          onPress={() => {
+            if (isNavigating || isCheckingUser) return;
+            setIsNavigating(true);
+            router.back();
+            setTimeout(() => setIsNavigating(false), 1000);
+          }}
         >
           <Text style={styles.backActionText}>ပြန်သွားမယ်</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.payActionButton, isCheckingUser && { opacity: 0.7 }]}
-          disabled={isCheckingUser}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.payActionButton, (isCheckingUser || isNavigating) && { opacity: 0.7 }]}
+          disabled={isCheckingUser || isNavigating}
           onPress={async () => {
+            if (isCheckingUser || isNavigating) return;
             if (!user?._id) {
               Alert.alert('Error', 'User information not found.');
               return;
@@ -270,13 +279,13 @@ export default function CheckoutStep3() {
               // Proceed if not banned
               await saveStep3Data();
               router.push('/checkout-step4');
+              setTimeout(() => setIsCheckingUser(false), 1000);
             } catch (error) {
               console.error('Error checking user profile:', error);
               // Fallback: proceed even if check fails, or show error?
               // Let's proceed as a fallback for robustness, or block it.
               // Blocking is safer for the business. Let's block it but with a friendly message.
               Alert.alert('Error', 'စနစ် အမှားအယွင်း ဖြစ်ပေါ်နေပါသည်။ ခဏနေမှ ပြန်လည်ကြိုးစားပေးပါ။');
-            } finally {
               setIsCheckingUser(false);
             }
           }}
@@ -286,8 +295,7 @@ export default function CheckoutStep3() {
           ) : (
             <Text style={styles.payActionText}>ငွေပေးချေမယ်</Text>
           )}
-        </Pressable>
-
+        </TouchableOpacity>
       </View>
 
 

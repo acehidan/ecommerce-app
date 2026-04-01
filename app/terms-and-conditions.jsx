@@ -1,23 +1,31 @@
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import PageHeader from './components/PageHeader';
 import colors from '../constants/colors';
 
 export default function TermsAndConditions() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleDisagree = () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
     router.back();
+    setTimeout(() => setIsNavigating(false), 1000);
   };
 
   const handleAgree = () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
     router.push('/checkout-step1');
+    setTimeout(() => setIsNavigating(false), 1000);
   };
 
   return (
@@ -88,12 +96,24 @@ export default function TermsAndConditions() {
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
-        <Pressable style={styles.disagreeButton} onPress={handleDisagree}>
+        <TouchableOpacity
+          style={[styles.disagreeButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating}
+          onPress={handleDisagree}
+        >
           <Text style={styles.disagreeButtonText}>မတူပါ</Text>
-        </Pressable>
-        <Pressable style={styles.agreeButton} onPress={handleAgree}>
-          <Text style={styles.agreeButtonText}>သဘောတူပါတယ်</Text>
-        </Pressable>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.agreeButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating}
+          onPress={handleAgree}
+        >
+          {isNavigating ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.agreeButtonText}>သဘောတူပါတယ်</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

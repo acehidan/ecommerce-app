@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -75,6 +76,7 @@ export default function CheckoutStep1() {
   const [error, setError] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const addressTypes = userAddresses.map((address) => ({
     key: address._id,
@@ -322,23 +324,39 @@ export default function CheckoutStep1() {
 
       {/* Bottom Action Buttons */}
       <View style={styles.bottomActions}>
-        <Pressable
-          style={styles.backActionButton}
-          onPress={() => router.back()}
+        <TouchableOpacity
+          style={[styles.backActionButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating}
+          onPress={() => {
+            if (isNavigating) return;
+            setIsNavigating(true);
+            router.back();
+            setTimeout(() => setIsNavigating(false), 1000);
+          }}
         >
           <Text style={styles.backActionText}>ပြန်သွားမယ်</Text>
-        </Pressable>
-        <Pressable
-          style={styles.confirmActionButton}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.confirmActionButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating}
           onPress={async () => {
+            if (isNavigating) return;
+            setIsNavigating(true);
             const success = await saveStep1Data();
             if (success) {
               router.push('/checkout-step2');
+              setTimeout(() => setIsNavigating(false), 1000);
+            } else {
+              setIsNavigating(false); // Enable button if save failed
             }
           }}
         >
-          <Text style={styles.confirmActionText}>မှန်ကန်ပါတယ်</Text>
-        </Pressable>
+          {isNavigating ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.confirmActionText}>မှန်ကန်ပါတယ်</Text>
+          )}
+        </TouchableOpacity>
       </View>
       <DeliveryZoneErrorModal
         visible={showErrorModal}

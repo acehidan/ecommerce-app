@@ -4,6 +4,8 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import {
   SafeAreaView,
@@ -11,6 +13,7 @@ import {
 } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../constants/colors';
@@ -19,6 +22,7 @@ import PageHeader from '../components/PageHeader';
 export default function Cart() {
   const router = useRouter();
   const { items, updateQuantity, getTotalPrice } = useCartStore();
+  const [isNavigating, setIsNavigating] = useState(false);
   console.log('items', items);
   const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
@@ -123,12 +127,22 @@ export default function Cart() {
         </View>
       </View>
       <View style={styles.checkoutButtonContainer}>
-        <Pressable
-          style={styles.checkoutButton}
-          onPress={() => router.push('/terms-and-conditions')}
+        <TouchableOpacity
+          style={[styles.checkoutButton, isNavigating && { opacity: 0.7 }]}
+          disabled={isNavigating}
+          onPress={() => {
+            if (isNavigating) return;
+            setIsNavigating(true);
+            router.push('/terms-and-conditions');
+            setTimeout(() => setIsNavigating(false), 1000);
+          }}
         >
-          <Text style={styles.checkoutButtonText}>ပိုက်ဆံရှင်းမယ်</Text>
-        </Pressable>
+          {isNavigating ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.checkoutButtonText}>ပိုက်ဆံရှင်းမယ်</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
