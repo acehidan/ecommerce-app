@@ -1,3 +1,4 @@
+import Toast from 'react-native-toast-message';
 import api from '../api';
 
 export interface AddAddressRequest {
@@ -27,6 +28,11 @@ const addAddress = async (
 ): Promise<AddAddressResponse> => {
   try {
     const response = await api.post('/api/v1/addresses', addressData);
+    Toast.show({
+      type: 'success',
+      text1: 'အောင်မြင်',
+      text2: 'လိပ်စာ အချက်အလက်များ အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ',
+    });
 
     return {
       success: true,

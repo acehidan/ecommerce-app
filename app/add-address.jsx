@@ -5,7 +5,7 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  Alert,
+  Modal,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,29 +16,9 @@ import EvilIcons from '@expo/vector-icons/EvilIcons';
 import addAddress from '../services/user/addAddress';
 import updateAddress from '../services/user/updateAddress';
 import { getUserProfile } from '../services/user/userProfile';
+import Toast from 'react-native-toast-message';
 import { getDeliveries } from '../services/delivery/getDeliveries';
-
-// const CITIES = [
-//   'ရန်ကုန်',
-//   'မန္တလေး',
-//   'နေပြည်တော်',
-//   'မော်လမြိုင်',
-//   'ပဲခူး',
-//   'ပြည်',
-//   'သီရိလင်္ကာ',
-//   'အခြား',
-// ];
-
-// const TOWNSHIPS = {
-//   ရန်ကုန်: ['ဗဟန်း', 'ဒဂုံ', 'သင်္ဃန်းကျွန်း', 'မရမ်းကုန်း', 'အခြား'],
-//   မန္တလေး: ['အမရပူရ', 'ပုသိမ်', 'အခြား'],
-//   နေပြည်တော်: ['ဇမ္ဗူသီရိ', 'ပျဉ်းမနား', 'အခြား'],
-//   မော်လမြိုင်: ['အခြား'],
-//   ပဲခူး: ['အခြား'],
-//   ပြည်: ['အခြား'],
-//   သီရိလင်္ကာ: ['အခြား'],
-//   အခြား: ['အခြား'],
-// };
+import PageHeader from './components/PageHeader';
 
 export default function AddAddress() {
   const params = useLocalSearchParams();
@@ -55,8 +35,8 @@ export default function AddAddress() {
   const [exactAddress, setExactAddress] = useState(addressData?.address || '');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showTownshipDropdown, setShowTownshipDropdown] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [deliveries, setDeliveries] = useState([]);
   const [cities, setCities] = useState([]);
   const [townships, setTownships] = useState({});
@@ -95,10 +75,13 @@ export default function AddAddress() {
     } catch (error) {
       console.error('Error fetching deliveries:', error);
       setDeliveryError(error.message);
-      Alert.alert(
-        'အမှား',
-        'မြို့နှင့် မြို့နယ် အချက်အလက်များ ရယူရာတွင် အမှားတစ်ခုဖြစ်ပွားခဲ့သည်'
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'အမှား',
+        text2: 'မြို့နှင့် မြို့နယ် အချက်အလက်များ ရယူရာတွင် အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
+        position: 'top',
+        visibilityTime: 3000,
+      });
     } finally {
       setLoadingDeliveries(false);
     }
@@ -109,40 +92,48 @@ export default function AddAddress() {
   };
 
   const handleCancel = () => {
-    Alert.alert(
-      'မလုပ်တော့ပါ',
-      isEditMode
-        ? 'သင်လိပ်စာပြင်ဆင်ခြင်းကို ရပ်တန့်ရန်သေချာပါသလား?'
-        : 'သင်လိပ်စာအသစ်ထည့်ခြင်းကို ရပ်တန့်ရန်သေချာပါသလား?',
-      [
-        {
-          text: 'ဆက်လုပ်မယ်',
-          style: 'cancel',
-        },
-        {
-          text: 'ရပ်တန့်မယ်',
-          style: 'destructive',
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    setShowCancelModal(true);
   };
 
   const handleAddAddress = async () => {
     if (!addressName.trim()) {
-      Alert.alert('အမှား', 'လိပ်စာ နာမည်ထည့်ပေးပါ');
+      Toast.show({
+        type: 'error',
+        text1: 'အမှား',
+        text2: 'လိပ်စာ နာမည်ထည့်ပေးပါ',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       return;
     }
     if (!selectedCity) {
-      Alert.alert('အမှား', 'မြို့ရွေးချယ်ပေးပါ');
+      Toast.show({
+        type: 'error',
+        text1: 'အမှား',
+        text2: 'မြို့ရွေးချယ်ပေးပါ',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       return;
     }
     if (!selectedTownship) {
-      Alert.alert('အမှား', 'မြို့နယ် ရွေးချယ်ပေးပါ');
+      Toast.show({
+        type: 'error',
+        text1: 'အမှား',
+        text2: 'မြို့နယ် ရွေးချယ်ပေးပါ',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       return;
     }
     if (!exactAddress.trim()) {
-      Alert.alert('အမှား', 'လိပ်စာ အတိအကျ ထည့်ပေးပါ');
+      Toast.show({
+        type: 'error',
+        text1: 'အမှား',
+        text2: 'လိပ်စာ အတိအကျ ထည့်ပေးပါ',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       return;
     }
 
@@ -161,15 +152,22 @@ export default function AddAddress() {
         const response = await updateAddress(addressData._id, updateData);
 
         if (response.success) {
-          setShowSuccessMessage(true);
-          setTimeout(() => {
-            router.back();
-          }, 2000);
+          Toast.show({
+            type: 'success',
+            text1: 'အောင်မြင်',
+            text2: 'လိပ်စာ အချက်အလက်များ အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ',
+            position: 'top',
+            visibilityTime: 2000,
+            onHide: () => router.back(),
+          });
         } else {
-          Alert.alert(
-            'အမှား',
-            response.message || 'လိပ်စာပြင်ဆင်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်'
-          );
+          Toast.show({
+            type: 'error',
+            text1: 'အမှား',
+            text2: response.message || 'လိပ်စာပြင်ဆင်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
+            position: 'top',
+            visibilityTime: 3000,
+          });
         }
       } else {
         // Add new address
@@ -189,25 +187,28 @@ export default function AddAddress() {
         const response = await addAddress(newAddressData);
 
         if (response.success) {
-          setShowSuccessMessage(true);
-          setTimeout(() => {
-            router.back();
-          }, 2000);
+          router.back();
         } else {
-          Alert.alert(
-            'အမှား',
-            response.message || 'လိပ်စာထည့်သွင်းရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်'
-          );
+          Toast.show({
+            type: 'error',
+            text1: 'အမှား',
+            text2: response.message || 'လိပ်စာထည့်သွင်းရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
+            position: 'top',
+            visibilityTime: 3000,
+          });
         }
       }
     } catch (error) {
       console.error('Error saving address:', error);
-      Alert.alert(
-        'အမှား',
-        isEditMode
+      Toast.show({
+        type: 'error',
+        text1: 'အမှား',
+        text2: isEditMode
           ? 'လိပ်စာပြင်ဆင်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်'
-          : 'လိပ်စာထည့်သွင်းရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်'
-      );
+          : 'လိပ်စာထည့်သွင်းရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
+        position: 'top',
+        visibilityTime: 3000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -257,30 +258,13 @@ export default function AddAddress() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={styles.container}
+      pointerEvents={isLoading ? 'none' : 'auto'}
+    >
       <ScrollView style={styles.content}>
-        {/* Success Message Banner */}
-        {showSuccessMessage && (
-          <View style={styles.successBanner}>
-            <View style={styles.successIcon}>
-              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-            </View>
-            <Text style={styles.successText}>
-              {isEditMode
-                ? 'လိပ်စာ အချက်အလက်များ အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ'
-                : 'လိပ်စာ အချက်အလက်များ အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ'}
-            </Text>
-          </View>
-        )}
         {/* Header */}
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>
-            {isEditMode ? 'လိပ်စာ ပြင်ဆင်မယ်' : 'လိပ်စာအသစ် ထည့်မယ်'}
-          </Text>
-        </View>
+        <PageHeader title={isEditMode ? 'လိပ်စာ ပြင်ဆင်မယ်' : 'လိပ်စာအသစ် ထည့်မယ်'} showBackButton={true} />
 
         {/* Form Fields */}
         <View style={styles.formContainer}>
@@ -343,55 +327,75 @@ export default function AddAddress() {
             </View>
           )}
 
-          {/* Township Selection Field */}
-          {renderField(
-            'home-outline',
-            'မြို့နယ်',
-            'မြို့နယ် ရွေးချယ်ပေးပါ',
-            selectedTownship,
-            null,
-            () => setShowTownshipDropdown(!showTownshipDropdown),
-            true
-          )}
+          {/* Township Wrapper */}
+          <View style={{ zIndex: 10 }}>
+            {/* Township Selection Field */}
+            {renderField(
+              'home-outline',
+              'မြို့နယ်',
+              'မြို့နယ် ရွေးချယ်ပေးပါ',
+              selectedTownship,
+              null,
+              () => setShowTownshipDropdown(!showTownshipDropdown),
+              true
+            )}
 
-          {/* Township Dropdown */}
-          {showTownshipDropdown && (
-            <View style={styles.dropdownContainer}>
-              {!selectedCity ? (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    မြို့နယ် ရွေးချယ်ရန် မြို့ကို အရင် ရွေးချယ်ပေးပါ
-                  </Text>
-                </View>
-              ) : loadingDeliveries ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#666666" />
-                  <Text style={styles.loadingText}>ဖတ်နေသည်...</Text>
-                </View>
-              ) : !townships[selectedCity] ||
-                townships[selectedCity].length === 0 ? (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>မြို့နယ်များ မရှိပါ</Text>
-                </View>
-              ) : (
-                townships[selectedCity].map((township) => (
-                  <Pressable
-                    key={township}
-                    style={styles.dropdownItem}
-                    onPress={() => handleTownshipSelect(township)}
-                  >
-                    <Text style={styles.dropdownItemText}>{township}</Text>
-                  </Pressable>
-                ))
-              )}
-            </View>
-          )}
+            {/* Township Dropdown */}
+            {showTownshipDropdown && (
+              <ScrollView 
+                style={[
+                  styles.dropdownContainer, 
+                  { 
+                    position: 'absolute', 
+                    bottom: 85, 
+                    left: 0, 
+                    right: 0,
+                    maxHeight: 250,
+                    zIndex: 1000
+                  }
+                ]}
+                nestedScrollEnabled={true}
+              >
+                {!selectedCity ? (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      မြို့နယ် ရွေးချယ်ရန် မြို့ကို အရင် ရွေးချယ်ပေးပါ
+                    </Text>
+                  </View>
+                ) : loadingDeliveries ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#666666" />
+                    <Text style={styles.loadingText}>ဖတ်နေသည်...</Text>
+                  </View>
+                ) : !townships[selectedCity] ||
+                  townships[selectedCity].length === 0 ? (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>မြို့နယ်များ မရှိပါ</Text>
+                  </View>
+                ) : (
+                  townships[selectedCity].map((township) => (
+                    <Pressable
+                      key={township}
+                      style={styles.dropdownItem}
+                      onPress={() => handleTownshipSelect(township)}
+                    >
+                      <Text style={styles.dropdownItemText}>{township}</Text>
+                    </Pressable>
+                  ))
+                )}
+              </ScrollView>
+            )}
+          </View>
         </View>
       </ScrollView>
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
-        <Pressable style={styles.cancelButton} onPress={handleCancel}>
+        <Pressable
+          style={[styles.cancelButton, isLoading && styles.cancelButtonDisabled]}
+          onPress={handleCancel}
+          disabled={isLoading}
+        >
           <Text style={styles.cancelButtonText}>မလုပ်တော့ပါ</Text>
         </Pressable>
         <Pressable
@@ -399,17 +403,59 @@ export default function AddAddress() {
           onPress={handleAddAddress}
           disabled={isLoading}
         >
-          <Text style={styles.addButtonText}>
-            {isLoading
-              ? isEditMode
-                ? 'ပြင်ဆင်နေသည်...'
-                : 'ထည့်သွင်းနေသည်...'
-              : isEditMode
-              ? 'လိပ်စာ ပြင်ဆင်မယ်'
-              : 'လိပ်စာအသစ် ထည့်မယ်'}
-          </Text>
+          {isLoading ? (
+            <View style={styles.loadingButtonContent}>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text style={styles.addButtonText}>
+                {isEditMode ? 'ပြင်ဆင်နေသည်...' : 'ထည့်သွင်းနေသည်...'}
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.addButtonText}>
+              {isEditMode ? 'လိပ်စာ ပြင်ဆင်မယ်' : 'လိပ်စာအသစ် ထည့်မယ်'}
+            </Text>
+          )}
         </Pressable>
       </View>
+
+      {/* Cancel Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showCancelModal}
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalIconContainer}>
+              <Ionicons name="warning-outline" size={32} color="#FF3B30" />
+            </View>
+            <Text style={styles.modalTitle}>မလုပ်တော့ပါ</Text>
+            <Text style={styles.modalMessage}>
+              {isEditMode
+                ? 'သင်လိပ်စာပြင်ဆင်ခြင်းကို ရပ်တန့်ရန်သေချာပါသလား?'
+                : 'သင်လိပ်စာအသစ်ထည့်ခြင်းကို ရပ်တန့်ရန်သေချာပါသလား?'}
+            </Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => setShowCancelModal(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>ဆက်လုပ်မယ်</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, styles.modalConfirmButton]}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  router.back();
+                }}
+              >
+                <Text style={styles.modalConfirmButtonText}>ရပ်တန့်မယ်</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -464,7 +510,8 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   inputContainer: {
-    paddingVertical: 5,
+    paddingVertical: 0,
+    // backgroundColor: 'red',
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -516,6 +563,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#666666',
   },
+  cancelButtonDisabled: {
+    opacity: 0.5,
+  },
   addButton: {
     flex: 1,
     backgroundColor: '#4A4A4A',
@@ -528,37 +578,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  addButtonDisabled: {
-    backgroundColor: '#CCCCCC',
-  },
-  successBanner: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 1000,
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 16,
+  loadingButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    justifyContent: 'center',
+    gap: 8,
   },
-  successIcon: {
-    marginRight: 12,
-  },
-  successText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
+  addButtonDisabled: {
+    backgroundColor: '#CCCCCC',
   },
   loadingContainer: {
     padding: 20,
@@ -587,5 +614,73 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: '#999999',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '85%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FFF0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: '#F5F5F5',
+  },
+  modalConfirmButton: {
+    backgroundColor: '#FF3B30',
+  },
+  modalCancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  modalConfirmButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

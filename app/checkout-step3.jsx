@@ -68,7 +68,7 @@ export default function CheckoutStep3() {
     if (selectedPaymentMethod === 'cash-on-delivery') {
       return [{ key: 'cash', label: 'ငွေသား', icon: 'cash-outline' }];
     } else if (selectedPaymentMethod === 'k-pay') {
-      return [{ key: 'kpay', label: 'KBZ-PAY', icon: 'card-outline' }];
+      return [{ key: 'kpay', label: 'KBZPay', icon: 'card-outline' }];
     }
     return [];
   };

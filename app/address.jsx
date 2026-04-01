@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getUserAddresses } from '../services/user/getUserAddresses';
 import { getUserProfile } from '../services/user/userProfile';
 import deleteAddress from '../services/user/deleteAddress';
+import PageHeader from './components/PageHeader';
 
 export default function Address() {
   const [addresses, setAddresses] = useState([]);
@@ -151,20 +152,18 @@ export default function Address() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
         {/* Navigation Bar */}
-        <View style={styles.navbar}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
-          </Pressable>
-
-          <Text style={styles.navTitle}>နေရပ် လိပ်စာ</Text>
-
-          <Pressable
-            style={styles.addButton}
-            onPress={() => router.push('/add-address')}
-          >
-            <Text style={styles.addButtonText}>လိပ်စာ အသစ်ထည့်မယ်</Text>
-          </Pressable>
-        </View>
+        <PageHeader
+          title="နေရပ် လိပ်စာ"
+          showBackButton={true}
+          rightContent={
+            <Pressable
+              style={styles.addButton}
+              onPress={() => router.push('/add-address')}
+            >
+              <Text style={styles.addButtonText}>လိပ်စာ အသစ်ထည့်မယ်</Text>
+            </Pressable>
+          }
+        />
 
         {/* Content */}
         {loading ? (
@@ -200,25 +199,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  navbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  backButton: {
-    padding: 8,
-  },
-  navTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-    flex: 1,
-    textAlign: 'center',
   },
   addButton: {
     backgroundColor: '#4A4A4A',

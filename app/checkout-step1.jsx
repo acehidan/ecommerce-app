@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
 import { useCheckoutStore } from '../store/checkoutStore';
 import { getUserAddresses } from '../services/user/getUserAddresses';
@@ -81,26 +81,28 @@ export default function CheckoutStep1() {
     label: address.note,
   }));
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        if (user && isAuthenticated) {
-          const response = await getUserAddresses();
-          if (response.success) {
-            setUserAddresses(response.data);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUserData = async () => {
+        try {
+          setLoading(true);
+          if (user && isAuthenticated) {
+            const response = await getUserAddresses();
+            if (response.success) {
+              setUserAddresses(response.data);
+            }
           }
+        } catch (err) {
+          console.error('Error fetching user addresses:', err);
+          setError('Failed to load user addresses');
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('Error fetching user addresses:', err);
-        setError('Failed to load user addresses');
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    fetchUserData();
-  }, [user, isAuthenticated]);
+      fetchUserData();
+    }, [user, isAuthenticated])
+  );
 
   const getCurrentAddress = () => {
     if (userAddresses.length === 0) return null;
@@ -232,6 +234,13 @@ export default function CheckoutStep1() {
             <Text style={styles.subsectionTitle}>
               ပို့ဆောင်ရမဲ့ နေရပ်လိပ်စာ
             </Text>
+
+            <Pressable
+              style={styles.addButton}
+              onPress={() => router.push('/add-address')}
+            >
+              <Text style={styles.addButtonText}>လိပ်စာ ထည့်မယ်</Text>
+            </Pressable>
           </View>
 
           {/* Address Type Tabs */}
@@ -434,6 +443,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
+  },
+  addButton: {
+    backgroundColor: '#4A4A4A',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontFamily: 'NotoSansMyanmar-Regular',
+    textShadowColor: colors.text.primary,
+    textShadowOffset: { width: 0.2, height: 0.1 },
+    textShadowRadius: 0.5,
   },
   contactCard: {
     backgroundColor: colors.background.secondary,
