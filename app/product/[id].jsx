@@ -33,6 +33,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [buying, setBuying] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { width: screenWidth } = Dimensions.get('window');
 
@@ -98,8 +99,8 @@ export default function ProductDetail() {
           selectedQuantity,
         );
 
-        // Navigate to cart after adding item
-        router.push('/cart');
+        // Show success modal instead of direct navigation
+        setShowSuccessModal(true);
       } catch (error) {
         console.error('Error adding to cart:', error);
       } finally {
@@ -319,6 +320,46 @@ export default function ProductDetail() {
           <View style={styles.modalContent}>
             <ActivityIndicator size="large" color={colors.button.primary} />
             <Text style={styles.modalText}>Adding to cart...</Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal
+        transparent={true}
+        visible={showSuccessModal}
+        animationType="fade"
+        statusBarTranslucent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.successModalContent}>
+            <View style={styles.successIconContainer}>
+              <Ionicons name="cart-outline" size={40} color={colors.button.primary} />
+            </View>
+            <Text style={styles.successModalTitle}>🛒 ပစ္စည်းကို Cart ထဲသို့ ထည့်ပြီးပါပြီ</Text>
+            <Text style={styles.successModalMessage}>သင် နောက်ထပ် ဘာလုပ်ချင်ပါသလဲ?</Text>
+
+            <View style={styles.modalButtonContainer}>
+              <Pressable
+                style={[styles.modalButton, styles.continueButton]}
+                onPress={() => {
+                  setShowSuccessModal(false)
+                  router.back()
+                }}
+              >
+                <Text style={styles.continueButtonText}>ပစ္စည်း ဆက်ဝယ်မယ်</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.modalButton, styles.goToCartButton]}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  router.push('/cart');
+                }}
+              >
+                <Text style={styles.goToCartButtonText}>Cart ထဲ သွားမယ်</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -611,5 +652,68 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     textDecorationLine: 'line-through',
     marginTop: 2,
+  },
+  successModalContent: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 20,
+    width: '85%',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  successIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F0F9F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  successModalMessage: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalButtonContainer: {
+    width: '100%',
+    gap: 12,
+  },
+  modalButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueButton: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  continueButtonText: {
+    fontSize: 16,
+    color: colors.text.primary,
+    fontWeight: '600',
+  },
+  goToCartButton: {
+    backgroundColor: colors.button.primary,
+  },
+  goToCartButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });

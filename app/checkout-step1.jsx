@@ -247,7 +247,12 @@ export default function CheckoutStep1() {
 
           {/* Address Type Tabs */}
           {addressTypes.length > 0 && (
-            <View style={styles.addressTabs}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.addressTabs}
+              contentContainerStyle={styles.addressTabsContent}
+            >
               {addressTypes.map((type) => (
                 <Pressable
                   key={type.key}
@@ -268,7 +273,7 @@ export default function CheckoutStep1() {
                   </Text>
                 </Pressable>
               ))}
-            </View>
+            </ScrollView>
           )}
 
           {/* Location Cards */}
@@ -529,9 +534,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   addressTabs: {
+    marginBottom: 16,
+  },
+  addressTabsContent: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 16,
   },
   addressTab: {
     paddingHorizontal: 12,

@@ -1,6 +1,7 @@
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Pressable,
   ScrollView,
@@ -79,10 +80,20 @@ export default function Cart() {
         >
           {items.map((item) => (
             <View key={item.id} style={styles.cartItem}>
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.itemImage} />
+              ) : (
+                <View style={[styles.itemImage, styles.placeholderImage]}>
+                  <Ionicons name="image-outline" size={24} color="#CCCCCC" />
+                </View>
+              )}
               <View style={styles.itemInfo}>
                 <View style={styles.itemDetails}>
-                  <View style={{ width: '50%' }}>
-                    <Text style={styles.itemName}>{item.name}</Text>
+                  <View style={{ flex: 1, marginRight: 10 }}>
+                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={styles.itemPriceSmall}>
+                      MMK {item.price.toLocaleString()}
+                    </Text>
                   </View>
                   <Text style={styles.itemPrice}>
                     MMK {(item.price * item.quantity).toLocaleString()}
@@ -98,8 +109,8 @@ export default function Cart() {
                     >
                       <Ionicons
                         name="remove-circle-outline"
-                        size={24}
-                        color="black"
+                        size={22}
+                        color={colors.button.primary}
                       />
                     </Pressable>
 
@@ -110,8 +121,8 @@ export default function Cart() {
                     >
                       <Ionicons
                         name="add-circle-outline"
-                        size={24}
-                        color="black"
+                        size={22}
+                        color={colors.button.primary}
                       />
                     </Pressable>
                   </View>
@@ -178,13 +189,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cartItem: {
-    padding: 12,
-    marginBottom: 12, // borderWidth: 1,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderBottomColor: colors.border.light,
     borderBottomWidth: 1,
   },
+  itemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
+    marginRight: 16,
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
   itemInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   itemDetails: {
     flexDirection: 'row',
@@ -202,10 +228,15 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: 12,
   },
+  itemPriceSmall: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
   quantityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 12,
+    marginTop: 8,
   },
   quantityLabel: {
     fontFamily: 'NotoSansMyanmar-Regular',
