@@ -87,8 +87,9 @@ export default function OrderHistory() {
       // Show all orders
       setOrders(allOrders);
       setTotalOrders(allOrders.length);
+      console.log("allOrders", allOrders);
       const total = allOrders.reduce(
-        (sum, order) => sum + (order.totalAmount || 0),
+        (sum, order) => sum + (order.finalAmount || 0),
         0
       );
       setTotalAmount(total);
@@ -313,7 +314,7 @@ export default function OrderHistory() {
         setTotalOrders(count);
 
         const total = orders.reduce(
-          (sum, order) => sum + (order.totalAmount || 0),
+          (sum, order) => sum + (order.finalAmount || 0),
           0
         );
         setTotalAmount(total);
