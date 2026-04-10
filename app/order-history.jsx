@@ -303,7 +303,7 @@ export default function OrderHistory() {
 
       if (response.success) {
         // console.log("response", response);
-        const filterOrder = response.data.orders.filter((order) => order.status !== 'pending');
+        const filterOrder = response.data.orders.filter((order) => order.status !== 'confirmed');
         // console.log("filterOrder", filterOrder);
         const orders = filterOrder || [];
         const count = filterOrder.length;
