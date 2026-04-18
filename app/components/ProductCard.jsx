@@ -1,4 +1,4 @@
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import colors from '../../constants/colors';
 
@@ -16,7 +16,7 @@ export default function ProductCard({ id, name, price, image, onPress, isDiscoun
 
   return (
     <View style={styles.productCard}>
-      <Pressable style={styles.productCardContent} onPress={handlePress}>
+      <TouchableOpacity style={styles.productCardContent} onPress={handlePress}>
         <View style={styles.productImageContainer}>
           <Image
             source={{ uri: image }}
@@ -49,10 +49,10 @@ export default function ProductCard({ id, name, price, image, onPress, isDiscoun
             )}
           </View>
         </View>
-      </Pressable>
-      <Pressable style={styles.viewButton} onPress={handlePress}>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.viewButton} onPress={handlePress}>
         <Text style={styles.viewButtonText}>ကြည့်မယ်</Text>
-      </Pressable>
+      </TouchableOpacity>
     </View>
   );
 }

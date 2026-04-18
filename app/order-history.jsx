@@ -363,7 +363,7 @@ export default function OrderHistory() {
         <PageHeader title="အော်ဒါ အနှစ်ချုပ်" showBackButton={true} />
 
         {/* Order Summary Cards */}
-        <View style={styles.summaryContainer}>
+        {/* <View style={styles.summaryContainer}>
           <View style={styles.summaryCard}>
             <View style={styles.summaryCardHeader}>
               <View style={styles.summaryIcon}>
@@ -390,10 +390,10 @@ export default function OrderHistory() {
               </Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* Separator */}
-        <View style={styles.separator} />
+        {/* <View style={styles.separator} /> */}
 
         {/* Placed Orders Section */}
         <View style={styles.placedOrdersHeader}>
@@ -427,7 +427,7 @@ export default function OrderHistory() {
         )}
 
         {/* Order List */}
-        <View style={styles.orderList}>
+        <View style={styles.orderListContainer}>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#000000" />
@@ -451,45 +451,47 @@ export default function OrderHistory() {
             </View>
           ) : (
             orders.map((order) => (
-              <View key={order._id} style={styles.orderCard}>
-                <View style={styles.orderInfo}>
-                  <View style={styles.orderHeader}>
-                    <View style={styles.orderHeaderInfo}>
-                      <View style={styles.orderIcon}>
-                        <Ionicons
-                          name="bag-outline"
-                          size={20}
-                          color="#000000"
-                        />
-                      </View>
-                      <View>
-                        <Text style={styles.orderDate}>
-                          {formatDate(order.createdAt)} မှ အော်ဒါ
-                        </Text>
-                        {/* <Text style={styles.orderStatus}>
+              <View style={styles.orderList}>
+                <View key={order._id} style={styles.orderCard}>
+                  <View style={styles.orderInfo}>
+                    <View style={styles.orderHeader}>
+                      <View style={styles.orderHeaderInfo}>
+                        <View style={styles.orderIcon}>
+                          <Ionicons
+                            name="bag-outline"
+                            size={20}
+                            color="#000000"
+                          />
+                        </View>
+                        <View>
+                          <Text style={styles.orderDate}>
+                            {formatDate(order.createdAt)} မှ အော်ဒါ
+                          </Text>
+                          {/* <Text style={styles.orderStatus}>
                           {formatStatus(order.status)}
                         </Text> */}
+                        </View>
                       </View>
-                    </View>
 
-                  </View>
-                  <View style={styles.orderActions}>
-                    <Pressable
-                      style={styles.reorderButton}
-                      onPress={() => handleReorder(order._id)}
-                    >
-                      <Text style={styles.reorderButtonText}>
-                        အော်ဒါ ပြန်မှာမယ်
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.detailsButton}
-                      onPress={() => handleOrderDetails(order._id)}
-                    >
-                      <Text style={styles.detailsButtonText}>
-                        အော်ဒါ အသေးစိတ်
-                      </Text>
-                    </Pressable>
+                    </View>
+                    <View style={styles.orderActions}>
+                      <Pressable
+                        style={styles.reorderButton}
+                        onPress={() => handleReorder(order._id)}
+                      >
+                        <Text style={styles.reorderButtonText}>
+                          အော်ဒါ ပြန်မှာမယ်
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.detailsButton}
+                        onPress={() => handleOrderDetails(order._id)}
+                      >
+                        <Text style={styles.detailsButtonText}>
+                          အော်ဒါ အသေးစိတ်
+                        </Text>
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
               </View>
@@ -779,8 +781,7 @@ const styles = StyleSheet.create({
   },
   orderList: {
     minHeight: 500,
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+
     backgroundColor: colors.background.secondary,
   },
   orderCard: {
@@ -870,6 +871,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
     textAlign: 'center',
+  },
+  orderListContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   loadingContainer: {
     alignItems: 'center',

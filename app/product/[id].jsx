@@ -5,7 +5,7 @@ import {
   Text,
   Image,
   StyleSheet,
-  Pressable,
+  TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   Modal,
@@ -279,24 +279,24 @@ export default function ProductDetail() {
 
       <View style={styles.bottomBar}>
         <View style={styles.quantitySelector}>
-          <Pressable
+          <TouchableOpacity
             style={[styles.quantityButton, (quantity === 0) && styles.quantityButtonDisabled]}
             onPress={() => handleQuantityChange(-1)}
             disabled={quantity === 0}
           >
             <Ionicons name="remove" size={20} color={quantity === 0 ? "#CCCCCC" : "#000000"} />
-          </Pressable>
+          </TouchableOpacity>
           <Text style={styles.quantityText}>{quantity} ခု</Text>
-          <Pressable
+          <TouchableOpacity
             style={[styles.quantityButton, (product.onSale === false || quantity === product.stockQuantity) && styles.quantityButtonDisabled]}
             onPress={() => handleQuantityChange(1)}
             disabled={product.onSale === false || quantity === product.stockQuantity}
 
           >
             <Ionicons name="add" size={20} color={(product.onSale === false || quantity === product.stockQuantity) ? "#CCCCCC" : "#000000"} />
-          </Pressable>
+          </TouchableOpacity>
         </View>
-        <Pressable
+        <TouchableOpacity
           style={[styles.buyButton, quantity === 0 && styles.buyButtonDisabled]}
           onPress={handleBuyProduct}
           disabled={quantity === 0 || buying}
@@ -306,7 +306,7 @@ export default function ProductDetail() {
           ) : (
             <Text style={styles.buyButtonText}>ပစ္စည်း ဝယ်မယ်</Text>
           )}
-        </Pressable>
+        </TouchableOpacity>
       </View>
 
       {/* Loading Modal */}
@@ -340,7 +340,7 @@ export default function ProductDetail() {
             <Text style={styles.successModalMessage}>သင် နောက်ထပ် ဘာလုပ်ချင်ပါသလဲ?</Text>
 
             <View style={styles.modalButtonContainer}>
-              <Pressable
+              <TouchableOpacity
                 style={[styles.modalButton, styles.continueButton]}
                 onPress={() => {
                   setShowSuccessModal(false)
@@ -348,9 +348,9 @@ export default function ProductDetail() {
                 }}
               >
                 <Text style={styles.continueButtonText}>ပစ္စည်း ဆက်ဝယ်မယ်</Text>
-              </Pressable>
+              </TouchableOpacity>
 
-              <Pressable
+              <TouchableOpacity
                 style={[styles.modalButton, styles.goToCartButton]}
                 onPress={() => {
                   setShowSuccessModal(false);
@@ -358,7 +358,7 @@ export default function ProductDetail() {
                 }}
               >
                 <Text style={styles.goToCartButtonText}>Cart ထဲ သွားမယ်</Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -713,6 +713,8 @@ const styles = StyleSheet.create({
   },
   goToCartButtonText: {
     fontSize: 16,
+    width: '100%',
+    textAlign: 'center',
     color: '#FFFFFF',
     fontWeight: 'bold',
   },

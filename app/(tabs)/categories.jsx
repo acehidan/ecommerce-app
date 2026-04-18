@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   Pressable,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -23,11 +24,8 @@ import LoadingState from '../components/LoadingState';
  * Sub-component for individual category items
  */
 const CategoryItem = React.memo(({ item, onPress }) => (
-  <Pressable
-    style={({ pressed }) => [
-      styles.categoryItem,
-      pressed && styles.categoryItemPressed,
-    ]}
+  <TouchableOpacity
+    style={styles.categoryItem}
     onPress={() => onPress(item.name)}
   >
     <View style={styles.categoryContent}>
@@ -41,7 +39,7 @@ const CategoryItem = React.memo(({ item, onPress }) => (
         <Ionicons name="chevron-forward" size={20} color={colors.text.primary} />
       </View>
     </View>
-  </Pressable>
+  </TouchableOpacity>
 ));
 
 /**
@@ -55,9 +53,9 @@ const ErrorState = ({ headerHeight, error, onRetry }) => (
       color={colors.error.main}
     />
     <Text style={styles.errorText}>{error}</Text>
-    <Pressable style={styles.retryButton} onPress={onRetry}>
+    <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
       <Text style={styles.retryButtonText}>ပြန်လည်ကြိုးစားမယ်</Text>
-    </Pressable>
+    </TouchableOpacity>
   </View>
 );
 
@@ -83,6 +81,7 @@ export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const lastPressTime = useRef(0);
 
   useEffect(() => {
     fetchCategories();
@@ -124,6 +123,11 @@ export default function Categories() {
   }, [categories, searchQuery]);
 
   const handleCategoryPress = useCallback((categoryName) => {
+    const now = Date.now();
+    if (now - lastPressTime.current < 500) {
+      return;
+    }
+    lastPressTime.current = now;
     router.push(`/collection/${categoryName}`);
   }, []);
 

@@ -584,251 +584,251 @@ export default function Chat() {
   // ── UI ─────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
+      {/* <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Customer Support</Text>
-            <View style={styles.statusRow}>
-              <View style={styles.statusDot} />
-              <Text style={styles.statusText}>Online</Text>
-            </View>
+      > */}
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Customer Support</Text>
+          <View style={styles.statusRow}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>Online</Text>
           </View>
-          <View style={styles.headerSpacer} />
         </View>
+        <View style={styles.headerSpacer} />
+      </View>
 
-        {/* Messages */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.messagesContainer}
-          contentContainerStyle={styles.messagesContent}
-          onContentSizeChange={(w, h) => {
-            // If we are loading more messages, we want to maintain scroll position
-            if (fetchingMore) {
-              const heightDiff = h - contentHeight;
-              scrollViewRef.current?.scrollTo({ y: heightDiff, animated: false });
-            } else if (page === 1) {
-              scrollToBottom();
-            }
-            setContentHeight(h);
-          }}
-          onLayout={scrollToBottom}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {fetchingMore && (
-            <ActivityIndicator
-              size="small"
-              color="#3B82F6"
-              style={{ marginVertical: 10 }}
-            />
-          )}
-          {loading ? (
-            <View style={styles.centerContainer}>
-              <ActivityIndicator size="large" color="#3B82F6" />
-              <Text style={styles.loadingText}>Loading messages...</Text>
-            </View>
-          ) : messages.length === 0 ? (
-            <View style={styles.centerContainer}>
-              <Ionicons name="chatbubbles-outline" size={64} color="#D1D5DB" />
-              <Text style={styles.emptyTitle}>Start a Conversation</Text>
-              <Text style={styles.emptyText}>
-                Send a message to connect with our support team.
-              </Text>
-            </View>
-          ) : (
-            messages.map((message, index) => (
-              <View
-                key={message._id || index}
-                style={[
-                  styles.messageContainer,
-                  isUserMessage(message)
-                    ? styles.userMessageContainer
-                    : styles.adminMessageContainer,
-                ]}
-              >
-                {/* Show admin avatar for admin messages */}
-                {!isUserMessage(message) && (
-                  <View style={styles.adminAvatar}>
-                    <Ionicons
-                      name="headset-outline"
-                      size={16}
-                      color="#3B82F6"
-                    />
-                  </View>
-                )}
-
-                <View style={styles.messageBubbleWrapper}>
-                  <TouchableOpacity
-                    onPress={() =>
-                      setSelectedMessageId((prev) =>
-                        prev === (message._id || index)
-                          ? null
-                          : message._id || index
-                      )
-                    }
-                  >
-                    <View
-                      style={[
-                        styles.messageBubble,
-                        isUserMessage(message)
-                          ? styles.userBubble
-                          : styles.adminBubble,
-                        message.messageType === 'image' && styles.imageBubble
-                      ]}
-                    >
-                      {message.messageType === 'image' ? (
-                        <Image
-                          source={{ uri: message.message }}
-                          style={styles.chatImage}
-                          resizeMode="cover"
-                        />
-                      ) : message.messageType === 'voice' ? (
-                        <VoiceMessagePlayer
-                          uri={message.message}
-                          duration={message.duration}
-                          isUser={isUserMessage(message)}
-                        />
-                      ) : (
-                        <Text
-                          style={[
-                            styles.messageText,
-                            isUserMessage(message)
-                              ? styles.userMessageText
-                              : styles.adminMessageText,
-                          ]}
-                        >
-                          {message.message}
-                        </Text>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-
-                  {selectedMessageId === (message._id || index) && (
-                    <View
-                      style={[
-                        styles.messageInfo,
-                        isUserMessage(message)
-                          ? styles.userMessageInfo
-                          : styles.adminMessageInfo,
-                      ]}
-                    >
-                      <Text style={styles.messageInfoText}>
-                        {getSenderName(message)} •{' '}
-                        {formatTime(message.createdAt)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            ))
-          )}
-        </ScrollView>
-
-        {/* Input Area */}
-        <View
-          style={[
-            styles.inputContainer,
-            { paddingBottom: insets.bottom || 12 },
-          ]}
-        >
-          {recorderState.isRecording ? (
-            <RNAnimated.View
+      {/* Messages */}
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+        onContentSizeChange={(w, h) => {
+          // If we are loading more messages, we want to maintain scroll position
+          if (fetchingMore) {
+            const heightDiff = h - contentHeight;
+            scrollViewRef.current?.scrollTo({ y: heightDiff, animated: false });
+          } else if (page === 1) {
+            scrollToBottom();
+          }
+          setContentHeight(h);
+        }}
+        onLayout={scrollToBottom}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {fetchingMore && (
+          <ActivityIndicator
+            size="small"
+            color="#3B82F6"
+            style={{ marginVertical: 10 }}
+          />
+        )}
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text style={styles.loadingText}>Loading messages...</Text>
+          </View>
+        ) : messages.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <Ionicons name="chatbubbles-outline" size={64} color="#D1D5DB" />
+            <Text style={styles.emptyTitle}>Start a Conversation</Text>
+            <Text style={styles.emptyText}>
+              Send a message to connect with our support team.
+            </Text>
+          </View>
+        ) : (
+          messages.map((message, index) => (
+            <View
+              key={message._id || index}
               style={[
-                styles.recordingContainer,
-                { transform: [{ translateX: dxAnim }] }
+                styles.messageContainer,
+                isUserMessage(message)
+                  ? styles.userMessageContainer
+                  : styles.adminMessageContainer,
               ]}
             >
-              <View style={styles.recordingInfo}>
-                <Ionicons name="mic" size={20} color="#EF4444" />
-                <Text style={styles.recordingDuration}>
-                  {Math.floor(recorderState.durationMillis / 60000)}:
-                  {((recorderState.durationMillis % 60000) / 1000).toFixed(0).padStart(2, '0')}
-                </Text>
-                <SoundWave />
-              </View>
-              <RNAnimated.Text
-                style={[
-                  styles.slideCancelText,
-                  {
-                    opacity: slideAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 0],
-                    })
+              {/* Show admin avatar for admin messages */}
+              {!isUserMessage(message) && (
+                <View style={styles.adminAvatar}>
+                  <Ionicons
+                    name="headset-outline"
+                    size={16}
+                    color="#3B82F6"
+                  />
+                </View>
+              )}
+
+              <View style={styles.messageBubbleWrapper}>
+                <TouchableOpacity
+                  onPress={() =>
+                    setSelectedMessageId((prev) =>
+                      prev === (message._id || index)
+                        ? null
+                        : message._id || index
+                    )
                   }
-                ]}
-              >
-                Slide to cancel
-              </RNAnimated.Text>
+                >
+                  <View
+                    style={[
+                      styles.messageBubble,
+                      isUserMessage(message)
+                        ? styles.userBubble
+                        : styles.adminBubble,
+                      message.messageType === 'image' && styles.imageBubble
+                    ]}
+                  >
+                    {message.messageType === 'image' ? (
+                      <Image
+                        source={{ uri: message.message }}
+                        style={styles.chatImage}
+                        resizeMode="cover"
+                      />
+                    ) : message.messageType === 'voice' ? (
+                      <VoiceMessagePlayer
+                        uri={message.message}
+                        duration={message.duration}
+                        isUser={isUserMessage(message)}
+                      />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.messageText,
+                          isUserMessage(message)
+                            ? styles.userMessageText
+                            : styles.adminMessageText,
+                        ]}
+                      >
+                        {message.message}
+                      </Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+
+                {selectedMessageId === (message._id || index) && (
+                  <View
+                    style={[
+                      styles.messageInfo,
+                      isUserMessage(message)
+                        ? styles.userMessageInfo
+                        : styles.adminMessageInfo,
+                    ]}
+                  >
+                    <Text style={styles.messageInfoText}>
+                      {getSenderName(message)} •{' '}
+                      {formatTime(message.createdAt)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ))
+        )}
+      </ScrollView>
+
+      {/* Input Area */}
+      <View
+        style={[
+          styles.inputContainer,
+          { paddingBottom: insets.bottom || 12 },
+        ]}
+      >
+        {recorderState.isRecording ? (
+          <RNAnimated.View
+            style={[
+              styles.recordingContainer,
+              { transform: [{ translateX: dxAnim }] }
+            ]}
+          >
+            <View style={styles.recordingInfo}>
+              <Ionicons name="mic" size={20} color="#EF4444" />
+              <Text style={styles.recordingDuration}>
+                {Math.floor(recorderState.durationMillis / 60000)}:
+                {((recorderState.durationMillis % 60000) / 1000).toFixed(0).padStart(2, '0')}
+              </Text>
+              <SoundWave />
+            </View>
+            <RNAnimated.Text
+              style={[
+                styles.slideCancelText,
+                {
+                  opacity: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 0],
+                  })
+                }
+              ]}
+            >
+              Slide to cancel
+            </RNAnimated.Text>
+          </RNAnimated.View>
+        ) : (
+          <View style={styles.inputRow}>
+            <TouchableOpacity
+              onPress={handlePickImage}
+              disabled={sending}
+              style={styles.attachButton}
+            >
+              <Ionicons name="image-outline" size={24} color="#6B7280" />
+            </TouchableOpacity>
+            <TextInput
+              value={input}
+              onChangeText={setInput}
+              placeholder="Type a message..."
+              placeholderTextColor="#9CA3AF"
+              style={styles.textInput}
+              multiline
+              maxLength={500}
+              editable={!sending}
+            />
+          </View>
+        )}
+
+        <View style={styles.actionButtons}>
+          {recorderState.isRecording || input.trim() === '' ? (
+            <RNAnimated.View
+              {...panResponder.panHandlers}
+              style={[
+                styles.sendButton,
+                styles.micButton,
+                { transform: [{ scale: scaleAnim }] }
+              ]}
+            >
+              <Ionicons name="mic" size={24} color="#fff" />
             </RNAnimated.View>
           ) : (
-            <View style={styles.inputRow}>
-              <TouchableOpacity
-                onPress={handlePickImage}
-                disabled={sending}
-                style={styles.attachButton}
-              >
-                <Ionicons name="image-outline" size={24} color="#6B7280" />
-              </TouchableOpacity>
-              <TextInput
-                value={input}
-                onChangeText={setInput}
-                placeholder="Type a message..."
-                placeholderTextColor="#9CA3AF"
-                style={styles.textInput}
-                multiline
-                maxLength={500}
-                editable={!sending}
-              />
-            </View>
+            <TouchableOpacity
+              onPress={handleSendMessage}
+              disabled={!input.trim() || sending}
+              style={[
+                styles.sendButton,
+                input.trim() && !sending
+                  ? styles.sendButtonActive
+                  : styles.sendButtonDisabled,
+              ]}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={input.trim() && !sending ? '#fff' : '#999'}
+                />
+              )}
+            </TouchableOpacity>
           )}
-
-          <View style={styles.actionButtons}>
-            {recorderState.isRecording || input.trim() === '' ? (
-              <RNAnimated.View
-                {...panResponder.panHandlers}
-                style={[
-                  styles.sendButton,
-                  styles.micButton,
-                  { transform: [{ scale: scaleAnim }] }
-                ]}
-              >
-                <Ionicons name="mic" size={24} color="#fff" />
-              </RNAnimated.View>
-            ) : (
-              <TouchableOpacity
-                onPress={handleSendMessage}
-                disabled={!input.trim() || sending}
-                style={[
-                  styles.sendButton,
-                  input.trim() && !sending
-                    ? styles.sendButtonActive
-                    : styles.sendButtonDisabled,
-                ]}
-              >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Ionicons
-                    name="send"
-                    size={20}
-                    color={input.trim() && !sending ? '#fff' : '#999'}
-                  />
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
+      {/* </KeyboardAvoidingView> */}
     </SafeAreaView>
   );
 }

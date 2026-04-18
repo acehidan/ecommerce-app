@@ -2,10 +2,10 @@ import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  Pressable,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -21,9 +21,9 @@ const CategoryItem = ({ name, slug }) => {
   }, [slug]);
 
   return (
-    <Pressable style={styles.categoryButton} onPress={handlePress}>
+    <TouchableOpacity style={styles.categoryButton} onPress={handlePress}>
       <Text style={styles.categoryButtonText}>{name} များ</Text>
-    </Pressable>
+    </TouchableOpacity>
   );
 };
 
