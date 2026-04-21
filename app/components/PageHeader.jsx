@@ -48,7 +48,7 @@ export default function PageHeader({
       {showBackButton && <Pressable style={styles.backButton} onPress={handleBackPress}>
         <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
       </Pressable>}
-      <Text style={[styles.headerTitle, titleStyle]}>{title}</Text>
+      <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.headerTitle, titleStyle]}>{title}</Text>
       {
         rightContent && (
           <View style={[styles.rightContent, rightContentStyle]}>

@@ -13,6 +13,8 @@ import {
   Animated as RNAnimated,
   PanResponder,
   TouchableOpacity,
+  Modal,
+  useWindowDimensions,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
@@ -81,6 +83,27 @@ const SoundWave = () => {
   );
 };
 
+const LoadingImage = ({ source, style, resizeMode, modal = false }) => {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <View style={[style, styles.imageLoadingContainer]}>
+      <Image
+        source={source}
+        style={[style, loading ? { position: 'absolute', opacity: 0 } : { opacity: 1 }]}
+        resizeMode={resizeMode}
+        onLoadStart={() => setLoading(true)}
+        onLoadEnd={() => setLoading(false)}
+      />
+      {loading && (
+        <View style={[styles.skeletonOverlay, style]}>
+          <ActivityIndicator size={modal ? "large" : "small"} color="#3B82F6" />
+        </View>
+      )}
+    </View>
+  );
+};
+
 export default function Chat() {
   // ── State ──────────────────────────────────────────────────────────────
   const [messages, setMessages] = useState([]);
@@ -93,6 +116,8 @@ export default function Chat() {
   const [fetchingMore, setFetchingMore] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
   const [selectedMessageId, setSelectedMessageId] = useState(null);
+  const [fullViewImage, setFullViewImage] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const initialLoadComplete = useRef(false);
 
   // ── Voice Recording Setup (expo-audio) ────────────────────────────────
@@ -109,6 +134,7 @@ export default function Chat() {
 
   const scrollViewRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { user } = useAuthStore();
 
   // ── Socket connection listeners (on mount) ─────────────────────────────
@@ -147,7 +173,7 @@ export default function Chat() {
 
     // Register the message listener (with duplicate check)
     socket.on('chat:message', (message) => {
-      // console.log('Incoming message:', message);
+      console.log('Incoming message:', message);
       setMessages((prev) => {
         // Skip if message already exists in state (avoid duplicate keys)
         if (prev.some((m) => m._id === message._id)) {
@@ -687,11 +713,18 @@ export default function Chat() {
                     ]}
                   >
                     {message.messageType === 'image' ? (
-                      <Image
-                        source={{ uri: message.message }}
-                        style={styles.chatImage}
-                        resizeMode="cover"
-                      />
+                      <TouchableOpacity
+                        onPress={() => {
+                          setFullViewImage(message.message);
+                          setIsModalVisible(true);
+                        }}
+                      >
+                        <LoadingImage
+                          source={{ uri: message.message }}
+                          style={styles.chatImage}
+                          resizeMode="cover"
+                        />
+                      </TouchableOpacity>
                     ) : message.messageType === 'voice' ? (
                       <VoiceMessagePlayer
                         uri={message.message}
@@ -829,6 +862,37 @@ export default function Chat() {
         </View>
       </View>
       {/* </KeyboardAvoidingView> */}
+
+      {/* Full View Image Modal */}
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setIsModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalCloseButton}
+            onPress={() => setIsModalVisible(false)}
+          >
+            <Ionicons name="close" size={30} color="#FFF" />
+          </TouchableOpacity>
+          <View style={styles.modalContent}>
+            {fullViewImage && (
+              <LoadingImage
+                source={{ uri: fullViewImage }}
+                style={{ width: windowWidth, height: windowHeight }}
+                resizeMode="contain"
+                modal={true}
+              />
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1085,5 +1149,45 @@ const styles = StyleSheet.create({
     height: 10,
     backgroundColor: '#EF4444',
     borderRadius: 1,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageLoadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  skeletonOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  fullImage: {
+    width: '100%',
+    height: '100%',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 25,
   },
 });

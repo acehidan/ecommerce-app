@@ -302,9 +302,9 @@ export default function OrderHistory() {
       const response = await getOrderHistory();
 
       if (response.success) {
-        // console.log("response", response);
-        const filterOrder = response.data.orders.filter((order) => order.status !== 'confirmed');
-        // console.log("filterOrder", filterOrder);
+        console.log("response", response);
+        const filterOrder = response.data.orders.filter((order) => order.status !== 'pending' || order.status !== 'cancelled');
+        console.log("filterOrder", filterOrder);
         const orders = filterOrder || [];
         const count = filterOrder.length;
 
@@ -450,9 +450,9 @@ export default function OrderHistory() {
               </Text> */}
             </View>
           ) : (
-            orders.map((order) => (
-              <View style={styles.orderList}>
-                <View key={order._id} style={styles.orderCard}>
+            orders.map((order, index) => (
+              <View key={order._id || index} style={styles.orderList}>
+                <View style={styles.orderCard}>
                   <View style={styles.orderInfo}>
                     <View style={styles.orderHeader}>
                       <View style={styles.orderHeaderInfo}>
@@ -779,11 +779,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
   },
-  orderList: {
-    minHeight: 500,
-
-    backgroundColor: colors.background.secondary,
-  },
   orderCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -796,6 +791,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 1,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   orderIcon: {
     width: 40,
@@ -875,6 +872,7 @@ const styles = StyleSheet.create({
   orderListContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20,
+    minHeight: 700
   },
   loadingContainer: {
     alignItems: 'center',
