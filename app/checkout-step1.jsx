@@ -103,14 +103,14 @@ export default function CheckoutStep1() {
       };
 
       fetchUserData();
-    }, [user, isAuthenticated])
+    }, [user, isAuthenticated]),
   );
 
   const getCurrentAddress = () => {
     if (userAddresses.length === 0) return null;
     if (selectedAddressType) {
       return userAddresses.find(
-        (address) => address._id === selectedAddressType
+        (address) => address._id === selectedAddressType,
       );
     }
     return userAddresses[0]; // Use first address as default
@@ -138,10 +138,13 @@ export default function CheckoutStep1() {
       try {
         const deliveryZoneResponse = await getDeliveryZone(
           currentAddress.city,
-          currentAddress.township
+          currentAddress.township,
         );
-        console.log("deliveryZoneResponse", deliveryZoneResponse);
-        if (deliveryZoneResponse.success && deliveryZoneResponse.data.deliveryZone) {
+        // console.log("deliveryZoneResponse", deliveryZoneResponse);
+        if (
+          deliveryZoneResponse.success &&
+          deliveryZoneResponse.data.deliveryZone
+        ) {
           deliveryZone = deliveryZoneResponse.data.deliveryZone;
         } else {
           setModalMessage(deliveryZoneResponse.message);
@@ -150,7 +153,9 @@ export default function CheckoutStep1() {
         }
       } catch (error) {
         console.error('Error fetching delivery zone:', error);
-        setModalMessage('ပို့ဆောင်ရေး အချက်အလက်များကို ရယူရာတွင် အမှားအယွင်းရှိနေပါသည်။');
+        setModalMessage(
+          'ပို့ဆောင်ရေး အချက်အလက်များကို ရယူရာတွင် အမှားအယွင်းရှိနေပါသည်။',
+        );
         setShowErrorModal(true);
         return false;
       }
@@ -209,7 +214,11 @@ export default function CheckoutStep1() {
               <>
                 <View style={styles.contactCard}>
                   <View style={styles.contactCardHeader}>
-                    <MaterialCommunityIcons name="account-circle-outline" size={17} color="black" />
+                    <MaterialCommunityIcons
+                      name="account-circle-outline"
+                      size={17}
+                      color="black"
+                    />
                     <Text style={styles.contactLabel}>နာမည်</Text>
                   </View>
                   <Text style={styles.contactValue}>
@@ -218,7 +227,11 @@ export default function CheckoutStep1() {
                 </View>
                 <View style={styles.contactCard}>
                   <View style={styles.contactCardHeader}>
-                    <MaterialCommunityIcons name="phone-outline" size={17} color="black" />
+                    <MaterialCommunityIcons
+                      name="phone-outline"
+                      size={17}
+                      color="black"
+                    />
                     <Text style={styles.contactLabel}>ဖုန်းနံပါတ်</Text>
                   </View>
                   <Text style={styles.contactValue}>
@@ -266,7 +279,7 @@ export default function CheckoutStep1() {
                     style={[
                       styles.addressTabText,
                       selectedAddressType === type.key &&
-                      styles.addressTabTextActive,
+                        styles.addressTabTextActive,
                     ]}
                   >
                     {type.label}
@@ -287,7 +300,11 @@ export default function CheckoutStep1() {
               <>
                 <View style={styles.contactCard}>
                   <View style={styles.contactCardHeader}>
-                    <MaterialCommunityIcons name="city" size={17} color="black" />
+                    <MaterialCommunityIcons
+                      name="city"
+                      size={17}
+                      color="black"
+                    />
                     <Text style={styles.contactLabel}>မြို့</Text>
                   </View>
                   <Text style={styles.contactValue}>
@@ -296,7 +313,11 @@ export default function CheckoutStep1() {
                 </View>
                 <View style={styles.contactCard}>
                   <View style={styles.contactCardHeader}>
-                    <MaterialIcons name="other-houses" size={17} color="black" />
+                    <MaterialIcons
+                      name="other-houses"
+                      size={17}
+                      color="black"
+                    />
                     <Text style={styles.contactLabel}>မြို့နယ်</Text>
                   </View>
                   <Text style={styles.contactValue}>
@@ -506,7 +527,6 @@ const styles = StyleSheet.create({
     textShadowColor: colors.text.primary,
     textShadowOffset: { width: 0.2, height: 0.1 },
     textShadowRadius: 0.2,
-
   },
   contactValue: {
     fontSize: 14,
@@ -598,7 +618,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border.light,
     borderRadius: 20,
-
   },
   exactAddressLabel: {
     fontSize: 14,

@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import SplashScreen from './components/SplashScreen';
 
 export default function Index() {
-  console.log('welcome to komin-diy - Entry Point');
+  // console.log('welcome to komin-diy - Entry Point');
   const { isAuthenticated, initializeAuth, token } = useAuthStore();
   const pathname = usePathname();
   const hasNavigated = useRef(false);
@@ -74,7 +74,14 @@ export default function Index() {
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [isInitialized, splashFinished, isAuthenticated, token, pathname, isTokenValid]);
+  }, [
+    isInitialized,
+    splashFinished,
+    isAuthenticated,
+    token,
+    pathname,
+    isTokenValid,
+  ]);
 
   // Show splash screen while initializing or before navigation
   if (showSplash) {

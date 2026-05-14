@@ -10,7 +10,7 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
-  Image
+  Image,
 } from 'react-native';
 
 import {
@@ -74,14 +74,14 @@ export default function Chat() {
 
   // ── Join room & start listening for messages ───────────────────────────
   const joinAndListen = (convId) => {
-    console.log('joinAndListen called with:', convId);
+    // console.log('joinAndListen called with:', convId);
 
     // Remove any previous listener to avoid duplicates
     socket.off('chat:message');
 
     // Register the message listener (with duplicate check)
     socket.on('chat:message', (message) => {
-      console.log('Incoming message:', message);
+      // console.log('Incoming message:', message);
       setMessages((prev) => {
         // Skip if message already exists in state (avoid duplicate keys)
         if (prev.some((m) => m._id === message._id)) {
@@ -94,7 +94,7 @@ export default function Chat() {
     // Helper to emit join
     const emitJoin = () => {
       socket.emit('chat:join', convId);
-      console.log('Joined conversation:', convId);
+      // console.log('Joined conversation:', convId);
     };
 
     // If socket is already connected, join immediately
@@ -102,7 +102,7 @@ export default function Chat() {
     if (socket.connected) {
       emitJoin();
     } else {
-      console.log('Socket not connected yet, waiting to join...');
+      // console.log('Socket not connected yet, waiting to join...');
       socket.once('connect', () => {
         emitJoin();
       });
@@ -115,14 +115,14 @@ export default function Chat() {
   }, []);
 
   const loadMessages = async (pageNum = 1) => {
-    console.log('loadMessages called for page:', pageNum);
+    // console.log('loadMessages called for page:', pageNum);
     try {
       if (pageNum === 1) setLoading(true);
       else setFetchingMore(true);
 
       const response = await getMessages(pageNum, 20);
       if (response.success) {
-        console.log(`Page ${pageNum} loaded:`, response.data);
+        // console.log(`Page ${pageNum} loaded:`, response.data);
         const newMessages = response.data.messages.reverse();
 
         if (newMessages.length === 0) {
@@ -132,7 +132,7 @@ export default function Chat() {
             if (pageNum === 1) return newMessages;
             // Filter out any duplicates that might have come in via socket
             const filteredNew = newMessages.filter(
-              (nm) => !prev.some((pm) => pm._id === nm._id)
+              (nm) => !prev.some((pm) => pm._id === nm._id),
             );
             return [...filteredNew, ...prev];
           });
@@ -163,7 +163,13 @@ export default function Chat() {
     const { y } = event.nativeEvent.contentOffset;
     // When y is near 0, user is at the top
     // Only trigger if initial load is complete to avoid loading page 2 immediately
-    if (y < 50 && hasMore && !fetchingMore && !loading && initialLoadComplete.current) {
+    if (
+      y < 50 &&
+      hasMore &&
+      !fetchingMore &&
+      !loading &&
+      initialLoadComplete.current
+    ) {
       loadMoreMessages();
     }
   };
@@ -193,7 +199,7 @@ export default function Chat() {
       const response = await sendMessage(text);
 
       if (response.success) {
-        console.log('Message sent:', response.data);
+        // console.log('Message sent:', response.data);
 
         // If we don't have a conversationId yet, get it from response
         // (the useEffect on conversationId will handle join & listen)
@@ -233,7 +239,7 @@ export default function Chat() {
 
   useEffect(() => {
     if (conversationId) {
-      console.log('conversationId', conversationId);
+      // console.log('conversationId', conversationId);
       joinAndListen(conversationId);
     }
   }, [conversationId]);
@@ -256,7 +262,7 @@ export default function Chat() {
       if (!initialLoadComplete.current) {
         setTimeout(() => {
           initialLoadComplete.current = true;
-          console.log('Initial load complete');
+          // console.log('Initial load complete');
         }, 500);
       }
     }
@@ -294,7 +300,10 @@ export default function Chat() {
             // If we are loading more messages, we want to maintain scroll position
             if (fetchingMore) {
               const heightDiff = h - contentHeight;
-              scrollViewRef.current?.scrollTo({ y: heightDiff, animated: false });
+              scrollViewRef.current?.scrollTo({
+                y: heightDiff,
+                animated: false,
+              });
             } else if (page === 1) {
               scrollToBottom();
             }
@@ -354,7 +363,7 @@ export default function Chat() {
                       setSelectedMessageId((prev) =>
                         prev === (message._id || index)
                           ? null
-                          : message._id || index
+                          : message._id || index,
                       )
                     }
                   >
@@ -363,12 +372,14 @@ export default function Chat() {
                         styles.messageBubble,
                         message.messageType === 'image'
                           ? styles.imageBubble
-                          : (isUserMessage(message) ? styles.userBubble : styles.adminBubble),
+                          : isUserMessage(message)
+                            ? styles.userBubble
+                            : styles.adminBubble,
                       ]}
                     >
-                      {console.log(message)}
+                      {/* {console.log(message)} */}
                       <View style={styles.imageWrapper}>
-                        {console.log(message.message)}
+                        {/* {console.log(message.message)} */}
                         <Image
                           source={{ uri: message.message }}
                           style={styles.image}
@@ -410,7 +421,8 @@ export default function Chat() {
                       <Text style={styles.messageInfoText}>
                         {getSenderName(message)} •{' '}
                         {formatTime(message.createdAt)}
-                        {message.messageType === 'image' && `\nURL: ${message.message.substring(0, 30)}...`}
+                        {message.messageType === 'image' &&
+                          `\nURL: ${message.message.substring(0, 30)}...`}
                       </Text>
                     </View>
                   )}

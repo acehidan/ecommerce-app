@@ -174,7 +174,7 @@ export default function AddAddress() {
       } else {
         // Add new address
         const userProfile = await getUserProfile();
-        console.log(userProfile);
+        // console.log(userProfile);
         if (!userProfile?.user?._id) {
           throw new Error('User not found');
         }

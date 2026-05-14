@@ -75,7 +75,7 @@ export default function OTPScreen() {
       });
 
       if (response.success) {
-        console.log('OTP verification response data:', response.data);
+        // console.log('OTP verification response data:', response.data);
 
         // Validate response data before saving
         if (
@@ -109,7 +109,8 @@ export default function OTPScreen() {
         Toast.show({
           type: 'error',
           text1: 'Error',
-          text2: 'OTP verification code is incorrect. Please check if the code is correct and re-enter it.',
+          text2:
+            'OTP verification code is incorrect. Please check if the code is correct and re-enter it.',
         });
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();

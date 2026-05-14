@@ -10,7 +10,7 @@ export interface GetDeliveryZoneResponse {
 
 export const getDeliveryZone = async (
   city: string,
-  township: string
+  township: string,
 ): Promise<GetDeliveryZoneResponse> => {
   try {
     const response = await api.get('/api/v1/delivery/matcher', {
@@ -19,9 +19,9 @@ export const getDeliveryZone = async (
         township,
       },
     });
-    console.log("Delivery matcher API response status:", response.data.status || response.data.success);
+    // console.log("Delivery matcher API response status:", response.data.status || response.data.success);
 
-    console.log('Delivery zone API response:', JSON.stringify(response.data, null, 2));
+    // console.log('Delivery zone API response:', JSON.stringify(response.data, null, 2));
 
     // Handle different possible response structures
     const deliveryZone =
@@ -35,7 +35,9 @@ export const getDeliveryZone = async (
     const isSuccessful =
       response.data.status === 'success' ||
       response.data.success === true ||
-      (response.data.status === undefined && response.data.success === undefined && deliveryZone);
+      (response.data.status === undefined &&
+        response.data.success === undefined &&
+        deliveryZone);
 
     if (!deliveryZone || !isSuccessful) {
       console.warn('No delivery zone found or API failed:', response.data);
@@ -69,4 +71,3 @@ export const getDeliveryZone = async (
     };
   }
 };
-

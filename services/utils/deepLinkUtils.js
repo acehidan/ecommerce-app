@@ -18,12 +18,13 @@ export const DEEP_LINK_SCHEME = 'komin-diy';
 export const generatePaymentResultLink = (params) => {
   const baseUrl = `${DEEP_LINK_SCHEME}://payment_result`;
   const queryParams = new URLSearchParams();
-  
+
   if (params.status) queryParams.append('status', params.status);
-  if (params.transaction_id) queryParams.append('transaction_id', params.transaction_id);
+  if (params.transaction_id)
+    queryParams.append('transaction_id', params.transaction_id);
   if (params.amount) queryParams.append('amount', params.amount);
   if (params.message) queryParams.append('message', params.message);
-  
+
   const queryString = queryParams.toString();
   return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 };
@@ -34,7 +35,9 @@ export const generatePaymentResultLink = (params) => {
  */
 export const testDeepLinkSupport = async () => {
   try {
-    const supported = await Linking.canOpenURL(`${DEEP_LINK_SCHEME}://payment_result`);
+    const supported = await Linking.canOpenURL(
+      `${DEEP_LINK_SCHEME}://payment_result`,
+    );
     return supported;
   } catch (error) {
     console.error('Error testing deep link support:', error);
@@ -54,7 +57,7 @@ export const openDeepLink = async (url) => {
       await Linking.openURL(url);
       return true;
     } else {
-      console.log('Cannot handle URL:', url);
+      // console.log('Cannot handle URL:', url);
       return false;
     }
   } catch (error) {
@@ -65,7 +68,7 @@ export const openDeepLink = async (url) => {
 
 /**
  * Example usage:
- * 
+ *
  * // Generate a successful payment link
  * const successLink = generatePaymentResultLink({
  *   status: 'success',
@@ -73,7 +76,7 @@ export const openDeepLink = async (url) => {
  *   amount: '99.99',
  *   message: 'Payment completed successfully'
  * });
- * 
+ *
  * // Generate a failed payment link
  * const failedLink = generatePaymentResultLink({
  *   status: 'failed',
@@ -81,7 +84,7 @@ export const openDeepLink = async (url) => {
  *   amount: '99.99',
  *   message: 'Payment failed due to insufficient funds'
  * });
- * 
+ *
  * // Test and open the link
  * openDeepLink(successLink);
  */
@@ -91,19 +94,19 @@ export const EXAMPLE_LINKS = {
     status: 'success',
     transaction_id: 'TXN123456',
     amount: '99.99',
-    message: 'Payment completed successfully'
+    message: 'Payment completed successfully',
   }),
   failed: generatePaymentResultLink({
     status: 'failed',
     transaction_id: 'TXN123456',
     amount: '99.99',
-    message: 'Payment failed due to insufficient funds'
+    message: 'Payment failed due to insufficient funds',
   }),
   pending: generatePaymentResultLink({
     status: 'pending',
     transaction_id: 'TXN123456',
     amount: '99.99',
-    message: 'Payment is being processed'
+    message: 'Payment is being processed',
   }),
-  basic: `${DEEP_LINK_SCHEME}://payment_result`
+  basic: `${DEEP_LINK_SCHEME}://payment_result`,
 };

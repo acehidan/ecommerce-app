@@ -101,7 +101,7 @@ export default function ForgotOTPScreen() {
         confirmPassword,
       });
 
-      console.log('Reset password response:', response);
+      // console.log('Reset password response:', response);
 
       if (response.success) {
         Alert.alert(
@@ -114,7 +114,7 @@ export default function ForgotOTPScreen() {
                 router.replace('/auth/login');
               },
             },
-          ]
+          ],
         );
       } else {
         Alert.alert('Error', response?.error || 'Failed to reset password');

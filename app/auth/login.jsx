@@ -35,8 +35,8 @@ export default function LoginScreen() {
       return;
     }
 
-    console.log('phoneNumber', phoneNumber);
-    console.log('password', password);
+    // console.log('phoneNumber', phoneNumber);
+    // console.log('password', password);
 
     setIsLoading(true);
 
@@ -45,10 +45,10 @@ export default function LoginScreen() {
         phoneNumber,
         password,
       });
-      console.log('response', response);
+      // console.log('response', response);
 
       if (response.success) {
-        console.log('Login response data:', response.data);
+        // console.log('Login response data:', response.data);
 
         if (
           !response.data ||
@@ -67,7 +67,7 @@ export default function LoginScreen() {
             isVerified: response.data.data.user.isVerified,
             role: response.data.data.user.role,
           },
-          response.data.data.token
+          response.data.data.token,
         );
 
         // Navigate directly to home page without showing success alert

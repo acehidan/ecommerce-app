@@ -22,7 +22,7 @@ export interface ValidateTokenResponse {
 export const validateToken = async (): Promise<ValidateTokenResponse> => {
   try {
     const response = await api.post('/api/v1/admin/validate');
-    console.log('validateToken', response.data);
+    // console.log('validateToken', response.data);
     return response.data;
   } catch (error) {
     if (error.response) {

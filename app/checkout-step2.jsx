@@ -30,7 +30,7 @@ export default function CheckoutStep2() {
 
   const getDelidata = async () => {
     const response = await getDeliveries();
-    console.log("response", response);
+    // console.log("response", response);
     if (response.status === 'success') {
       const deliveryData = response.data.find(
         (delivery) => delivery._id === deliveryZone,
@@ -46,7 +46,7 @@ export default function CheckoutStep2() {
       setShowErrorModal(true);
     }
   };
-  console.log("deliveryData", deliveryData);
+  // console.log('deliveryData', deliveryData);
   // console.log("items", items);
 
   useEffect(() => {
@@ -66,7 +66,9 @@ export default function CheckoutStep2() {
 
   // Calculate overweight charge (example: MMK 500 per incremental KG over 2KG)
   const overweightCharge =
-    totalWeight > 2 ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0) : 0;
+    totalWeight > 2
+      ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0)
+      : 0;
 
   // Calculate grand total
   const grandTotal = getTotalPrice() + shippingFee + overweightCharge;
@@ -87,14 +89,17 @@ export default function CheckoutStep2() {
     setOrderSummary({
       subtotal: getTotalPrice(),
       shippingFee: deliveryData?.deliveryFee || 0,
-      overweightCharge: totalWeight > 2 ?
-        Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0)
-        : 0,
+      overweightCharge:
+        totalWeight > 2
+          ? Math.ceil(totalWeight - 2) *
+            (deliveryData?.additionalWeightCharge || 0)
+          : 0,
       grandTotal:
         getTotalPrice() +
         deliveryData?.deliveryFee +
         (totalWeight > 2
-          ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0)
+          ? Math.ceil(totalWeight - 2) *
+            (deliveryData?.additionalWeightCharge || 0)
           : 0),
       totalWeight,
     });
@@ -102,9 +107,13 @@ export default function CheckoutStep2() {
 
   return (
     <SafeAreaView style={styles.container}>
-
       {/* Header */}
-      <PageHeader title="စစ်ဆေးပါ" sticky={false} showBackButton={true} rightContent="စုစုပေါင်း အဆင့် ၄ ဆင့်" />
+      <PageHeader
+        title="စစ်ဆေးပါ"
+        sticky={false}
+        showBackButton={true}
+        rightContent="စုစုပေါင်း အဆင့် ၄ ဆင့်"
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Purchased Items Section */}
@@ -133,7 +142,7 @@ export default function CheckoutStep2() {
                   <Text style={styles.itemWeight}>{item.unitWeight} kg</Text>
                 </View>
                 <Text style={styles.itemPrice}>
-                  MMK {((item.price * item.quantity)).toLocaleString()}
+                  MMK {(item.price * item.quantity).toLocaleString()}
                 </Text>
               </View>
             ))}
@@ -169,8 +178,10 @@ export default function CheckoutStep2() {
                 </View>
                 <Text style={styles.summaryValue}>
                   MMK{' '}
-                  {(
-                    totalWeight > 2 ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0) : 0
+                  {(totalWeight > 2
+                    ? Math.ceil(totalWeight - 2) *
+                      (deliveryData?.additionalWeightCharge || 0)
+                    : 0
                   ).toLocaleString()}
                 </Text>
               </View>
@@ -184,7 +195,8 @@ export default function CheckoutStep2() {
                   getTotalPrice() +
                   deliveryData?.deliveryFee +
                   (totalWeight > 2
-                    ? Math.ceil(totalWeight - 2) * (deliveryData?.additionalWeightCharge || 0)
+                    ? Math.ceil(totalWeight - 2) *
+                      (deliveryData?.additionalWeightCharge || 0)
                     : 0)
                 ).toLocaleString()}
               </Text>
@@ -362,7 +374,7 @@ const styles = StyleSheet.create({
   itemQuantity: {
     fontSize: 14,
     color: '#666666',
-    width: "8%"
+    width: '8%',
   },
   itemDetails: {
     flex: 1,
@@ -405,7 +417,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.tertiary,
     fontFamily: 'NotoSansMyanmar-Regular',
-
   },
   summaryValue: {
     fontSize: 14,

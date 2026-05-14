@@ -36,7 +36,11 @@ export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch Tags
-  const { data: tagsData, isLoading: isLoadingTags, refetch: refetchTags } = useQuery({
+  const {
+    data: tagsData,
+    isLoading: isLoadingTags,
+    refetch: refetchTags,
+  } = useQuery({
     queryKey: ['product-tags'],
     queryFn: handleGetTags,
     staleTime: 5 * 60 * 1000,
@@ -51,8 +55,8 @@ export default function Home() {
 
   /**
    * Synchronized loading handler
-   * Ensures the Pull-to-Refresh spinner stays visible until all 
-   * child components have finished their data fetching and 
+   * Ensures the Pull-to-Refresh spinner stays visible until all
+   * child components have finished their data fetching and
    * at least MIN_LOADING_TIME has passed.
    */
   const handleLoadingChange = useCallback((isLoading) => {
@@ -90,7 +94,7 @@ export default function Home() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setRefreshing(false);
-      console.warn('Refresh timed out');
+      // console.warn('Refresh timed out');
     }, 10000);
   }, [refetchTags]);
 

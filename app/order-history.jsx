@@ -87,10 +87,10 @@ export default function OrderHistory() {
       // Show all orders
       setOrders(allOrders);
       setTotalOrders(allOrders.length);
-      console.log("allOrders", allOrders);
+      // console.log("allOrders", allOrders);
       const total = allOrders.reduce(
         (sum, order) => sum + (order.finalAmount || 0),
-        0
+        0,
       );
       setTotalAmount(total);
       return;
@@ -114,7 +114,7 @@ export default function OrderHistory() {
     setTotalOrders(filtered.length);
     const total = filtered.reduce(
       (sum, order) => sum + (order.totalAmount || 0),
-      0
+      0,
     );
     setTotalAmount(total);
   };
@@ -132,7 +132,7 @@ export default function OrderHistory() {
     setTotalOrders(allOrders.length);
     const total = allOrders.reduce(
       (sum, order) => sum + (order.totalAmount || 0),
-      0
+      0,
     );
     setTotalAmount(total);
     setShowDateFilter(false);
@@ -167,7 +167,7 @@ export default function OrderHistory() {
                 const date = new Date(
                   parseInt(parts[2]),
                   parseInt(parts[1]) - 1,
-                  parseInt(parts[0])
+                  parseInt(parts[0]),
                 );
                 if (type === 'start') {
                   setStartDate(date);
@@ -181,7 +181,7 @@ export default function OrderHistory() {
           },
         },
       ],
-      'plain-text'
+      'plain-text',
     );
   };
 
@@ -199,7 +199,9 @@ export default function OrderHistory() {
       // console.log('Order Details Response:', orderResponse);
 
       if (!orderResponse.success || !orderResponse.data) {
-        throw new Error(orderResponse.message || 'Failed to fetch order details');
+        throw new Error(
+          orderResponse.message || 'Failed to fetch order details',
+        );
       }
 
       const products = orderResponse.data.products;
@@ -216,7 +218,8 @@ export default function OrderHistory() {
 
           if (productResponse.success && productResponse.data) {
             // Check structured data based on ProductDetail usage: result.data.data.data
-            const productData = productResponse.data.data?.data || productResponse.data.data;
+            const productData =
+              productResponse.data.data?.data || productResponse.data.data;
             // console.log(`Product data for ${item.productCode}:`, productData);
 
             if (productData) {
@@ -225,7 +228,9 @@ export default function OrderHistory() {
                 productCode: productData.productCode || productData._id,
                 name: productData.name,
                 price: productData.retailUnitPrice,
-                image: productData.images?.[0]?.url || 'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg',
+                image:
+                  productData.images?.[0]?.url ||
+                  'https://pub-e2d317c977e5422bbf6be2feb6800a10.r2.dev/komin.jpg',
                 retailUnitPrice: productData.retailUnitPrice,
                 wholeSale: productData.wholeSale || [],
                 unitWeight: productData.unitWeight || 0,
@@ -302,9 +307,11 @@ export default function OrderHistory() {
       const response = await getOrderHistory();
 
       if (response.success) {
-        console.log("response", response);
-        const filterOrder = response.data.orders.filter((order) => order.status !== 'pending' || order.status !== 'cancelled');
-        console.log("filterOrder", filterOrder);
+        // console.log('response', response);
+        const filterOrder = response.data.orders.filter(
+          (order) => order.status !== 'pending' || order.status !== 'cancelled',
+        );
+        // console.log('filterOrder', filterOrder);
         const orders = filterOrder || [];
         const count = filterOrder.length;
 
@@ -315,12 +322,12 @@ export default function OrderHistory() {
 
         const total = orders.reduce(
           (sum, order) => sum + (order.finalAmount || 0),
-          0
+          0,
         );
         setTotalAmount(total);
       } else {
         setError(
-          response.message || 'အော်ဒါ မှတ်တမ်း ရယူရာတွင် အမှား ဖြစ်ပွားပါသည်'
+          response.message || 'အော်ဒါ မှတ်တမ်း ရယူရာတွင် အမှား ဖြစ်ပွားပါသည်',
         );
       }
     } catch (err) {
@@ -416,8 +423,8 @@ export default function OrderHistory() {
                     ? 'ပြီးခဲ့သော ၁ လ'
                     : startDate || endDate
                       ? `${formatDateForDisplay(startDate)} - ${formatDateForDisplay(
-                        endDate
-                      )}`
+                          endDate,
+                        )}`
                       : 'အားလုံး'}
             </Text>
             <Pressable onPress={handleClearFilter}>
@@ -472,7 +479,6 @@ export default function OrderHistory() {
                         </Text> */}
                         </View>
                       </View>
-
                     </View>
                     <View style={styles.orderActions}>
                       <Pressable
@@ -524,7 +530,7 @@ export default function OrderHistory() {
                   style={[
                     styles.quickFilterButton,
                     selectedFilter === 'today' &&
-                    styles.quickFilterButtonActive,
+                      styles.quickFilterButtonActive,
                   ]}
                   onPress={() => handleQuickFilter('today')}
                 >
@@ -532,7 +538,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'today' &&
-                      styles.quickFilterButtonTextActive,
+                        styles.quickFilterButtonTextActive,
                     ]}
                   >
                     ယနေ့
@@ -549,7 +555,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'week' &&
-                      styles.quickFilterButtonTextActive,
+                        styles.quickFilterButtonTextActive,
                     ]}
                   >
                     ပြီးခဲ့သော ၇ ရက်
@@ -559,7 +565,7 @@ export default function OrderHistory() {
                   style={[
                     styles.quickFilterButton,
                     selectedFilter === 'month' &&
-                    styles.quickFilterButtonActive,
+                      styles.quickFilterButtonActive,
                   ]}
                   onPress={() => handleQuickFilter('month')}
                 >
@@ -567,7 +573,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'month' &&
-                      styles.quickFilterButtonTextActive,
+                        styles.quickFilterButtonTextActive,
                     ]}
                   >
                     ပြီးခဲ့သော ၁ လ
@@ -584,7 +590,7 @@ export default function OrderHistory() {
                     style={[
                       styles.quickFilterButtonText,
                       selectedFilter === 'all' &&
-                      styles.quickFilterButtonTextActive,
+                        styles.quickFilterButtonTextActive,
                     ]}
                   >
                     အားလုံး
@@ -748,7 +754,6 @@ const styles = StyleSheet.create({
     textShadowColor: colors.text.primary,
     textShadowOffset: { width: 0.2, height: 0.1 },
     textShadowRadius: 0.5,
-
   },
   dateFilterButton: {
     backgroundColor: '#000000',
@@ -872,7 +877,7 @@ const styles = StyleSheet.create({
   orderListContainer: {
     paddingHorizontal: 20,
     paddingVertical: 20,
-    minHeight: 700
+    minHeight: 700,
   },
   loadingContainer: {
     alignItems: 'center',

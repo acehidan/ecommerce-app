@@ -77,7 +77,7 @@ export default function SignupScreen() {
           // Send welcome message to chat
           try {
             await sendMessage('Join the chat');
-            console.log('Welcome message sent successfully');
+            // console.log('Welcome message sent successfully');
           } catch (chatError) {
             console.error('Failed to send welcome message:', chatError);
             // Don't block signup flow if chat message fails

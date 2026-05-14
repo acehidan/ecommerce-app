@@ -45,7 +45,7 @@ export default function ProductDetail() {
         setLoading(true);
         const result = await handleGetProductById(id);
         if (result.success) {
-          console.log('product', result.data.data.data);
+          // console.log('product', result.data.data.data);
           setProduct(result.data.data.data);
           // console.log('product', result.data.data.data);
         } else {
@@ -69,7 +69,6 @@ export default function ProductDetail() {
     }
   }, [items, id]);
 
-
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
     if (newQuantity >= 0 && product && newQuantity <= product.stockQuantity) {
@@ -91,10 +90,12 @@ export default function ProductDetail() {
             productCode: product.productCode,
             name: product.name,
             image: product.images?.[0]?.url || '',
-            retailUnitPrice: product.isDiscounted ? product.retailUnitPrice - (product.retailUnitPrice * (product.discountPercentage / 100)) : product.retailUnitPrice,
+            retailUnitPrice: product.isDiscounted
+              ? product.retailUnitPrice -
+                product.retailUnitPrice * (product.discountPercentage / 100)
+              : product.retailUnitPrice,
             wholeSale: product.wholeSale || [],
             unitWeight: product.unitWeight || 0,
-
           },
           selectedQuantity,
         );
@@ -153,8 +154,11 @@ export default function ProductDetail() {
 
   return (
     <SafeAreaView style={styles.container}>
-
-      <PageHeader title="ပစ္စည်း အသေးစိတ်" sticky={true} showBackButton={true} />
+      <PageHeader
+        title="ပစ္စည်း အသေးစိတ်"
+        sticky={true}
+        showBackButton={true}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingTop: headerHeight }}
@@ -195,7 +199,9 @@ export default function ProductDetail() {
           {/* Discount Badge */}
           {product.isDiscounted && product.discountPercentage > 0 && (
             <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>-{product.discountPercentage}%</Text>
+              <Text style={styles.discountText}>
+                -{product.discountPercentage}%
+              </Text>
             </View>
           )}
 
@@ -224,7 +230,9 @@ export default function ProductDetail() {
 
           <View style={styles.specsItem}>
             <Text style={styles.specsTitle}>သိုလှောင်မှု</Text>
-            <Text style={styles.specValue}>{product.onSale ? "ပစ္စည်းရှိ" : "Store in"}</Text>
+            <Text style={styles.specValue}>
+              {product.onSale ? 'ပစ္စည်းရှိ' : 'Store in'}
+            </Text>
           </View>
 
           {/* <View style={styles.specsItem}>
@@ -245,14 +253,21 @@ export default function ProductDetail() {
               {product.isDiscounted && product.discountPercentage > 0 ? (
                 <>
                   <Text style={styles.specValueDiscounted}>
-                    MMK {(product.retailUnitPrice - (product.retailUnitPrice * (product.discountPercentage / 100))).toLocaleString()}
+                    MMK{' '}
+                    {(
+                      product.retailUnitPrice -
+                      product.retailUnitPrice *
+                        (product.discountPercentage / 100)
+                    ).toLocaleString()}
                   </Text>
                   <Text style={styles.specValueOriginal}>
                     MMK {product?.retailUnitPrice?.toLocaleString()}
                   </Text>
                 </>
               ) : (
-                <Text style={styles.specValue}>MMK {product?.retailUnitPrice?.toLocaleString()}</Text>
+                <Text style={styles.specValue}>
+                  MMK {product?.retailUnitPrice?.toLocaleString()}
+                </Text>
               )}
             </View>
           </View>
@@ -280,20 +295,41 @@ export default function ProductDetail() {
       <View style={styles.bottomBar}>
         <View style={styles.quantitySelector}>
           <TouchableOpacity
-            style={[styles.quantityButton, (quantity === 0) && styles.quantityButtonDisabled]}
+            style={[
+              styles.quantityButton,
+              quantity === 0 && styles.quantityButtonDisabled,
+            ]}
             onPress={() => handleQuantityChange(-1)}
             disabled={quantity === 0}
           >
-            <Ionicons name="remove" size={20} color={quantity === 0 ? "#CCCCCC" : "#000000"} />
+            <Ionicons
+              name="remove"
+              size={20}
+              color={quantity === 0 ? '#CCCCCC' : '#000000'}
+            />
           </TouchableOpacity>
           <Text style={styles.quantityText}>{quantity} ခု</Text>
           <TouchableOpacity
-            style={[styles.quantityButton, (product.onSale === false || quantity === product.stockQuantity) && styles.quantityButtonDisabled]}
+            style={[
+              styles.quantityButton,
+              (product.onSale === false ||
+                quantity === product.stockQuantity) &&
+                styles.quantityButtonDisabled,
+            ]}
             onPress={() => handleQuantityChange(1)}
-            disabled={product.onSale === false || quantity === product.stockQuantity}
-
+            disabled={
+              product.onSale === false || quantity === product.stockQuantity
+            }
           >
-            <Ionicons name="add" size={20} color={(product.onSale === false || quantity === product.stockQuantity) ? "#CCCCCC" : "#000000"} />
+            <Ionicons
+              name="add"
+              size={20}
+              color={
+                product.onSale === false || quantity === product.stockQuantity
+                  ? '#CCCCCC'
+                  : '#000000'
+              }
+            />
           </TouchableOpacity>
         </View>
         <TouchableOpacity
@@ -334,17 +370,25 @@ export default function ProductDetail() {
         <View style={styles.modalOverlay}>
           <View style={styles.successModalContent}>
             <View style={styles.successIconContainer}>
-              <Ionicons name="cart-outline" size={40} color={colors.button.primary} />
+              <Ionicons
+                name="cart-outline"
+                size={40}
+                color={colors.button.primary}
+              />
             </View>
-            <Text style={styles.successModalTitle}>🛒 ပစ္စည်းကို Cart ထဲသို့ ထည့်ပြီးပါပြီ</Text>
-            <Text style={styles.successModalMessage}>သင် နောက်ထပ် ဘာလုပ်ချင်ပါသလဲ?</Text>
+            <Text style={styles.successModalTitle}>
+              🛒 ပစ္စည်းကို Cart ထဲသို့ ထည့်ပြီးပါပြီ
+            </Text>
+            <Text style={styles.successModalMessage}>
+              သင် နောက်ထပ် ဘာလုပ်ချင်ပါသလဲ?
+            </Text>
 
             <View style={styles.modalButtonContainer}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.continueButton]}
                 onPress={() => {
-                  setShowSuccessModal(false)
-                  router.back()
+                  setShowSuccessModal(false);
+                  router.back();
                 }}
               >
                 <Text style={styles.continueButtonText}>ပစ္စည်း ဆက်ဝယ်မယ်</Text>

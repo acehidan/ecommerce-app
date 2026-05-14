@@ -28,7 +28,7 @@ export const getOrderHistory = async (): Promise<OrderHistoryResponse> => {
     }
 
     const response = await api.get('/api/v1/user/orders');
-    console.log('Order history response:', response.data);
+    // console.log('Order history response:', response.data);
 
     // Handle different response structures
     if (response.data.success !== undefined) {

@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -29,11 +23,11 @@ export default function Profile() {
   const needsAuth = !user;
 
   // Debug log
-  console.log('Profile - Auth state:', {
-    isAuthenticated,
-    hasUser: !!user,
-    needsAuth,
-  });
+  // console.log('Profile - Auth state:', {
+  //   isAuthenticated,
+  //   hasUser: !!user,
+  //   needsAuth,
+  // });
 
   const handleLogout = () => {
     setIsLogoutModalVisible(true);
@@ -46,7 +40,7 @@ export default function Profile() {
       clearCart();
       router.replace('/auth/login');
     } catch (error) {
-      console.error('Logout error:', error);
+      // console.error('Logout error:', error);
     }
   };
 
@@ -55,7 +49,6 @@ export default function Profile() {
       <SafeAreaView style={styles.container}>
         <PageHeader title="မိမိအကောင့်" sticky={false} />
         <View style={styles.emptyContainer}>
-
           <Ionicons name="person-outline" size={64} color="#666666" />
           <Text style={styles.emptyText}>
             Please login to view your profile

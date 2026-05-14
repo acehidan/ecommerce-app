@@ -24,7 +24,7 @@ export default function Cart() {
   const router = useRouter();
   const { items, updateQuantity, getTotalPrice } = useCartStore();
   const [isNavigating, setIsNavigating] = useState(false);
-  console.log('items', items);
+  // console.log('items', items);
   const { user } = useAuthStore();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 60 + insets.bottom + 16;
@@ -47,7 +47,6 @@ export default function Cart() {
             <Text style={styles.loginButtonText}>Login</Text>
           </Pressable>
         </View>
-
       </SafeAreaView>
     );
   }
@@ -58,7 +57,9 @@ export default function Cart() {
         <PageHeader title="စျေးခြင်း" sticky={false} backIcon={true} />
         <View style={styles.emptyCart}>
           <Ionicons name="cart-outline" size={64} color={colors.text.primary} />
-          <Text style={styles.emptyCartText}>စျေးခြင်းထဲမှာ ပစ္စည်းမရှိသေးပါ</Text>
+          <Text style={styles.emptyCartText}>
+            စျေးခြင်းထဲမှာ ပစ္စည်းမရှိသေးပါ
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -90,7 +91,9 @@ export default function Cart() {
               <View style={styles.itemInfo}>
                 <View style={styles.itemDetails}>
                   <View style={{ flex: 1, marginRight: 10 }}>
-                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={styles.itemName} numberOfLines={2}>
+                      {item.name}
+                    </Text>
                     <Text style={styles.itemPriceSmall}>
                       MMK {item.price.toLocaleString()}
                     </Text>
@@ -134,7 +137,9 @@ export default function Cart() {
 
         <View style={styles.totalSection}>
           <Text style={styles.totalLabel}>စုစုပေါင်း</Text>
-          <Text style={styles.totalAmount}>MMK {getTotalPrice().toLocaleString()}</Text>
+          <Text style={styles.totalAmount}>
+            MMK {getTotalPrice().toLocaleString()}
+          </Text>
         </View>
       </View>
       <View style={styles.checkoutButtonContainer}>
@@ -183,7 +188,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
-
   },
   cartList: {
     flex: 1,

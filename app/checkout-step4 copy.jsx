@@ -36,12 +36,12 @@ export default function CheckoutStep4() {
     orderItems.length > 0
       ? orderItems
       : items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        weight: item.weight || 1.0,
-        price: item.price,
-      }));
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          weight: item.weight || 1.0,
+          price: item.price,
+        }));
 
   const handleCreateOrder = async () => {
     if (!user) {
@@ -72,18 +72,18 @@ export default function CheckoutStep4() {
       // Fetch delivery zone if not already set
       let deliveryZone = addressInfo.deliveryZone;
       if (!deliveryZone || deliveryZone.trim() === '') {
-        console.log('Delivery zone not found, fetching from API...');
-        console.log(
-          'City:',
-          addressInfo.city,
-          'Township:',
-          addressInfo.township
-        );
+        // console.log('Delivery zone not found, fetching from API...');
+        // console.log(
+        //   'City:',
+        //   addressInfo.city,
+        //   'Township:',
+        //   addressInfo.township
+        // );
 
         try {
           const deliveryZoneResponse = await getDeliveryZone(
             addressInfo.city,
-            addressInfo.township
+            addressInfo.township,
           );
 
           if (
@@ -98,13 +98,13 @@ export default function CheckoutStep4() {
             });
           } else {
             throw new Error(
-              deliveryZoneResponse.message || 'Failed to fetch delivery zone'
+              deliveryZoneResponse.message || 'Failed to fetch delivery zone',
             );
           }
         } catch (error) {
           console.error('Error fetching delivery zone:', error);
           throw new Error(
-            'Unable to determine delivery zone. Please check your address and try again.'
+            'Unable to determine delivery zone. Please check your address and try again.',
           );
         }
       }
@@ -115,8 +115,8 @@ export default function CheckoutStep4() {
         quantity: item.quantity,
       }));
 
-      console.log('Products:', products);
-      console.log('Delivery Zone:', deliveryZone);
+      // console.log('Products:', products);
+      // console.log('Delivery Zone:', deliveryZone);
 
       // Map payment method
 
@@ -140,11 +140,11 @@ export default function CheckoutStep4() {
         throw new Error('Delivery zone is required');
       }
 
-      console.log('Order data:', orderData);
+      // console.log('Order data:', orderData);
 
       const response = await createOrder(orderData);
 
-      console.log('Order created successfully:', response);
+      // console.log('Order created successfully:', response);
 
       // Clear cart items and checkout data first
       clearCart();

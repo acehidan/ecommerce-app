@@ -1,5 +1,12 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, BackHandler, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  BackHandler,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,15 +58,17 @@ export default function PaymentResult() {
             return;
           } else {
             setCurrentStatus('failed');
-            setCurrentMessage('ငွေပေးချေမှု အတည်ပြုချက် မရရှိသေးပါ။ ခဏစောင့်ဆိုင်းပြီး အော်ဒါမှတ်တမ်းတွင် ပြန်လည်စစ်ဆေးပေးပါ။');
+            setCurrentMessage(
+              'ငွေပေးချေမှု အတည်ပြုချက် မရရှိသေးပါ။ ခဏစောင့်ဆိုင်းပြီး အော်ဒါမှတ်တမ်းတွင် ပြန်လည်စစ်ဆေးပေးပါ။',
+            );
           }
         }
       }
     } catch (err) {
-      console.error('Error checking order status:', err);
+      // console.error('Error checking order status:', err);
       // Only show error on final fail or critical error
       if (retryCount >= 20) {
-        console.log("fail")
+        // console.log('fail');
         setCurrentStatus('failed');
         setCurrentMessage(err.message || 'Error checking payment status');
       } else {
@@ -70,7 +79,7 @@ export default function PaymentResult() {
       if (!isNavigating.current) {
         // Small delay before setting loading to false if we are not polling
         setLoading(false);
-        console.log("loading false");
+        // console.log('loading false');
       }
     }
   };
@@ -81,14 +90,17 @@ export default function PaymentResult() {
 
   useEffect(() => {
     // Prevent hardware back button on Android to ensure user uses our navigation
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      handleNavigateHome();
-      return true;
-    });
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        handleNavigateHome();
+        return true;
+      },
+    );
 
     // Log for debugging
-    console.log('--- Deep Link Received ---');
-    console.log('Order ID:', displayOrderId);
+    // console.log('--- Deep Link Received ---');
+    // console.log('Order ID:', displayOrderId);
 
     if (displayOrderId) {
       if (!hasFetched.current) {
@@ -101,8 +113,6 @@ export default function PaymentResult() {
 
     return () => backHandler.remove();
   }, []);
-
-
 
   const handleNavigateHome = () => {
     // Replace to prevent going back to this screen
@@ -117,7 +127,8 @@ export default function PaymentResult() {
           icon: 'close-circle',
           color: colors.error.main,
           title: 'ငွေပေးချေမှု မအောင်မြင်ပါ',
-          subtitle: currentMessage || 'တစ်ခုခု မှားယွင်းနေပါသည်။ ထပ်မံကြိုးစားကြည့်ပါ။',
+          subtitle:
+            currentMessage || 'တစ်ခုခု မှားယွင်းနေပါသည်။ ထပ်မံကြိုးစားကြည့်ပါ။',
           bgLight: colors.error.light,
         };
       case 'pending':
@@ -147,7 +158,9 @@ export default function PaymentResult() {
 
       <View style={styles.content}>
         {/* Status Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: config.bgLight }]}>
+        <View
+          style={[styles.iconContainer, { backgroundColor: config.bgLight }]}
+        >
           {loading ? (
             <ActivityIndicator size="large" color={config.color} />
           ) : (
@@ -156,7 +169,9 @@ export default function PaymentResult() {
         </View>
 
         {/* Status Text */}
-        <Text style={[styles.title, { color: config.color }]}>{config.title}</Text>
+        <Text style={[styles.title, { color: config.color }]}>
+          {config.title}
+        </Text>
         <Text style={styles.subtitle}>{config.subtitle}</Text>
 
         {/* Transaction Details Card */}
@@ -182,21 +197,25 @@ export default function PaymentResult() {
 
       {/* Action Buttons */}
       <View style={styles.footer}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.primaryButton,
-            { opacity: pressed ? 0.8 : 1 }
-          ]}
-          onPress={handleNavigateHome}
-        >
-          <Text style={styles.primaryButtonText}>ပင်မစာမျက်နှာသို့ သွားမည်</Text>
-        </Pressable>
+        {currentStatus !== 'pending' && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.primaryButton,
+              { opacity: pressed ? 0.8 : 1 },
+            ]}
+            onPress={handleNavigateHome}
+          >
+            <Text style={styles.primaryButtonText}>
+              ပင်မစာမျက်နှာသို့ သွားမည်
+            </Text>
+          </Pressable>
+        )}
 
         {(currentStatus === 'failed' || currentStatus === 'cancelled') && (
           <Pressable
             style={({ pressed }) => [
               styles.secondaryButton,
-              { opacity: pressed ? 0.8 : 1 }
+              { opacity: pressed ? 0.8 : 1 },
             ]}
             onPress={() => router.back()}
           >

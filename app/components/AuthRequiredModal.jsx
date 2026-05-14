@@ -11,8 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 export default function AuthRequiredModal({ visible, onClose }) {
-  console.log('AuthRequiredModal - visible:', visible);
-  
+  // console.log('AuthRequiredModal - visible:', visible);
+
   const handleLogin = () => {
     onClose();
     router.push('/auth/login');
@@ -42,8 +42,7 @@ export default function AuthRequiredModal({ visible, onClose }) {
           </View>
           <Text style={styles.modalTitle}>အကောင့်ဝင်ရမည်</Text>
           <Text style={styles.modalMessage}>
-            ဤစာမျက်နှာကို ဝင်ရောက်ရန် အကောင့်ဝင်ရမည် သို့မဟုတ်
-            အကောင့်ဖွင့်ရမည်
+            ဤစာမျက်နှာကို ဝင်ရောက်ရန် အကောင့်ဝင်ရမည် သို့မဟုတ် အကောင့်ဖွင့်ရမည်
           </Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -147,4 +146,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-

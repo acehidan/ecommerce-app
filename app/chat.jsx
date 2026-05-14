@@ -23,7 +23,7 @@ import {
   AudioModule,
   RecordingPresets,
   setAudioModeAsync,
-  useAudioRecorderState
+  useAudioRecorderState,
 } from 'expo-audio';
 import VoiceMessagePlayer from './components/VoiceMessagePlayer';
 import {
@@ -64,8 +64,8 @@ const SoundWave = () => {
             duration: 300 + Math.random() * 200,
             useNativeDriver: true,
           }),
-        ])
-      )
+        ]),
+      ),
     );
     animations.forEach((a) => a.start());
     return () => animations.forEach((a) => a.stop());
@@ -90,14 +90,17 @@ const LoadingImage = ({ source, style, resizeMode, modal = false }) => {
     <View style={[style, styles.imageLoadingContainer]}>
       <Image
         source={source}
-        style={[style, loading ? { position: 'absolute', opacity: 0 } : { opacity: 1 }]}
+        style={[
+          style,
+          loading ? { position: 'absolute', opacity: 0 } : { opacity: 1 },
+        ]}
         resizeMode={resizeMode}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
       />
       {loading && (
         <View style={[styles.skeletonOverlay, style]}>
-          <ActivityIndicator size={modal ? "large" : "small"} color="#3B82F6" />
+          <ActivityIndicator size={modal ? 'large' : 'small'} color="#3B82F6" />
         </View>
       )}
     </View>
@@ -173,7 +176,7 @@ export default function Chat() {
 
     // Register the message listener (with duplicate check)
     socket.on('chat:message', (message) => {
-      console.log('Incoming message:', message);
+      // console.log('Incoming message:', message);
       setMessages((prev) => {
         // Skip if message already exists in state (avoid duplicate keys)
         if (prev.some((m) => m._id === message._id)) {
@@ -224,7 +227,7 @@ export default function Chat() {
             if (pageNum === 1) return newMessages;
             // Filter out any duplicates that might have come in via socket
             const filteredNew = newMessages.filter(
-              (nm) => !prev.some((pm) => pm._id === nm._id)
+              (nm) => !prev.some((pm) => pm._id === nm._id),
             );
             return [...filteredNew, ...prev];
           });
@@ -261,7 +264,13 @@ export default function Chat() {
     const { y } = event.nativeEvent.contentOffset;
     // When y is near 0, user is at the top
     // Only trigger if initial load is complete to avoid loading page 2 immediately
-    if (y < 50 && hasMore && !fetchingMore && !loading && initialLoadComplete.current) {
+    if (
+      y < 50 &&
+      hasMore &&
+      !fetchingMore &&
+      !loading &&
+      initialLoadComplete.current
+    ) {
       loadMoreMessages();
     }
   };
@@ -360,7 +369,7 @@ export default function Chat() {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: "Failed to send image",
+        text2: 'Failed to send image',
       });
     } finally {
       setSending(false);
@@ -451,7 +460,7 @@ export default function Chat() {
             duration: 400,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     } catch (err) {
       // console.error('Failed to start recording', err);
@@ -604,7 +613,7 @@ export default function Chat() {
           }).start();
         },
       }),
-    []
+    [],
   );
 
   // ── UI ─────────────────────────────────────────────────────────────────
@@ -617,7 +626,10 @@ export default function Chat() {
       > */}
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
@@ -685,11 +697,7 @@ export default function Chat() {
               {/* Show admin avatar for admin messages */}
               {!isUserMessage(message) && (
                 <View style={styles.adminAvatar}>
-                  <Ionicons
-                    name="headset-outline"
-                    size={16}
-                    color="#3B82F6"
-                  />
+                  <Ionicons name="headset-outline" size={16} color="#3B82F6" />
                 </View>
               )}
 
@@ -699,7 +707,7 @@ export default function Chat() {
                     setSelectedMessageId((prev) =>
                       prev === (message._id || index)
                         ? null
-                        : message._id || index
+                        : message._id || index,
                     )
                   }
                 >
@@ -709,7 +717,7 @@ export default function Chat() {
                       isUserMessage(message)
                         ? styles.userBubble
                         : styles.adminBubble,
-                      message.messageType === 'image' && styles.imageBubble
+                      message.messageType === 'image' && styles.imageBubble,
                     ]}
                   >
                     {message.messageType === 'image' ? (
@@ -756,8 +764,7 @@ export default function Chat() {
                     ]}
                   >
                     <Text style={styles.messageInfoText}>
-                      {getSenderName(message)} •{' '}
-                      {formatTime(message.createdAt)}
+                      {getSenderName(message)} • {formatTime(message.createdAt)}
                     </Text>
                   </View>
                 )}
@@ -769,23 +776,22 @@ export default function Chat() {
 
       {/* Input Area */}
       <View
-        style={[
-          styles.inputContainer,
-          { paddingBottom: insets.bottom || 12 },
-        ]}
+        style={[styles.inputContainer, { paddingBottom: insets.bottom || 12 }]}
       >
         {recorderState.isRecording ? (
           <RNAnimated.View
             style={[
               styles.recordingContainer,
-              { transform: [{ translateX: dxAnim }] }
+              { transform: [{ translateX: dxAnim }] },
             ]}
           >
             <View style={styles.recordingInfo}>
               <Ionicons name="mic" size={20} color="#EF4444" />
               <Text style={styles.recordingDuration}>
                 {Math.floor(recorderState.durationMillis / 60000)}:
-                {((recorderState.durationMillis % 60000) / 1000).toFixed(0).padStart(2, '0')}
+                {((recorderState.durationMillis % 60000) / 1000)
+                  .toFixed(0)
+                  .padStart(2, '0')}
               </Text>
               <SoundWave />
             </View>
@@ -796,8 +802,8 @@ export default function Chat() {
                   opacity: slideAnim.interpolate({
                     inputRange: [0, 1],
                     outputRange: [1, 0],
-                  })
-                }
+                  }),
+                },
               ]}
             >
               Slide to cancel
@@ -832,7 +838,7 @@ export default function Chat() {
               style={[
                 styles.sendButton,
                 styles.micButton,
-                { transform: [{ scale: scaleAnim }] }
+                { transform: [{ scale: scaleAnim }] },
               ]}
             >
               <Ionicons name="mic" size={24} color="#fff" />
@@ -870,9 +876,9 @@ export default function Chat() {
         animationType="fade"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
           onPress={() => setIsModalVisible(false)}
         >
           <TouchableOpacity
