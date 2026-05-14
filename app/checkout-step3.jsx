@@ -31,6 +31,7 @@ export default function CheckoutStep3() {
   const [isBanned, setIsBanned] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [codEnabled, setCodEnabled] = useState(true);
+  const [kpayEnabled, setKpayEnabled] = useState(true);
   const [isLoadingCOD, setIsLoadingCOD] = useState(false);
   const { user } = useAuthStore();
 
@@ -64,21 +65,44 @@ export default function CheckoutStep3() {
           const codSwitch = switchesResponse.data.find(
             (switchItem) => switchItem.name === 'cod',
           );
-          if (codSwitch) {
-            const codEnabled = codSwitch.value;
-            setCodEnabled(codEnabled);
+          const kpaySwitch = switchesResponse.data.find(
+            (switchItem) => switchItem.name === 'kpay',
+          );
 
-            // If COD is disabled, switch to k-pay
-            if (!codEnabled && selectedPaymentMethod === 'cash-on-delivery') {
+          const codStatus = codSwitch ? codSwitch.value : true;
+          const kpayStatus = kpaySwitch ? kpaySwitch.value : true;
+
+          setCodEnabled(codStatus);
+          setKpayEnabled(kpayStatus);
+
+          // Handle payment method selection logic
+          if (!codStatus && !kpayStatus) {
+            // Both disabled - show error message
+            Alert.alert(
+              'အသိပေးချက်',
+              'လောလောဆယ် ငွေပေးချေမှုနည်းလမ်းအားလုံး ရပ်ဆိုင်းထားသောကြောင့် ဆက်လက်၍ မရနိုင်ပါ။',
+            );
+            return;
+          } else if (codStatus && !kpayStatus) {
+            // Only COD enabled - force selection to COD
+            if (selectedPaymentMethod !== 'cash-on-delivery') {
+              setSelectedPaymentMethod('cash-on-delivery');
+              setSelectedPaymentType('cash');
+            }
+          } else if (!codStatus && kpayStatus) {
+            // Only KPay enabled - force selection to KPay
+            if (selectedPaymentMethod !== 'k-pay') {
               setSelectedPaymentMethod('k-pay');
               setSelectedPaymentType('kpay');
             }
           }
+          // When both are enabled, allow manual selection (no forced change)
         }
       } catch (error) {
-        console.error('Error fetching COD status:', error);
-        // Default to enabled if API fails
+        console.error('Error fetching payment switches:', error);
+        // Default to both enabled if API fails
         setCodEnabled(true);
+        setKpayEnabled(true);
       } finally {
         setIsLoadingCOD(false);
       }
@@ -93,7 +117,9 @@ export default function CheckoutStep3() {
     ...(codEnabled
       ? [{ key: 'cash-on-delivery', label: 'အိမ်အရောက်ငွေချေ', type: 'radio' }]
       : []),
-    { key: 'k-pay', label: 'ငွေကြိုရှင်း', type: 'radio' },
+    ...(kpayEnabled
+      ? [{ key: 'k-pay', label: 'ငွေကြိုရှင်း', type: 'radio' }]
+      : []),
   ];
 
   // Payment type options based on selected payment method
@@ -119,6 +145,14 @@ export default function CheckoutStep3() {
       Alert.alert(
         'အသိပေးချက်',
         'လောလောဆယ် "အိမ်အရောက်ငွေချေ" နည်းလမ်းအား ရပ်ဆိုင်းထားသောကြောင့် အသုံးပြု၍ မရနိုင်ပါ။',
+      );
+      return;
+    }
+
+    if (!kpayEnabled && methodKey === 'k-pay') {
+      Alert.alert(
+        'အသိပေးချက်',
+        'လောလောဆယ် "ငွေကြိုရှင်း" နည်းလမ်းအား ရပ်ဆိုင်းထားသောကြောင့် အသုံးပြု၍ မရနိုင်ပါ။',
       );
       return;
     }
@@ -182,7 +216,8 @@ export default function CheckoutStep3() {
                 paymentMethods.map((method) => {
                   const isDisabled =
                     (isBanned && method.key === 'cash-on-delivery') ||
-                    (!codEnabled && method.key === 'cash-on-delivery');
+                    (!codEnabled && method.key === 'cash-on-delivery') ||
+                    (!kpayEnabled && method.key === 'k-pay');
 
                   return (
                     <Pressable
@@ -251,8 +286,8 @@ export default function CheckoutStep3() {
             </View>
           </View>
 
-          {/* Payment Type Section - Only show if payment method is selected */}
-          {selectedPaymentMethod && (
+          {/* Payment Type Section - Only show if payment method is selected and at least one payment method is enabled */}
+          {selectedPaymentMethod && (codEnabled || kpayEnabled) && (
             <View style={styles.paymentTypeSection}>
               <Text style={styles.subsectionTitle}>ငွေပေးချေမှု နည်းလမ်း</Text>
               <View style={styles.paymentOptionsCard}>
@@ -318,13 +353,26 @@ export default function CheckoutStep3() {
         <TouchableOpacity
           style={[
             styles.payActionButton,
-            (isCheckingUser || isNavigating) && { opacity: 0.7 },
+            (isCheckingUser ||
+              isNavigating ||
+              (!codEnabled && !kpayEnabled)) && { opacity: 0.7 },
           ]}
-          disabled={isCheckingUser || isNavigating}
+          disabled={
+            isCheckingUser || isNavigating || (!codEnabled && !kpayEnabled)
+          }
           onPress={async () => {
             if (isCheckingUser || isNavigating) return;
             if (!user?._id) {
               Alert.alert('Error', 'User information not found.');
+              return;
+            }
+
+            // Check if any payment method is available
+            if (!codEnabled && !kpayEnabled) {
+              Alert.alert(
+                'အသိပေးချက်',
+                'လောလောဆယ် ငွေပေးချေမှုနည်းလမ်းအားလုံး ရပ်ဆိုင်းထားသောကြောင့် ဆက်လက်၍ မရနိုင်ပါ။',
+              );
               return;
             }
 
