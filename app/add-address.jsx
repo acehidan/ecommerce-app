@@ -30,7 +30,7 @@ export default function AddAddress() {
   const [addressName, setAddressName] = useState(addressData?.note || '');
   const [selectedCity, setSelectedCity] = useState(addressData?.city || '');
   const [selectedTownship, setSelectedTownship] = useState(
-    addressData?.township || ''
+    addressData?.township || '',
   );
   const [exactAddress, setExactAddress] = useState(addressData?.address || '');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
@@ -78,7 +78,8 @@ export default function AddAddress() {
       Toast.show({
         type: 'error',
         text1: 'အမှား',
-        text2: 'မြို့နှင့် မြို့နယ် အချက်အလက်များ ရယူရာတွင် အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
+        text2:
+          'မြို့နှင့် မြို့နယ် အချက်အလက်များ ရယူရာတွင် အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
         position: 'top',
         visibilityTime: 3000,
       });
@@ -164,7 +165,8 @@ export default function AddAddress() {
           Toast.show({
             type: 'error',
             text1: 'အမှား',
-            text2: response.message || 'လိပ်စာပြင်ဆင်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
+            text2:
+              response.message || 'လိပ်စာပြင်ဆင်ရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
             position: 'top',
             visibilityTime: 3000,
           });
@@ -172,6 +174,7 @@ export default function AddAddress() {
       } else {
         // Add new address
         const userProfile = await getUserProfile();
+        console.log(userProfile);
         if (!userProfile?.user?._id) {
           throw new Error('User not found');
         }
@@ -192,7 +195,9 @@ export default function AddAddress() {
           Toast.show({
             type: 'error',
             text1: 'အမှား',
-            text2: response.message || 'လိပ်စာထည့်သွင်းရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
+            text2:
+              response.message ||
+              'လိပ်စာထည့်သွင်းရာတွင်အမှားတစ်ခုဖြစ်ပွားခဲ့သည်',
             position: 'top',
             visibilityTime: 3000,
           });
@@ -232,7 +237,7 @@ export default function AddAddress() {
     value,
     onChangeText,
     onPress,
-    showDropdown = false
+    showDropdown = false,
   ) => (
     <View style={styles.fieldWrapper}>
       <View style={styles.fieldContainer}>
@@ -264,7 +269,10 @@ export default function AddAddress() {
     >
       <ScrollView style={styles.content}>
         {/* Header */}
-        <PageHeader title={isEditMode ? 'လိပ်စာ ပြင်ဆင်မယ်' : 'လိပ်စာအသစ် ထည့်မယ်'} showBackButton={true} />
+        <PageHeader
+          title={isEditMode ? 'လိပ်စာ ပြင်ဆင်မယ်' : 'လိပ်စာအသစ် ထည့်မယ်'}
+          showBackButton={true}
+        />
 
         {/* Form Fields */}
         <View style={styles.formContainer}>
@@ -274,7 +282,7 @@ export default function AddAddress() {
             'လိပ်စာ နာမည်',
             'လိပ်စာ နာမည်ထည့်ပါ',
             addressName,
-            setAddressName
+            setAddressName,
           )}
 
           {/* Exact Delivery Address Field */}
@@ -283,7 +291,7 @@ export default function AddAddress() {
             'ပို့ဆောင်ရန် လိပ်စာ အတိအကျ',
             'လိပ်စာ အတိအကျ ထည့်ပေးပါ',
             exactAddress,
-            setExactAddress
+            setExactAddress,
           )}
 
           {/* City Selection Field */}
@@ -294,7 +302,7 @@ export default function AddAddress() {
             selectedCity,
             null,
             () => setShowCityDropdown(!showCityDropdown),
-            true
+            true,
           )}
 
           {/* City Dropdown */}
@@ -337,22 +345,22 @@ export default function AddAddress() {
               selectedTownship,
               null,
               () => setShowTownshipDropdown(!showTownshipDropdown),
-              true
+              true,
             )}
 
             {/* Township Dropdown */}
             {showTownshipDropdown && (
-              <ScrollView 
+              <ScrollView
                 style={[
-                  styles.dropdownContainer, 
-                  { 
-                    position: 'absolute', 
-                    bottom: 85, 
-                    left: 0, 
+                  styles.dropdownContainer,
+                  {
+                    position: 'absolute',
+                    bottom: 85,
+                    left: 0,
                     right: 0,
                     maxHeight: 250,
-                    zIndex: 1000
-                  }
+                    zIndex: 1000,
+                  },
                 ]}
                 nestedScrollEnabled={true}
               >
@@ -392,7 +400,10 @@ export default function AddAddress() {
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <Pressable
-          style={[styles.cancelButton, isLoading && styles.cancelButtonDisabled]}
+          style={[
+            styles.cancelButton,
+            isLoading && styles.cancelButtonDisabled,
+          ]}
           onPress={handleCancel}
           disabled={isLoading}
         >

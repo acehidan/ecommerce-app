@@ -18,19 +18,20 @@ import PageHeader from './components/PageHeader';
 import colors from '../constants/colors';
 import { useAuthStore } from '../store/authStore';
 import { getUserProfileById } from '../services/user/getUserProfileById';
+import { getSwitches } from '../services/utils/getSwitches';
 import { Alert, ActivityIndicator } from 'react-native';
-
 
 export default function CheckoutStep3() {
   const router = useRouter();
-  const { setPaymentMethod, setPaymentDetails } =
-    useCheckoutStore();
+  const { setPaymentMethod, setPaymentDetails } = useCheckoutStore();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState('cash-on-delivery');
   const [selectedPaymentType, setSelectedPaymentType] = useState('cash'); // 'cash' for COD, 'kpay' for cash-down
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [codEnabled, setCodEnabled] = useState(true);
+  const [isLoadingCOD, setIsLoadingCOD] = useState(false);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -55,13 +56,43 @@ export default function CheckoutStep3() {
       }
     };
 
+    const checkCODStatus = async () => {
+      try {
+        setIsLoadingCOD(true);
+        const switchesResponse = await getSwitches();
+        if (switchesResponse.status === 'success') {
+          const codSwitch = switchesResponse.data.find(
+            (switchItem) => switchItem.name === 'cod',
+          );
+          if (codSwitch) {
+            const codEnabled = codSwitch.value;
+            setCodEnabled(codEnabled);
+
+            // If COD is disabled, switch to k-pay
+            if (!codEnabled && selectedPaymentMethod === 'cash-on-delivery') {
+              setSelectedPaymentMethod('k-pay');
+              setSelectedPaymentType('kpay');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching COD status:', error);
+        // Default to enabled if API fails
+        setCodEnabled(true);
+      } finally {
+        setIsLoadingCOD(false);
+      }
+    };
+
+    // Run both checks in parallel
     checkBanStatus();
-  }, [user?._id]);
-
-
+    checkCODStatus();
+  }, [user?._id, selectedPaymentMethod]);
 
   const paymentMethods = [
-    { key: 'cash-on-delivery', label: 'အိမ်အရောက်ငွေချေ', type: 'radio' },
+    ...(codEnabled
+      ? [{ key: 'cash-on-delivery', label: 'အိမ်အရောက်ငွေချေ', type: 'radio' }]
+      : []),
     { key: 'k-pay', label: 'ငွေကြိုရှင်း', type: 'radio' },
   ];
 
@@ -79,10 +110,19 @@ export default function CheckoutStep3() {
     if (isBanned && methodKey === 'cash-on-delivery') {
       Alert.alert(
         'အသိပေးချက်',
-        'သင်၏ အကောင့်အား ပိတ်ထားသောကြောင့် "အိမ်အရောက်ငွေချေ" နည်းလမ်းအား အသုံးပြု၍ မရနိုင်ပါ။'
+        'သင်၏ အကောင့်အား ပိတ်ထားသောကြောင့် "အိမ်အရောက်ငွေချေ" နည်းလမ်းအား အသုံးပြု၍ မရနိုင်ပါ။',
       );
       return;
     }
+
+    if (!codEnabled && methodKey === 'cash-on-delivery') {
+      Alert.alert(
+        'အသိပေးချက်',
+        'လောလောဆယ် "အိမ်အရောက်ငွေချေ" နည်းလမ်းအား ရပ်ဆိုင်းထားသောကြောင့် အသုံးပြု၍ မရနိုင်ပါ။',
+      );
+      return;
+    }
+
     setSelectedPaymentMethod(methodKey);
     // Reset payment type when payment method changes
     if (methodKey === 'cash-on-delivery') {
@@ -91,7 +131,6 @@ export default function CheckoutStep3() {
       setSelectedPaymentType('kpay');
     }
   };
-
 
   const saveStep3Data = async () => {
     setPaymentMethod(selectedPaymentMethod);
@@ -122,12 +161,8 @@ export default function CheckoutStep3() {
         <View style={styles.paymentInfoSection}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleContainer}>
-              <Text style={styles.sectionTitle}>
-                ငွေပေးချေမှုဆိုင်ရာ
-              </Text>
-              <Text style={styles.sectionTitle}>
-                အချက်အလက်များ
-              </Text>
+              <Text style={styles.sectionTitle}>ငွေပေးချေမှုဆိုင်ရာ</Text>
+              <Text style={styles.sectionTitle}>အချက်အလက်များ</Text>
             </View>
             <View style={styles.currentStepBadge}>
               <Text style={styles.currentStepText}>အဆင့် နံပါတ် ၃</Text>
@@ -138,68 +173,81 @@ export default function CheckoutStep3() {
           <View style={styles.paymentMethodSection}>
             <Text style={styles.subsectionTitle}>ငွေပေးချေမှု</Text>
             <View style={styles.paymentOptionsCard}>
-              {paymentMethods.map((method) => {
-                const isDisabled = isBanned && method.key === 'cash-on-delivery';
+              {isLoadingCOD ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={styles.loadingText}>စစ်ဆေးနေသည်...</Text>
+                </View>
+              ) : (
+                paymentMethods.map((method) => {
+                  const isDisabled =
+                    (isBanned && method.key === 'cash-on-delivery') ||
+                    (!codEnabled && method.key === 'cash-on-delivery');
 
-                return (
-                  <Pressable
-                    key={method.key}
-                    style={[
-                      styles.paymentOption,
-                      isDisabled && { opacity: 0.5 }
-                    ]}
-                    onPress={() => handlePaymentMethodChange(method.key)}
-                  >
-                    <View style={styles.paymentOptionLeft}>
-                      {method.type === 'checkbox' ? (
-                        <View
+                  return (
+                    <Pressable
+                      key={method.key}
+                      style={[
+                        styles.paymentOption,
+                        isDisabled && { opacity: 0.5 },
+                      ]}
+                      onPress={() => handlePaymentMethodChange(method.key)}
+                    >
+                      <View style={styles.paymentOptionLeft}>
+                        {method.type === 'checkbox' ? (
+                          <View
+                            style={[
+                              styles.checkbox,
+                              selectedPaymentMethod === method.key &&
+                                styles.checkboxSelected,
+                            ]}
+                          >
+                            {selectedPaymentMethod === method.key && (
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color="#FFFFFF"
+                              />
+                            )}
+                          </View>
+                        ) : (
+                          <View
+                            style={[
+                              styles.radioButton,
+                              selectedPaymentMethod === method.key &&
+                                styles.radioButtonSelected,
+                              isDisabled && {
+                                borderColor: '#999',
+                                opacity: 0.3,
+                              },
+                            ]}
+                          >
+                            {selectedPaymentMethod === method.key && (
+                              <View style={styles.radioButtonInner} />
+                            )}
+                          </View>
+                        )}
+                        <Text
                           style={[
-                            styles.checkbox,
-                            selectedPaymentMethod === method.key &&
-                            styles.checkboxSelected,
+                            styles.paymentOptionText,
+                            isDisabled && { color: '#888' },
                           ]}
                         >
-                          {selectedPaymentMethod === method.key && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color="#FFFFFF"
-                            />
-                          )}
-                        </View>
-                      ) : (
-                        <View
-                          style={[
-                            styles.radioButton,
-                            selectedPaymentMethod === method.key &&
-                            styles.radioButtonSelected,
-                            isDisabled && { borderColor: '#999', opacity: 0.3 }
-                          ]}
-                        >
-                          {selectedPaymentMethod === method.key && (
-                            <View style={styles.radioButtonInner} />
-                          )}
-                        </View>
-                      )}
-                      <Text style={[
-                        styles.paymentOptionText,
-                        isDisabled && { color: '#888' }
-                      ]}>
-                        {method.label}
-                      </Text>
-                      {isDisabled && (
-                        <Ionicons
-                          name="lock-closed"
-                          size={14}
-                          color="#888"
-                          style={{ marginLeft: 8 }}
-                        />
-                      )}
-                    </View>
-                  </Pressable>
-                );
-              })}
-
+                          {method.label}
+                        </Text>
+                        {isDisabled && (
+                          <Ionicons
+                            name="lock-closed"
+                            size={14}
+                            color="#888"
+                            style={{ marginLeft: 8 }}
+                          />
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                })
+              )}
             </View>
           </View>
 
@@ -224,7 +272,11 @@ export default function CheckoutStep3() {
                           />
                         </View>
                       ) : (
-                        <MaterialCommunityIcons name="currency-usd" size={20} color="black" />
+                        <MaterialCommunityIcons
+                          name="currency-usd"
+                          size={20}
+                          color="black"
+                        />
                       )}
                       <Text style={styles.paymentOptionText}>
                         {option.label}
@@ -234,7 +286,7 @@ export default function CheckoutStep3() {
                       style={[
                         styles.radioButton,
                         selectedPaymentType === option.key &&
-                        styles.radioButtonSelected,
+                          styles.radioButtonSelected,
                       ]}
                     >
                       {selectedPaymentType === option.key && (
@@ -264,7 +316,10 @@ export default function CheckoutStep3() {
           <Text style={styles.backActionText}>ပြန်သွားမယ်</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.payActionButton, (isCheckingUser || isNavigating) && { opacity: 0.7 }]}
+          style={[
+            styles.payActionButton,
+            (isCheckingUser || isNavigating) && { opacity: 0.7 },
+          ]}
           disabled={isCheckingUser || isNavigating}
           onPress={async () => {
             if (isCheckingUser || isNavigating) return;
@@ -285,7 +340,10 @@ export default function CheckoutStep3() {
               // Fallback: proceed even if check fails, or show error?
               // Let's proceed as a fallback for robustness, or block it.
               // Blocking is safer for the business. Let's block it but with a friendly message.
-              Alert.alert('Error', 'စနစ် အမှားအယွင်း ဖြစ်ပေါ်နေပါသည်။ ခဏနေမှ ပြန်လည်ကြိုးစားပေးပါ။');
+              Alert.alert(
+                'Error',
+                'စနစ် အမှားအယွင်း ဖြစ်ပေါ်နေပါသည်။ ခဏနေမှ ပြန်လည်ကြိုးစားပေးပါ။',
+              );
               setIsCheckingUser(false);
             }
           }}
@@ -297,8 +355,6 @@ export default function CheckoutStep3() {
           )}
         </TouchableOpacity>
       </View>
-
-
     </SafeAreaView>
   );
 }
@@ -519,5 +575,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
     marginTop: 8,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginLeft: 8,
+    fontFamily: 'NotoSansMyanmar-Regular',
   },
 });

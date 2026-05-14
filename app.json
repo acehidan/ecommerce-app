@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Komin-DIY",
-    "slug": "komin-diy",
+    "name": "Komin-DIY Store",
+    "slug": "komin-diy-store",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/komin.jpg",
@@ -15,7 +15,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.komin.diy",
+      "bundleIdentifier": "com.komin.store",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -43,12 +43,12 @@
         "origin": false
       },
       "eas": {
-        "projectId": "25454095-16c6-4214-bb79-5f04582c77a0"
+        "projectId": "ab00058a-b8e6-4ff7-a3be-fad6a457fa64"
       }
     },
     "android": {
-      "package": "com.komin.diystore",
-      "versionCode": 3,
+      "package": "com.komin.store",
+      "versionCode": 6,
       "softwareKeyboardLayoutMode": "pan",
       "launchMode": "singleTask",
       "permissions": [
